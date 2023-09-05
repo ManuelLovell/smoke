@@ -1,0 +1,15 @@
+{
+    "name": "Smoke!",
+    "description": "Dynamic fog of war for battlemaps.",
+    "version": "2.0.0",
+    "author": "Battle-System & Armindo Flores",
+    "icon": "/logo.png",
+    "manifest_version": 1,
+    "action": {
+        "title": "Smoke!",
+        "icon": "/icon.svg",
+        "popover": "/",
+        "height": 500,
+        "width": 400
+    }
+}
