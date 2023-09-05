@@ -1,1 +1,0 @@
-declare module 'pathkit-wasm/bin/pathkit';
