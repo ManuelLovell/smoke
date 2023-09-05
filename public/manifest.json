@@ -1,6 +1,6 @@
 {
     "name": "Smoke!",
-    "description": "Dynamic fog of war for Battlemaps (inherited from Dynamic Fog of War).",
+    "description": "Dynamic fog of war for Battlemaps(inherited from Dynamic Fog of War).",
     "version": "2.0.0",
     "author": "Battle-System & Armindo Flores",
     "icon": "/logo.png",
