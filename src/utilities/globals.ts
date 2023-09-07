@@ -9,6 +9,7 @@ class SceneCash
     metadata: Metadata;
     gridDpi: number;
     gridScale: any;
+    gridSnap: number;
     fog: Fog;
     ready: boolean;
 
@@ -21,6 +22,7 @@ class SceneCash
         this.metadata = {};
         this.gridDpi = 0;
         this.gridScale = 0;
+        this.gridSnap = 10;
         this.fog = {filled: false, style: { color: "white", strokeWidth: 0}};
         this.ready = false;
     }

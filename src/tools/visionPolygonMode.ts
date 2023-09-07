@@ -76,8 +76,10 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .layer("POPOVER")
             .build();
         const finishLabel = buildLabel()
-            .plainText("Finish")
+            .plainText("Finish [Enter]")
             .position(event.pointerPosition)
+            .fillOpacity(.95)
+            .backgroundOpacity(.5)
             .layer("POPOVER")
             .build();
 
@@ -92,8 +94,10 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .visible(false)
             .build();
         const cancelLabel = buildLabel()
-            .plainText("Cancel")
+            .plainText("Cancel [Escape]")
             .position(event.pointerPosition)
+            .fillOpacity(.95)
+            .backgroundOpacity(.5)
             .layer("POPOVER")
             .pointerDirection("UP")
             .build();

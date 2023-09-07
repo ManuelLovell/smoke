@@ -337,10 +337,12 @@ async function computeShadow(event: any)
     // from the point of view of one player.
     const polygons: Polygon[][] = [];
     const playerRings: Shape[] = [];
+    const gmIds = sceneCache.players.filter(x => x.role == "GM");
     for (const token of tokensWithVision)
     {
         const myToken = (sceneCache.userId === token.createdUserId);
-        if (!myToken && sceneCache.role !== "GM") continue;
+        const gmToken = gmIds.some(x => x.id == token.createdUserId);
+        if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
 
         const cacheResult = playerShadowCache.getValue(token.id);
         polygons.push([]);
@@ -537,9 +539,10 @@ async function computeShadow(event: any)
         const token = tokensWithVision[i];
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
+        const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
         if (visionRangeMeta)
         {
-            if (!myToken && sceneCache.role !== "GM") continue;
+            if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
 
             const visionRange = sceneCache.gridDpi * (visionRangeMeta / sceneCache.gridScale + .5);
             const ellipse = PathKit.NewPath().ellipse(token.position.x, token.position.y, visionRange, visionRange, 0, 0, 2 * Math.PI);
@@ -554,7 +557,7 @@ async function computeShadow(event: any)
                 const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
                     .position({ x: token.position.x, y: token.position.y }).width(visionRange * 2)
                     .height(visionRange * 2).shapeType("CIRCLE").metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
-    
+
                 playerRings.push(playerRing);
             }
         }
@@ -623,19 +626,24 @@ export async function onSceneDataChange()
     awaitTimer.start(); awaitTimer.pause();
     computeTimer.start();
 
-    const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn);
+    const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
+    const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id));
+    const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
     const backgroundImage = sceneCache.items.filter(isBackgroundBorder)?.[0] as any as Shape;
     const visionEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
     if (backgroundImage === undefined)
         return;
 
-    //const dpiRatio = sceneCache.gridDpi / backgroundImage.grid.dpi;
+    //const dpiRatio = sceneCache.gridDpi / backgroundImage.grid.dpi;      const size = [backgroundImage.width * backgroundImage.scale.x, backgroundImage.height * backgroundImage.scale.y];
     const size = [backgroundImage.width * backgroundImage.scale.x, backgroundImage.height * backgroundImage.scale.y];
     const scale = [backgroundImage.scale.x, backgroundImage.scale.y];
     const offset = [backgroundImage.position.x, backgroundImage.position.y];
 
-    document.getElementById("map_size")!.innerText = `Boundary Size: ${Math.round(size[0])}x${Math.round(size[1])} px`;
+    const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
+    const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
+    mapWidth.value = (Math.round(size[0]) / sceneCache.gridDpi).toString();
+    mapHeight.value = (Math.round(size[1]) / sceneCache.gridDpi).toString();
 
     // Check if any values have changed and a re-draw is necessary
     const sVisionShapes = JSON.stringify(visionShapes);

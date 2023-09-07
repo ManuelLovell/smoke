@@ -1,5 +1,5 @@
 import "./css/style.css";
-import OBR, { Image, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog } from './utilities/itemFilters';
 import { setupContextMenus, createActions, createMode, createTool, onSceneDataChange } from './tools/visionTool';
@@ -18,7 +18,10 @@ app.innerHTML = `
     </div>
     <hr>
     <div style="text-align: center;">
-      <p><span id="map_size"></span></p>
+      <p><span id="map_size">Boundary Size: 
+      <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
+      <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
+      <input type="button" id="mapSubmit" value="Update"/></span></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <p id="no_tokens_message">Enable vision on your character tokens.</p>
@@ -45,6 +48,14 @@ app.parentElement!.style.placeItems = "start";
 const visionCheckbox = document.getElementById("vision_checkbox")! as HTMLInputElement;
 const table = document.getElementById("token_list")! as HTMLDivElement;
 const message = document.getElementById("no_tokens_message")! as HTMLParagraphElement;
+const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
+const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
+const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
+// const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
+// const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
+    //   <span id="snap_degree">Snap Sensitity (1-10):
+    //   <input type="number" id="snapSense" name="Snap" value="10" min="1" max="10"/>
+    //   <input type="button" id="snapSubmit" value="Update"/></span></p>
 
 async function setButtonHandler()
 {
@@ -187,8 +198,9 @@ async function initScene(playerRole: string): Promise<void>
     let drawing = undefined;
     if (sceneCache.items.filter(isBackgroundBorder).length == 0)
     {
-        drawing = buildShape().width(5000).height(5000).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("green").fillOpacity(0).strokeDash([200, 100]).strokeWidth(10).build() as any;
+        drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
         drawing.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
+        drawing.id = Constants.GRIDID;
         sceneCache.items.push(drawing);
     }
 
@@ -198,6 +210,22 @@ async function initScene(playerRole: string): Promise<void>
         {
             await OBR.scene.items.addItems([drawing]);
         }
+        mapSubmit.onclick = async () =>
+        {
+            await OBR.scene.items.updateItems([Constants.GRIDID], items =>
+                {
+                    for (const item of items)
+                    {
+                        const shape = item as Shape;
+                        shape.width = (sceneCache.gridDpi * (+mapWidth.value));
+                        shape.height = (sceneCache.gridDpi * (+mapHeight.value));
+                    }
+                });
+        };
+        // snapSubmit.onclick = async () =>
+        // {
+        //     sceneCache.gridSnap = (11 - +snapSense.value) * .1;
+        // };
 
         updateUI(sceneCache.items);
 
@@ -223,10 +251,10 @@ OBR.onReady(async () =>
         if (value == "GM")
         {
             sceneCache.role = "GM";
-            setButtonHandler();
-            setupContextMenus();
-            createTool();
-            createMode();
+            await setButtonHandler();
+            await setupContextMenus();
+            await createTool();
+            await createMode();
             createActions();
         }
 
