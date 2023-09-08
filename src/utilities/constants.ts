@@ -1,6 +1,8 @@
 export class Constants
 {
     static EXTENSIONID = "com.battle-system.smoke";
+    static LINETOOLID = "com.battle-system.linetool";
+    static POLYTOOLID = "com.battle-system.polytool";
     static ARMINDOID = "com.armindoflores.fogofwar";
     static VISIONDEFAULT = "30";
     static LABELSID = "com.battle-system.labels";

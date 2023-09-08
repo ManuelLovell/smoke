@@ -5,6 +5,8 @@ class SceneCash
     userId: string;
     role: string;
     items: Image[];
+    ghosts: Image[];
+    ghostViewers: GhostView[];
     players: Player[];
     metadata: Metadata;
     gridDpi: number;
@@ -19,6 +21,8 @@ class SceneCash
         this.role = "PLAYER";
         this.items = [];
         this.players = [];
+        this.ghosts = [];
+        this.ghostViewers = [];
         this.metadata = {};
         this.gridDpi = 0;
         this.gridScale = 0;

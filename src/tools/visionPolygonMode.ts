@@ -14,6 +14,7 @@ async function cleanUpPopovers()
     finishId = "";
     cancelLabelId = "";
     cancelId = "";
+    await OBR.popover.close(Constants.POLYTOOLID);
 }
 
 async function cancelDrawing()
@@ -56,14 +57,24 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
         return;
     if (!interaction)
     {
+        const finishLabel = buildLabel()
+            .plainText("Finish [Enter]")
+            .position({x: event.pointerPosition.x, y: event.pointerPosition.y - 50})
+            .fillOpacity(.95)
+            .backgroundOpacity(.5)
+            .layer("POPOVER")
+            .build();
+            
         const polygon = buildCurve()
             .tension(0)
             .points([event.pointerPosition, event.pointerPosition])
             .fillColor("#000000")
+            .fillOpacity(.5)
             .strokeColor("#000000")
             .layer("DRAWING")
             .name("Vision Line (Polygon)")
             .build();
+
         interaction = await OBR.interaction.startItemInteraction(polygon);
 
         const finish = buildShape()
@@ -75,14 +86,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .position(event.pointerPosition)
             .layer("POPOVER")
             .build();
-        const finishLabel = buildLabel()
-            .plainText("Finish [Enter]")
-            .position(event.pointerPosition)
-            .fillOpacity(.95)
-            .backgroundOpacity(.5)
-            .layer("POPOVER")
-            .build();
-
+            
         const cancel = buildShape()
             .shapeType("CIRCLE")
             .strokeColor("#FFFFFF")
@@ -107,6 +111,15 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
         finishId = finish.id;
         cancelLabelId = cancelLabel.id;
         cancelId = cancel.id;
+
+        //Create Tooltip
+        await OBR.popover.open({
+            id: Constants.POLYTOOLID,
+            url: `/pages/polygon.html`,
+            height: 40,
+            width: 400,
+            disableClickAway: true
+        });
     }
     else
     {

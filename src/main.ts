@@ -2,8 +2,9 @@ import "./css/style.css";
 import OBR, { Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog } from './utilities/itemFilters';
-import { setupContextMenus, createActions, createMode, createTool, onSceneDataChange } from './tools/visionTool';
+import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
+import { RunSpectre, SetupSpectreGM } from "./mystery";
 
 // Create the extension page
 
@@ -30,6 +31,17 @@ app.innerHTML = `
         </tbody></table>
       </div>
       </div>
+      <hr>
+      <div class="visionTitle">Spectres</div>
+      <div id="ghostContainer" style="display: block;">
+        <table style="margin: auto; padding: 0; width: 100%">
+        <colgroup>
+            <col style="width: 50%;">
+            <col style="width: 25%;">
+            <col style="width: 25%;">
+        </colgroup>
+        <tbody id="ghostList">
+        </tbody></table>
     <div id="debug_div" style="display: none;">
       <br><hr><br>
       <h2>Debug</h2>
@@ -243,19 +255,25 @@ async function initScene(playerRole: string): Promise<void>
 // Setup extension add-ons
 OBR.onReady(async () =>
 {
-    await OBR.player.getRole().then(async value =>
+    await OBR.player.getRole().then(async role =>
     {
         // Allow the extension to load for any player
         // This is now needed because each player updates their own
         // local fog paths.
-        if (value == "GM")
+        if (role == "GM")
         {
             sceneCache.role = "GM";
             await setButtonHandler();
             await setupContextMenus();
             await createTool();
             await createMode();
-            createActions();
+            await SetupSpectreGM();
+        }
+        else
+        {
+            app.innerHTML = `Configuration is GM-Access only.`;
+            await OBR.action.setHeight(90);
+            await OBR.action.setWidth(320);
         }
 
         OBR.scene.fog.onChange(fog =>
@@ -269,7 +287,7 @@ OBR.onReady(async () =>
             sceneCache.items = iItems;
             if (sceneCache.ready)
             {
-                if (value == "GM") updateUI(iItems);
+                if (role == "GM") updateUI(iItems);
                 onSceneDataChange();
             }
         });
@@ -279,6 +297,10 @@ OBR.onReady(async () =>
         OBR.party.onChange(players =>
         {
             sceneCache.players = players;
+            if (role === "PLAYER")
+            {
+                RunSpectre(players);
+            }
         });
 
         OBR.scene.grid.onChange(grid =>
@@ -301,20 +323,20 @@ OBR.onReady(async () =>
             sceneCache.ready = ready;
             if (ready)
             {
-                initScene(value);
+                initScene(role);
                 onSceneDataChange();
             }
-            else if (value == "GM")
+            else if (role == "GM")
                 updateUI([]);
         });
 
         sceneCache.ready = await OBR.scene.isReady();
         if (sceneCache.ready)
         {
-            initScene(value);
+            initScene(role);
             onSceneDataChange();
         }
-        else if (value == "GM")
+        else if (role == "GM")
             updateUI([]);
     }
     )

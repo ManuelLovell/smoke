@@ -55,38 +55,6 @@ export async function setupContextMenus(): Promise<void>
         },
     });
 
-    // This context menu appears on images on the MAP layer and is used to set
-    // which image is the background image. It is used to compute how far the
-    // shadows need to be rendered, among other things
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/set-background-image`,
-        icons: [
-            {
-                icon: "/set-background.svg",
-                label: "Set as background image",
-                filter: {
-                    every: [{ key: "layer", value: "MAP" }, { key: ["metadata", `${Constants.EXTENSIONID}/isBackgroundImage`], value: true, operator: "!=" }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            if (ctx.items.length != 1)
-                return;
-            const item = ctx.items[0];
-            await OBR.scene.items.updateItems(item => item.layer == "MAP", items =>
-            {
-                for (const other_item of items)
-                {
-                    if (item.id != other_item.id && other_item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`])
-                        delete other_item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`];
-                    else if (item.id == other_item.id)
-                        other_item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
-                }
-            });
-        }
-    });
-
     // This context appears on vision lines and lets the user toggle whether
     // they're active or not
     await OBR.contextMenu.create({
@@ -96,7 +64,10 @@ export async function setupContextMenus(): Promise<void>
                 icon: "/icon.svg",
                 label: "Disable Vision Line",
                 filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }, { key: ["metadata", `${Constants.EXTENSIONID}/disabled`], value: undefined }],
+                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.EXTENSIONID}/disabled`], value: undefined, coordinator: "||" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/disabled`], value: undefined }]
                 },
             },
             {
@@ -133,21 +104,28 @@ export async function setupContextMenus(): Promise<void>
                 icon: "/two-sided.svg",
                 label: "Two-sided",
                 filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }, { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: undefined }],
+                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: undefined, coordinator: "||" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: undefined }]
                 },
             },
             {
                 icon: "/left-sided.svg",
                 label: "One-sided left",
                 filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }, { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: "left" }],
+                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: "left", coordinator: "||" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: "left" }]
                 },
             },
             {
                 icon: "/right-sided.svg",
                 label: "One-sided right",
                 filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }],
+                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
                 },
             }
         ],
@@ -157,17 +135,22 @@ export async function setupContextMenus(): Promise<void>
             {
                 for (const item of items)
                 {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "right")
+                    if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
+                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "right" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "right"))
                     {
                         delete item.metadata[`${Constants.EXTENSIONID}/oneSided`];
+                        delete item.metadata[`${Constants.ARMINDOID}/oneSided`];
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "left")
+                    else if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
+                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "left" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "left"))
                     {
                         item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "right";
+                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "right";
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
+                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
                     {
                         item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "left";
+                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "left";
                     }
                 }
             });
@@ -193,26 +176,8 @@ export async function createTool(): Promise<void>
     });
 }
 
-// This tool doesn't do what the name implies and will be removed
 export async function createMode(): Promise<void>
 {
-    // Create "erase" mode
-    // OBR.tool.createMode({
-    //   id: `${Constants.EXTENSIONID}/erase-vision-mode`,
-    //   icons: [
-    //     {
-    //       icon: "/add.svg", // mismatched item
-    //       label: "Erase Vision",
-    //       filter: {
-    //         activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
-    //       },
-    //     },
-    //   ],
-    //   async onClick() { 
-    //     console.log(await OBR.scene.items.getItems());
-    //    },
-    // });
-
     // Create "add polygon" mode
     await OBR.tool.createMode({
         id: `${Constants.EXTENSIONID}/add-vision-polygon-mode`,
@@ -246,10 +211,6 @@ export async function createMode(): Promise<void>
         onToolMove: lineMode.onToolMove,
         onKeyDown: lineMode.onKeyDown
     });
-}
-
-export function createActions()
-{
 }
 
 // This function is responsible for updating the performance information in the
@@ -627,7 +588,8 @@ export async function onSceneDataChange()
     computeTimer.start();
 
     const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
-    const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id));
+    const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id)
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]));
     const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
     const backgroundImage = sceneCache.items.filter(isBackgroundBorder)?.[0] as any as Shape;
@@ -640,10 +602,13 @@ export async function onSceneDataChange()
     const scale = [backgroundImage.scale.x, backgroundImage.scale.y];
     const offset = [backgroundImage.position.x, backgroundImage.position.y];
 
-    const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
-    const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
-    mapWidth.value = (Math.round(size[0]) / sceneCache.gridDpi).toString();
-    mapHeight.value = (Math.round(size[1]) / sceneCache.gridDpi).toString();
+    if (sceneCache.role == "GM")
+    {
+        const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
+        const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
+        mapWidth.value = (Math.round(size[0]) / sceneCache.gridDpi).toString();
+        mapHeight.value = (Math.round(size[1]) / sceneCache.gridDpi).toString();
+    }
 
     // Check if any values have changed and a re-draw is necessary
     const sVisionShapes = JSON.stringify(visionShapes);

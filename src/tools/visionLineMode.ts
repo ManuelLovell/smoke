@@ -15,6 +15,7 @@ async function cleanUpPopovers(): Promise<void>
     finishId = "";
     cancelLabelId = "";
     cancelId = "";
+    await OBR.popover.close(Constants.LINETOOLID);
 }
 
 async function cancelDrawing(): Promise<void>
@@ -56,6 +57,15 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         return;
     if (!interaction)
     {
+        
+        const finishLabel = buildLabel()
+            .plainText("Finish [Enter]")
+            .position({x: event.pointerPosition.x, y: event.pointerPosition.y - 50})
+            .fillOpacity(.95)
+            .backgroundOpacity(.5)
+            .layer("POPOVER")
+            .build();
+
         const line = buildCurve()
             .tension(0)
             .points([event.pointerPosition, event.pointerPosition])
@@ -77,14 +87,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .position(event.pointerPosition)
             .layer("POPOVER")
             .build();
-        const finishLabel = buildLabel()
-            .plainText("Finish [Enter]")
-            .position(event.pointerPosition)
-            .fillOpacity(.95)
-            .backgroundOpacity(.5)
-            .layer("POPOVER")
-            .build();
-
+            
         const cancel = buildShape()
             .shapeType("CIRCLE")
             .strokeColor("#FFFFFF")
@@ -101,6 +104,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .fillOpacity(.95)
             .backgroundOpacity(.5)
             .layer("POPOVER")
+            .pointerDirection("UP")
             .build();
 
         await OBR.scene.local.addItems([finishLabel, finish, cancel, cancelLabel]);
@@ -108,6 +112,15 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         finishId = finish.id;
         cancelLabelId = cancelLabel.id;
         cancelId = cancel.id;
+        
+        //Create Tooltip
+        await OBR.popover.open({
+            id: Constants.LINETOOLID,
+            url: `/pages/line.html`,
+            height: 40,
+            width: 400,
+            disableClickAway: true
+        });
     }
     else
     {

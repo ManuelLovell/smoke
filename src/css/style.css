@@ -63,6 +63,17 @@ input
     padding: 2px;
 }
 
+.mysteryButton,
+#mapSubmit
+{
+    cursor: pointer;
+}
+.mysteryButton:hover,
+#mapSubmit:hover
+{
+    background-color: var(--OBR-Purple-Select);
+}
+
 body {
     margin: 0;
     display: flex;
