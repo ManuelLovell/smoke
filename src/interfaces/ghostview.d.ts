@@ -9,3 +9,8 @@ interface GhostPackage
     ghostViews: GhostView[];
     ghostItems: Image[];
 }
+
+interface Viewers
+{
+    ids: string[];
+}

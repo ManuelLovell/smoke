@@ -14,7 +14,7 @@ const app = document.getElementById('app')! as HTMLDivElement;
 app.innerHTML = `
   <div>
     <div>
-      <div class="title">Smoke! x Dynamic Fog&nbsp;&nbsp;</div>
+      <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;</div>
       <input type="checkbox" id="vision_checkbox" class="large">
     </div>
     <hr>
@@ -32,8 +32,10 @@ app.innerHTML = `
       </div>
       </div>
       <hr>
-      <div class="visionTitle">Spectres</div>
+      <div class="visionTitle">Spectres!</div>
       <div id="ghostContainer" style="display: block;">
+      <div id="spectreWarning">Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</br>
+      Enable vision here after it's been Spectred.</div>
         <table style="margin: auto; padding: 0; width: 100%">
         <colgroup>
             <col style="width: 50%;">
