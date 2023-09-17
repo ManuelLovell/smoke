@@ -74,7 +74,8 @@ export async function setupContextMenus(): Promise<void>
                 icon: "/no-vision.svg",
                 label: "Enable Vision Line",
                 filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }],
+                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
+                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
                 },
             }
         ],

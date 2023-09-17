@@ -7,7 +7,8 @@ export default {
             input: {
                 main: path.resolve(__dirname, 'index.html'),
                 linetool: path.resolve(__dirname, 'pages/line.html'),
-                polygontool: path.resolve(__dirname, 'pages/polygon.html')
+                polygontool: path.resolve(__dirname, 'pages/polygon.html'),
+                whatsnew: path.resolve(__dirname, 'pages/whatsnew.html')
             }
         }
     }

@@ -4,7 +4,7 @@ import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
-import { RunSpectre, SetupSpectreGM } from "./mystery";
+import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
 
 // Create the extension page
 
@@ -16,6 +16,7 @@ app.innerHTML = `
     <div>
       <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;</div>
       <input type="checkbox" id="vision_checkbox" class="large">
+      <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;
     </div>
     <hr>
     <div style="text-align: center;">
@@ -25,6 +26,7 @@ app.innerHTML = `
       <input type="button" id="mapSubmit" value="Update"/></span></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
+      <div><i>GM-owned tokens give universal vision.</i></div>
       <p id="no_tokens_message">Enable vision on your character tokens.</p>
       <div id="token_list_div" style="display: block;">
         <table style="margin: auto; padding: 0;"><tbody id="token_list">
@@ -34,7 +36,7 @@ app.innerHTML = `
       <hr>
       <div class="visionTitle">Spectres!</div>
       <div id="ghostContainer" style="display: block;">
-      <div id="spectreWarning">Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</br>
+      <div id="spectreWarning"><i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i></br>
       Enable vision here after it's been Spectred.</div>
         <table style="margin: auto; padding: 0; width: 100%">
         <colgroup>
@@ -56,7 +58,7 @@ app.innerHTML = `
     </div>
   </div>
 `;
-app.style.textAlign = "left";
+
 app.parentElement!.style.placeItems = "start";
 
 const visionCheckbox = document.getElementById("vision_checkbox")! as HTMLInputElement;
@@ -67,9 +69,9 @@ const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
 const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
 // const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
 // const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
-    //   <span id="snap_degree">Snap Sensitity (1-10):
-    //   <input type="number" id="snapSense" name="Snap" value="10" min="1" max="10"/>
-    //   <input type="button" id="snapSubmit" value="Update"/></span></p>
+//   <span id="snap_degree">Snap Sensitity (1-10):
+//   <input type="number" id="snapSense" name="Snap" value="10" min="1" max="10"/>
+//   <input type="button" id="snapSubmit" value="Update"/></span></p>
 
 async function setButtonHandler()
 {
@@ -227,19 +229,28 @@ async function initScene(playerRole: string): Promise<void>
         mapSubmit.onclick = async () =>
         {
             await OBR.scene.items.updateItems([Constants.GRIDID], items =>
+            {
+                for (const item of items)
                 {
-                    for (const item of items)
-                    {
-                        const shape = item as Shape;
-                        shape.width = (sceneCache.gridDpi * (+mapWidth.value));
-                        shape.height = (sceneCache.gridDpi * (+mapHeight.value));
-                    }
-                });
+                    const shape = item as Shape;
+                    shape.width = (sceneCache.gridDpi * (+mapWidth.value));
+                    shape.height = (sceneCache.gridDpi * (+mapHeight.value));
+                    shape.scale = { x: 1, y: 1 };
+                }
+            });
         };
-        // snapSubmit.onclick = async () =>
-        // {
-        //     sceneCache.gridSnap = (11 - +snapSense.value) * .1;
-        // };
+
+        //Create Whatsnew Button
+        const whatsNewButton = document.getElementById("whatsnewbutton")!;
+        whatsNewButton.onclick = async function ()
+        {
+            await OBR.modal.open({
+                id: Constants.EXTENSIONWHATSNEW,
+                url: `/pages/whatsnew.html`,
+                height: 500,
+                width: 350,
+            });
+        };
 
         updateUI(sceneCache.items);
 
@@ -283,50 +294,54 @@ OBR.onReady(async () =>
             sceneCache.fog = fog;
         });
 
-        OBR.scene.items.onChange(items =>
+        OBR.scene.items.onChange(async (items) =>
         {
             const iItems = items as Image[];
             sceneCache.items = iItems;
             if (sceneCache.ready)
             {
                 if (role == "GM") updateUI(iItems);
-                onSceneDataChange();
+                await onSceneDataChange();
             }
         });
 
         sceneCache.userId = await OBR.player.getId();
         sceneCache.players = await OBR.party.getPlayers();
-        OBR.party.onChange(players =>
+        OBR.party.onChange(async (players) =>
         {
             sceneCache.players = players;
             if (role === "PLAYER")
             {
-                RunSpectre(players);
+                await RunSpectre(players);
+            }
+            else
+            {
+                UpdateSpectreTargets();
             }
         });
 
-        OBR.scene.grid.onChange(grid =>
+        OBR.scene.grid.onChange(async (grid) =>
         {
             sceneCache.gridDpi = grid.dpi;
             sceneCache.gridScale = parseInt(grid.scale);
             if (sceneCache.ready)
-                onSceneDataChange();
+                await onSceneDataChange();
         });
 
-        OBR.scene.onMetadataChange(metadata =>
+        OBR.scene.onMetadataChange(async (metadata) =>
         {
             sceneCache.metadata = metadata;
             if (sceneCache.ready)
-                onSceneDataChange();
+                await onSceneDataChange();
         });
 
-        OBR.scene.onReadyChange(ready =>
+        OBR.scene.onReadyChange(async (ready) =>
         {
             sceneCache.ready = ready;
             if (ready)
             {
                 initScene(role);
-                onSceneDataChange();
+                await onSceneDataChange();
             }
             else if (role == "GM")
                 updateUI([]);
@@ -336,7 +351,7 @@ OBR.onReady(async () =>
         if (sceneCache.ready)
         {
             initScene(role);
-            onSceneDataChange();
+            await onSceneDataChange();
         }
         else if (role == "GM")
             updateUI([]);

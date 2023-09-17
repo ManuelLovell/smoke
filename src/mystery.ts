@@ -6,9 +6,12 @@ import "tom-select/dist/css/tom-select.css";
 
 export async function RunSpectre(players: Player[]): Promise<void>
 {
+    const sceneReady = await OBR.scene.isReady();
+    if (!sceneReady) return;
+    
     const localGhosts = await OBR.scene.local.getItems(
         (item): item is Image => item.layer === "CHARACTER");
-    const localIds = localGhosts.map(x => x.id);
+    const localIds = localGhosts?.map(x => x.id);
     let foundghost = false;
 
     // This should only trigger on the GM, whomever that is
@@ -47,6 +50,41 @@ export async function RunSpectre(players: Player[]): Promise<void>
     {
         await OBR.scene.local.deleteItems(localIds);
     }
+}
+
+export function UpdateSpectreTargets(): void
+{
+    const existingSelects = document.querySelectorAll('.tSelects') as any;
+
+    for (const tSelect of existingSelects)
+    {
+        if (tSelect && tSelect.tomselect)
+        {
+            // Access the TomSelect instance using .tomselect
+            const tomSelectInstance = tSelect.tomselect as TomSelect;
+
+            const newOptions = [];
+            for (const player of sceneCache.players)
+            {
+                newOptions.push({ value: player.id, text: player.name });
+            }
+
+            tomSelectInstance.clearOptions();
+            tomSelectInstance.addOption(newOptions);
+
+            if (newOptions.length === 0)
+            {
+                tomSelectInstance.settings.placeholder = "No Players";
+                tomSelectInstance.inputState();
+            }
+            else
+            {
+                tomSelectInstance.settings.placeholder = "Choose..";
+                tomSelectInstance.inputState();
+            }
+        }
+    }
+
 }
 
 // For the GM
@@ -94,8 +132,8 @@ export async function SetupSpectreGM(): Promise<void>
                 newTr.id = `tr-${ghost.id}`;
                 newTr.className = "ghost-table-entry";
                 newTr.innerHTML = `<td class="token-name">${name}</td>
-<td><select id="select-${ghost.id}" multiple autocomplete="off" /></td>
-<td>&nbsp;&nbsp;&nbsp<input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
+<td><select id="select-${ghost.id}" class="tSelects" multiple autocomplete="off" /></td>
+<td><input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
 
                 table.appendChild(newTr);
 
@@ -116,7 +154,7 @@ export async function SetupSpectreGM(): Promise<void>
                         }
                     },
                     allowEmptyOption: true,
-                    placeholder: "Choose..",
+                    placeholder: sceneCache.players.length == 0 ? "No Players" : "Choose..",
                     maxItems: null,
                     create: false,
                     onDelete: async function (id: string, element: any) 
