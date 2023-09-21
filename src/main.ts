@@ -25,8 +25,7 @@ app.innerHTML = `
       <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
       <input type="button" id="mapSubmit" value="Update"/>
       &nbsp;&nbsp;&nbsp;
-      Grid Snap:</span><input type="checkbox" id="snap_checkbox" class="></p>
-      
+      Grid Snap:</span><input type="checkbox" id="snap_checkbox"></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <div><i>GM-owned tokens give universal vision.</i></div>
