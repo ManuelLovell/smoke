@@ -23,8 +23,7 @@ ae.x<0?y=u[0]*w[0]:y=(N+u[0])*w[0],ae.y<0?I=u[1]*w[1]:I=(L+u[1])*w[1],fe.x<0?f=u
       <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
       <input type="button" id="mapSubmit" value="Update"/>
       &nbsp;&nbsp;&nbsp;
-      Grid Snap:</span><input type="checkbox" id="snap_checkbox" class="></p>
-      
+      Grid Snap:</span><input type="checkbox" id="snap_checkbox"></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <div><i>GM-owned tokens give universal vision.</i></div>
