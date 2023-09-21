@@ -1,5 +1,11 @@
-import{O as e,C as t}from"./constants-4214fcbb.js";const s=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");s.innerHTML=`
+import{O as e,C as t}from"./constants-4214fcbb.js";const n=document.querySelector("#smoke-whatsnew"),s=document.querySelector("#smoke-whatsnew-notes");n.innerHTML=`
   <div>
+    <h1>Smoke & Spectre! 9/20</h1>
+    Added a toggle for the grid snapping, for those who don't want it.
+    </br>
+    Also added snapping to the polygon tool, because I apparently forgot.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 9/16</h1>
     Fixed a bug where the boundary input was going crazy if you changed the scale of the box.
     </br>
@@ -12,7 +18,7 @@ import{O as e,C as t}from"./constants-4214fcbb.js";const s=document.querySelecto
     'General Stability Fixes.'
     </br>
     </br>
-`;e.onReady(async()=>{n.innerHTML=`
+`;e.onReady(async()=>{s.innerHTML=`
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
