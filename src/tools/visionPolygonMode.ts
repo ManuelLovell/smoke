@@ -1,5 +1,6 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve, buildLabel, buildShape } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/constants";
+import { sceneCache } from "../utilities/globals";
 
 let interaction: [any, any] | [any] | null = null;
 let finishLabelId = "";
@@ -144,10 +145,39 @@ function onToolMove(_: ToolContext, event: ToolEvent)
         return;
 
     // Update the end position of the interaction when the tool moves
+    
     const [update] = interaction;
+    // Snap to the grid with light sensitivity
+    const snapVar = Math.round(sceneCache.gridDpi / sceneCache.gridSnap);
+    const nearGridX = Math.round(event.pointerPosition.x / sceneCache.gridDpi) * sceneCache.gridDpi;
+    const nearGridY = Math.round(event.pointerPosition.y / sceneCache.gridDpi) * sceneCache.gridDpi;
+    const absoluteX = Math.abs(nearGridX - event.pointerPosition.x);
+    const absoluteY = Math.abs(nearGridY - event.pointerPosition.y);
+
+    let snapPositionX: number;
+    let snapPositionY: number;
+
+    if (absoluteX <= snapVar)
+    {
+        snapPositionX = nearGridX;
+    }
+    else
+    {
+        snapPositionX = event.pointerPosition.x;
+    }
+
+    if (absoluteY <= snapVar)
+    {
+        snapPositionY = nearGridY;
+    }
+    else
+    {
+        snapPositionY = event.pointerPosition.y;
+    }
     update((polygon: Curve) =>
     {
-        polygon.points[polygon.points.length - 1] = event.pointerPosition;
+        //polygon.points[polygon.points.length - 1] = event.pointerPosition;
+        polygon.points[polygon.points.length - 1] = sceneCache.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
     });
 }
 

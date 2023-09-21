@@ -13,6 +13,7 @@ class SceneCash
     gridSnap: number;
     fog: Fog;
     ready: boolean;
+    snap: boolean;
 
     constructor()
     {
@@ -27,6 +28,7 @@ class SceneCash
         this.gridSnap = 10;
         this.fog = {filled: false, style: { color: "white", strokeWidth: 0}};
         this.ready = false;
+        this.snap = true;
     }
 };
 

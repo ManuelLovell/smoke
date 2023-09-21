@@ -8,6 +8,12 @@ const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 whatsnew.innerHTML = `
   <div>
+    <h1>Smoke & Spectre! 9/20</h1>
+    Added a toggle for the grid snapping, for those who don't want it.
+    </br>
+    Also added snapping to the polygon tool, because I apparently forgot.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 9/16</h1>
     Fixed a bug where the boundary input was going crazy if you changed the scale of the box.
     </br>

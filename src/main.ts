@@ -15,7 +15,7 @@ app.innerHTML = `
   <div>
     <div>
       <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;</div>
-      <input type="checkbox" id="vision_checkbox" class="large">
+      <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
       <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;
     </div>
     <hr>
@@ -23,7 +23,10 @@ app.innerHTML = `
       <p><span id="map_size">Boundary Size: 
       <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
       <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
-      <input type="button" id="mapSubmit" value="Update"/></span></p>
+      <input type="button" id="mapSubmit" value="Update"/>
+      &nbsp;&nbsp;&nbsp;
+      Grid Snap:</span><input type="checkbox" id="snap_checkbox" class="></p>
+      
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <div><i>GM-owned tokens give universal vision.</i></div>
@@ -62,6 +65,7 @@ app.innerHTML = `
 app.parentElement!.style.placeItems = "start";
 
 const visionCheckbox = document.getElementById("vision_checkbox")! as HTMLInputElement;
+const snapCheckbox = document.getElementById("snap_checkbox")! as HTMLInputElement;
 const table = document.getElementById("token_list")! as HTMLDivElement;
 const message = document.getElementById("no_tokens_message")! as HTMLParagraphElement;
 const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
@@ -86,6 +90,20 @@ async function setButtonHandler()
 
         const target = event.target as HTMLInputElement;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionEnabled`]: target.checked });
+    }, false);
+
+    snapCheckbox.checked = true;
+    // The visionCheckbox element is responsible for toggling vision updates
+    snapCheckbox.addEventListener("click", async (event: MouseEvent) =>
+    {
+        if (!sceneCache.ready || !event.target)
+        {
+            event.preventDefault();
+            return;
+        }
+
+        const target = event.target as HTMLInputElement;
+        sceneCache.snap = target.checked;
     }, false);
 }
 
@@ -199,6 +217,8 @@ async function initScene(playerRole: string): Promise<void>
     ]);
     await OBR.scene.items.deleteItems(sceneCache.items.filter(isVisionFog).map(x => x.id));
 
+    sceneCache.snap = true;
+    
     sceneCache.gridScale = sceneCache.gridScale.parsed.multiplier;
     sceneCache.fog = { filled: fogFilled, style: { color: fogColor, strokeWidth: 5 } };
 

@@ -187,7 +187,7 @@ function onToolMove(_: ToolContext, event: ToolEvent)
 
     update((line: Curve) =>
     {
-        line.points[line.points.length - 1] = { x: snapPositionX, y: snapPositionY };
+        line.points[line.points.length - 1] = sceneCache.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
     });
 }
 
