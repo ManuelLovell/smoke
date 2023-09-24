@@ -265,7 +265,7 @@ async function computeShadow(event: any)
     const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
     if (autodetectEnabled) {
         // draw a big box around all the maps
-        const maps = await OBR.scene.items.getItems((item) => item.layer === "MAP");
+        const maps:Image[] = await OBR.scene.items.getItems((item) => item.layer === "MAP");
 
         let mapbox = [];
         for (let map of maps) {
@@ -575,8 +575,13 @@ async function computeShadow(event: any)
       // Create a rect (around our fog area, needs autodetection or something), which we then carve out based on the path showing the currently visible area
       trailingFogRect.rect(offset[0], offset[1], size[0], size[1]);
     }
+
+    let reuseFog:Image[] = [];
+    if (persistenceEnabled) {
+        reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+    }
   
-    for (const key of Object.keys(itemsPerPlayer)) {
+    for (const key of Object.keys(itemsPerPlayer) as any) {
         const item = itemsPerPlayer[key];
 
         // TODO: how slow is this? is there a more efficient way?
@@ -587,11 +592,29 @@ async function computeShadow(event: any)
             return ([...new Uint8Array(hash)].map(x => x.toString(16).padStart(2, '0')).join(''));
         });
 
-        const dedup = await OBR.scene.local.getItems(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
+        // @ts-ignore
+        const dedup:Image[] = await OBR.scene.local.getItems(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
         if (dedup.length === 0) {
-            itemsToAdd.push({cmds: item.toCmds(), visible: false, zIndex: 3, playerId: tokensWithVision[key].id, digest: digest});
-            const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#FF0000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
+            if (persistenceEnabled && reuseFog.length > 0) {
+                // TODO: New code, not fully tested.
+                // This updates the existing paths in the scene rather than adding multiple local items.
+                // No general testing or performance testing has been done yet.
+                await OBR.scene.local.updateItems([reuseFog[0].id], (items) => {
+                    const pathBuilder = new PathKit.SkOpBuilder();
+                    let oldPath = PathKit.FromCmds(items[0].commands);
+                    pathBuilder.add(oldPath, PathKit.PathOp.UNION);
+                    pathBuilder.add(item, PathKit.PathOp.UNION);
+                    let newPath = pathBuilder.resolve();
+                    items[0].commands = newPath.toCmds();
+                    oldPath.delete();
+                    newPath.delete();
+                    pathBuilder.delete();
+                });
+            } else {
+                itemsToAdd.push({cmds: item.toCmds(), visible: false, zIndex: 3, playerId: tokensWithVision[key].id, digest: digest});
+            }
+            //const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#FF0000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
             //OBR.scene.local.addItems([debugp]);
         } else {
             // these duplicates are still visible, so dont delete them if we have persistence turned off.
@@ -599,7 +622,7 @@ async function computeShadow(event: any)
         }
 
         if (fowEnabled) {
-            const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
+            //const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
             //OBR.scene.local.addItems([debugp]);
 
             trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
@@ -609,6 +632,10 @@ async function computeShadow(event: any)
 
     // can this come from sceneCache?
     const oldTrailingFog = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>);
+
+    // what was i doing here? removing fog from other extensions?
+    // @ts-ignore
+    const oldFog = await OBR.scene.local.getItems((item) => isVisionFog(item) && dedup_digest[item.metadata[`${Constants.EXTENSIONID}/digest`]] === undefined);
 
     computeTimer.pause(); awaitTimer.resume();
     if (fowEnabled) {
@@ -648,9 +675,6 @@ async function computeShadow(event: any)
     }
     
     trailingFogRect.delete();
-
-    // Before we start adding and removing, get a list of fog items, excluding any that we detected as duplicates in the scene:
-    const oldFog = await OBR.scene.local.getItems((item) => isVisionFog(item) && dedup_digest[item.metadata[`${Constants.EXTENSIONID}/digest`]] === undefined);
 
     const promisesToExecute = [
         OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)),

@@ -73,6 +73,7 @@ const table = document.getElementById("token_list")! as HTMLDivElement;
 const message = document.getElementById("no_tokens_message")! as HTMLParagraphElement;
 const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
 const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
+const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
 const persistenceCheckbox = document.getElementById("persistence_checkbox")! as HTMLInputElement;
 const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HTMLInputElement;
 const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
@@ -140,6 +141,8 @@ async function setButtonHandler()
     }, false);
     
     resetButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+
         // TODO: isnt there a better way to do this?
         // Update the metadata to tell all the other players that they need to reset:
         OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: true });
