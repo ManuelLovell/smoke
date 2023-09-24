@@ -71,6 +71,13 @@ input
     padding: 2px;
 }
 
+.clr-field > button {
+    height: 16px !important;
+    width: 20px !important;
+    right: 2px !important;
+    margin-top: 2px !important;
+}
+
 .mysteryButton
 {
     vertical-align: middle;

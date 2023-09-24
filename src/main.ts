@@ -6,6 +6,9 @@ import { setupContextMenus, createMode, createTool, onSceneDataChange } from './
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
 
+import "@melloware/coloris/dist/coloris.css";
+import Coloris from "@melloware/coloris";
+
 // Create the extension page
 
 
@@ -29,7 +32,7 @@ app.innerHTML = `
       Grid Snap:</span><input type="checkbox" id="snap_checkbox"></p>
       <hr>
       <p>Persistence&nbsp;&nbsp;&nbsp;<input type="checkbox" id="persistence_checkbox">&nbsp;&nbsp;<input type="button" id="persistence_reset" value="Reset"></p>
-      <p>Fog of War&nbsp;&nbsp;&nbsp;<input type="checkbox" id="fow_checkbox">&nbsp;&nbsp;<input type="text" maxlength=7 size=4 id="fow_color" value="#000000"></p>
+      <p>Fog of War&nbsp;&nbsp;&nbsp;<input type="checkbox" id="fow_checkbox">&nbsp;&nbsp;<input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <div><i>GM-owned tokens give universal vision.</i></div>
@@ -81,6 +84,11 @@ const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
 const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
 const boundryOptions = document.getElementById("boundry_options")! as HTMLParagraphElement;
 
+Coloris.init();
+Coloris({themeMode: 'dark',
+        alpha: false,
+        el: "#fow_color",
+        });
 
 // const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
 // const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
