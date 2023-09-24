@@ -1,5 +1,13 @@
 import{O as e,C as t}from"./constants-4214fcbb.js";const n=document.querySelector("#smoke-whatsnew"),s=document.querySelector("#smoke-whatsnew-notes");n.innerHTML=`
   <div>
+    <h1>Smoke & Spectre! 9/24</h1>
+    Attaching tokens to a NOTE will let you toggle vision on/off via that Note's vision button.
+    </br>
+    Also added Blind.
+    </br>
+    You can thank Andrew.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 9/20</h1>
     Added a toggle for the grid snapping, for those who don't want it.
     </br>
