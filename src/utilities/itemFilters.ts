@@ -54,4 +54,10 @@ function isTrailingFog(item: Image) {
     return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`];
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog };
+function isFog(item: Image) { 
+    return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`] 
+        || item.metadata[`${Constants.EXTENSIONID}/isVisionFog`] 
+        || item.metadata[`${Constants.ARMINDOID}/isVisionFog`];
+}
+
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isFog };

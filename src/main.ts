@@ -1,7 +1,7 @@
 import "./css/style.css";
-import OBR, { Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { ItemFilter, Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
-import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog, isTrailingFog } from './utilities/itemFilters';
+import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog, isTrailingFog, isFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
@@ -156,7 +156,7 @@ async function setButtonHandler()
             // Remove existing fog, will be regenerated on update:
             await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowColor`]: target.value});
         
-            const fogItems = await OBR.scene.local.getItems(isTrailingFog) as Image[];
+            const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
             await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
         }
     
@@ -377,13 +377,10 @@ OBR.onReady(async () =>
         OBR.scene.onMetadataChange(async function(metadata) {
             // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
             if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
-                const fogItems = await OBR.scene.local.getItems((item) => { return (isVisionFog(item) || isTrailingFog(item)) });
+                const fogItems = await OBR.scene.local.getItems(isFog as ItemFilter<Image>);
                 OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
-        
-                // Remove items from previous extension versions too
-                const staleItems = await OBR.scene.items.getItems((item) => { return (isVisionFog(item) || isTrailingFog(item)) });
-                OBR.scene.items.deleteItems(staleItems.map((item) => { return item.id; }));
-        
+
+                // Force an update:
                 onSceneDataChange(true);
             }
         });
