@@ -1,7 +1,7 @@
 import "./css/style.css";
 import OBR, { Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
-import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog } from './utilities/itemFilters';
+import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog, isTrailingFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
@@ -16,16 +16,20 @@ app.innerHTML = `
     <div>
       <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;</div>
       <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
-      <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;
-    </div>
+      <div class="tooltip" id="settingsbutton" title="Settings">&#x2699;</div>
+      <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
     <hr>
     <div style="text-align: center;">
-      <p><span id="map_size">Boundary Size: 
+      <p>Autodetect Maps&nbsp;&nbsp;&nbsp;<input type="checkbox" id="autodetect_checkbox" checked></p>
+      <p id="boundry_options" style="display:none;"><span id="map_size">Boundary Size: 
       <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
       <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
       <input type="button" id="mapSubmit" value="Update"/>
       &nbsp;&nbsp;&nbsp;
       Grid Snap:</span><input type="checkbox" id="snap_checkbox"></p>
+      <hr>
+      <p>Persistence&nbsp;&nbsp;&nbsp;<input type="checkbox" id="persistence_checkbox">&nbsp;&nbsp;<input type="button" id="persistence_reset" value="Reset"></p>
+      <p>Fog of War&nbsp;&nbsp;&nbsp;<input type="checkbox" id="fow_checkbox">&nbsp;&nbsp;<input type="text" maxlength=7 size=4 id="fow_color" value="#000000"></p>
       <hr>
       <div class="visionTitle">Vision Radius</div>
       <div><i>GM-owned tokens give universal vision.</i></div>
@@ -69,7 +73,14 @@ const table = document.getElementById("token_list")! as HTMLDivElement;
 const message = document.getElementById("no_tokens_message")! as HTMLParagraphElement;
 const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
 const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
-const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
+const persistenceCheckbox = document.getElementById("persistence_checkbox")! as HTMLInputElement;
+const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HTMLInputElement;
+const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
+const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
+const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
+const boundryOptions = document.getElementById("boundry_options")! as HTMLParagraphElement;
+
+
 // const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
 // const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
 //   <span id="snap_degree">Snap Sensitity (1-10):
@@ -104,19 +115,69 @@ async function setButtonHandler()
         const target = event.target as HTMLInputElement;
         sceneCache.snap = target.checked;
     }, false);
+
+    
+    persistenceCheckbox.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/persistenceEnabled`]: target.checked});
+    }, false);
+  
+    autodetectCheckbox.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/autodetectEnabled`]: target.checked});
+        boundryOptions.style.display = target.checked ? 'none' : '';
+    }, false);
+    
+    fowCheckbox.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowEnabled`]: target.checked});
+    }, false);
+    
+    resetButton.addEventListener("click", async (event: MouseEvent) => {
+        // TODO: isnt there a better way to do this?
+        // Update the metadata to tell all the other players that they need to reset:
+        OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: true });
+        OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: undefined });
+    }, false);
+  
+    fowColor.addEventListener("input", async (event: Event) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        //let fowColor = "#000000";
+        const fogRegex = /#[a-f0-9]{6}/
+        if (fogRegex.test(target.value)) {
+            // Remove existing fog, will be regenerated on update:
+            await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowColor`]: target.value});
+        
+            const fogItems = await OBR.scene.local.getItems(isTrailingFog) as Image[];
+            await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
+        }
+    
+    }, false);
 }
 
 function updateUI(items: Image[])
 {
     const playersWithVision = items.filter(isTokenWithVision);
 
-    if (sceneCache.metadata)
+    if (sceneCache.metadata) {
         visionCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
+        autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
+        persistenceCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
+        autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
+        fowCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
+        fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#000000") as string;
+    }
 
-    if (playersWithVision.length > 0)
-        message.style.display = "none";
-    else
-        message.style.display = "block";
+    boundryOptions.style.display = autodetectCheckbox.checked ? "none" : "";
+    message.style.display = playersWithVision.length > 0 ? "none" : "block";
 
     const tokenTableEntries = document.getElementsByClassName("token-table-entry");
     const toRemove = [];
@@ -313,6 +374,20 @@ OBR.onReady(async () =>
             sceneCache.fog = fog;
         });
 
+        OBR.scene.onMetadataChange(async function(metadata) {
+            // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
+            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
+                const fogItems = await OBR.scene.local.getItems((item) => { return (isVisionFog(item) || isTrailingFog(item)) });
+                OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
+        
+                // Remove items from previous extension versions too
+                const staleItems = await OBR.scene.items.getItems((item) => { return (isVisionFog(item) || isTrailingFog(item)) });
+                OBR.scene.items.deleteItems(staleItems.map((item) => { return item.id; }));
+        
+                onSceneDataChange(true);
+            }
+        });
+      
         OBR.scene.items.onChange(async (items) =>
         {
             const iItems = items as Image[];
