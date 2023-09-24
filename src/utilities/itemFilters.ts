@@ -32,16 +32,24 @@ function isActiveVisionLine(item: Image)
         || (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] && !item.metadata[`${Constants.ARMINDOID}/disabled`]);
 }
 
-function isTokenWithVision(item: Image)
+function isTokenWithVisionForUI(item: Image)
 {
     return item.layer == "CHARACTER"
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
 }
 
+function isTokenWithVision(item: Image)
+{
+    return item.layer == "CHARACTER"
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
+        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
+}
+
 function isTokenWithVisionIOwn(item: Image)
 {
     return item.layer == "CHARACTER" && item.createdUserId == sceneCache.userId
-        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
+        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }
 
 function isBackgroundBorder(item: Image)
@@ -50,4 +58,4 @@ function isBackgroundBorder(item: Image)
         && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] || item.metadata[`${Constants.ARMINDOID}/isBackgroundImage`]);
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn };
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI };

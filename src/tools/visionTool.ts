@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, Shape } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, Item, Shape } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -34,24 +34,70 @@ export async function setupContextMenus(): Promise<void>
         ],
         async onClick(ctx)
         {
+            const enableFog = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/hasVision`] === undefined);
+
             await OBR.scene.items.updateItems(ctx.items, items =>
             {
                 for (const item of items)
                 {
-                    if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && item.layer == "CHARACTER")
+                    if (!enableFog)
                     {
                         delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
                     }
-                    else if (item.layer == "CHARACTER")
+                    else
                     {
                         item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                        if (!item.metadata[`${Constants.EXTENSIONID}/visionRange`])
+                        if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
                         {
                             item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
                         }
                     }
                 }
             });
+        },
+    });
+
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-groupvision-menu`,
+        icons: [
+            {
+                icon: "/no-vision.svg",
+                label: "Toggle Attachments Vision",
+                filter: {
+                    every: [{ key: "layer", value: "NOTE" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            if (ctx.items.length > 0)
+            {
+                const parentIds = ctx.items.map(x => x.id);
+                const attached = await OBR.scene.items.getItemAttachments(parentIds);
+                await OBR.scene.items.updateItems(attached, items =>
+                {
+                    for (const item of items)
+                    {
+                        if (parentIds.includes(item.attachedTo))
+                        {
+                            if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && item.layer == "CHARACTER")
+                            {
+                                delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
+                            }
+                            else if (item.layer == "CHARACTER")
+                            {
+                                item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
+                                if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
+                                {
+                                    item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
         },
     });
 
@@ -275,6 +321,7 @@ async function computeShadow(event: any)
     {
         // Clear fog
         await OBR.scene.local.deleteItems(localItems.filter(isVisionFog).map(fogItem => fogItem.id));
+        await OBR.scene.local.deleteItems(localItems.filter(isIndicatorRing).map(fogItem => fogItem.id));
         busy = false;
         return;
     }
@@ -508,7 +555,7 @@ async function computeShadow(event: any)
 
             const visionRange = sceneCache.gridDpi * (visionRangeMeta / sceneCache.gridScale + .5);
             const ellipse = PathKit.NewPath().ellipse(token.position.x, token.position.y, visionRange, visionRange, 0, 0, 2 * Math.PI);
-            itemsPerPlayer[i].op(ellipse, PathKit.PathOp.INTERSECT);
+            itemsPerPlayer[i]?.op(ellipse, PathKit.PathOp.INTERSECT);
             ellipse.delete();
 
             // Get Color for Players
@@ -590,7 +637,9 @@ export async function onSceneDataChange()
 
     const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
     const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id)
-        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]));
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
+        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`]);
+
     const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
     const backgroundImage = sceneCache.items.filter(isBackgroundBorder)?.[0] as any as Shape;

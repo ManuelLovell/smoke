@@ -1,7 +1,7 @@
 import "./css/style.css";
 import OBR, { Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
-import { isBackgroundBorder, isBackgroundImage, isTokenWithVision, isVisionFog } from './utilities/itemFilters';
+import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVisionFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
@@ -108,7 +108,7 @@ async function setButtonHandler()
 
 function updateUI(items: Image[])
 {
-    const playersWithVision = items.filter(isTokenWithVision);
+    const playersWithVision = items.filter(isTokenWithVisionForUI);
 
     if (sceneCache.metadata)
         visionCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
@@ -138,37 +138,65 @@ function updateUI(items: Image[])
             const name = tr.getElementsByClassName("token-name")[0] as HTMLTableRowElement;
             const rangeInput = tr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
             const unlimitedCheckbox = tr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
+            const blindCheckbox = tr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
 
             if (name) name.innerText = player.name;
             if (rangeInput)
             {
-                if (!unlimitedCheckbox.checked)
+                if (!unlimitedCheckbox.checked && !blindCheckbox.checked)
                     rangeInput.value = player.metadata[`${Constants.EXTENSIONID}/visionRange`] ? player.metadata[`${Constants.EXTENSIONID}/visionRange`] as string : Constants.VISIONDEFAULT;
             }
             if (unlimitedCheckbox)
             {
-                unlimitedCheckbox.checked = !player.metadata[`${Constants.EXTENSIONID}/visionRange`];
+                unlimitedCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionRange`] === 0;
             }
-            if (unlimitedCheckbox.checked)
+            if (blindCheckbox)
+            {
+                blindCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean;
+            }
+            if (unlimitedCheckbox.checked || blindCheckbox.checked)
                 rangeInput.setAttribute("disabled", "disabled");
             else
                 rangeInput.removeAttribute("disabled");
         }
         else
         {
+            const currentPlayer = sceneCache.items.find(x => x.id === player.id)!;
             // Create new item for this token
             const newTr = document.createElement("tr");
-            newTr.id = `tr-${player.id}`;
+            newTr.id = `tr-${currentPlayer.id}`;
             newTr.className = "token-table-entry";
-            newTr.innerHTML = `<td class="token-name">${player.name}</td><td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td><td>&nbsp;&nbsp;&infin;&nbsp<input type="checkbox" class="unlimited-vision"></td>`;
+            newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td><td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td><td>&nbsp;&nbsp;&infin;&nbsp<input type="checkbox" class="unlimited-vision">&nbsp;None <input type="checkbox" class="no-vision"></td>`;
             table.appendChild(newTr);
 
             // Register event listeners
             const rangeInput = newTr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
             const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
+            const blindCheckbox = newTr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
+
+            if (rangeInput)
+            {
+                if (!unlimitedCheckbox.checked && !blindCheckbox.checked)
+                    rangeInput.value = player.metadata[`${Constants.EXTENSIONID}/visionRange`] ? player.metadata[`${Constants.EXTENSIONID}/visionRange`] as string : Constants.VISIONDEFAULT;
+            }
+            if (unlimitedCheckbox)
+            {
+                unlimitedCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionRange`] === 0;
+            }
+            if (blindCheckbox)
+            {
+                blindCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean;
+            }
+            if (unlimitedCheckbox.checked || blindCheckbox.checked)
+                rangeInput.setAttribute("disabled", "disabled");
+            else
+                rangeInput.removeAttribute("disabled");
+
             rangeInput.addEventListener("change", async event =>
             {
                 if (!event || !event.target) return;
+                // Grab from scene to avoid a snapshot of the playerstate
+                const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
 
                 const target = event.target as HTMLInputElement;
                 const value = parseInt(target.value);
@@ -176,27 +204,55 @@ function updateUI(items: Image[])
                     target.value = "0";
                 if (value > 999)
                     target.value = "999";
-                await OBR.scene.items.updateItems([player], items =>
+                await OBR.scene.items.updateItems([thisPlayer], items =>
                 {
                     items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = value;
                 });
             }, false);
+
             unlimitedCheckbox.addEventListener("click", async event =>
             {
                 if (!event || !event.target) return;
+                // Grab from scene to avoid a snapshot of the playerstate
+                const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
 
                 let value = 0;
                 const target = event.target as HTMLInputElement;
                 if (target.checked)
+                {
                     rangeInput.setAttribute("disabled", "disabled");
+                    blindCheckbox.checked = false;
+                }
                 else
                 {
                     value = parseInt(rangeInput.value);
                     rangeInput.removeAttribute("disabled");
                 }
-                await OBR.scene.items.updateItems([player], items =>
+                await OBR.scene.items.updateItems([thisPlayer], items =>
                 {
                     items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = value;
+                });
+            }, false);
+
+            blindCheckbox.addEventListener("click", async event =>
+            {
+                if (!event || !event.target) return;
+                // Grab from scene to avoid a snapshot of the playerstate
+                const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+
+                const target = event.target as HTMLInputElement;
+                if (target.checked)
+                {
+                    rangeInput.setAttribute("disabled", "disabled");
+                    unlimitedCheckbox.checked = false;
+                }
+                else
+                {
+                    rangeInput.removeAttribute("disabled");
+                }
+                await OBR.scene.items.updateItems([thisPlayer], items =>
+                {
+                    items[0].metadata[`${Constants.EXTENSIONID}/visionBlind`] = target.checked;
                 });
             }, false);
         }
@@ -217,7 +273,7 @@ async function initScene(playerRole: string): Promise<void>
     await OBR.scene.items.deleteItems(sceneCache.items.filter(isVisionFog).map(x => x.id));
 
     sceneCache.snap = true;
-    
+
     sceneCache.gridScale = sceneCache.gridScale.parsed.multiplier;
     sceneCache.fog = { filled: fogFilled, style: { color: fogColor, strokeWidth: 5 } };
 
