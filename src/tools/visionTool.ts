@@ -596,7 +596,7 @@ async function computeShadow(event: any)
         const dedup:Image[] = await OBR.scene.local.getItems(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
         if (dedup.length === 0) {
-            if (persistenceEnabled && reuseFog.length > 0) {
+            if (false && persistenceEnabled && reuseFog.length > 0) {
                 // TODO: New code, not fully tested.
                 // This updates the existing paths in the scene rather than adding multiple local items.
                 // No general testing or performance testing has been done yet.
