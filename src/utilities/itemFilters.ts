@@ -32,16 +32,24 @@ function isActiveVisionLine(item: Image)
         || (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] && !item.metadata[`${Constants.ARMINDOID}/disabled`]);
 }
 
-function isTokenWithVision(item: Image)
+function isTokenWithVisionForUI(item: Image)
 {
     return item.layer == "CHARACTER"
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
 }
 
+function isTokenWithVision(item: Image)
+{
+    return item.layer == "CHARACTER"
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
+        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
+}
+
 function isTokenWithVisionIOwn(item: Image)
 {
     return item.layer == "CHARACTER" && item.createdUserId == sceneCache.userId
-        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
+        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
+        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }
 
 function isBackgroundBorder(item: Image)
@@ -54,10 +62,11 @@ function isTrailingFog(item: Image) {
     return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`];
 }
 
-function isFog(item: Image) { 
+function isAnyFog(item: Image) { 
     return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`] 
         || item.metadata[`${Constants.EXTENSIONID}/isVisionFog`] 
-        || item.metadata[`${Constants.ARMINDOID}/isVisionFog`];
+        || item.metadata[`${Constants.ARMINDOID}/isVisionFog`]
+        || item.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`];
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isFog };
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog };
