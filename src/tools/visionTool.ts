@@ -578,7 +578,6 @@ async function computeShadow(event: any)
             playerShadowCache.cacheValue(player.id, { shadowPath: path.copy(), player: player });
         }
     }
-    const oldRings = await OBR.scene.local.getItems(isIndicatorRing as ItemFilter<Image>);
 
     // *3rd step* - compute vision ranges
     // Create vision circles that cut each player's fog
@@ -610,13 +609,18 @@ async function computeShadow(event: any)
             }
         }
     }
+    
+    // *4th step* - persistent and trailing fog
 
     const itemsToAdd = [];
     const persistenceEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true;
     const fowEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] === true;
     const trailingFogRect = PathKit.NewPath();
     const dedup_digest = {} as any;
-  
+    const localItemCache = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+    const oldRings = await OBR.scene.local.getItems(isIndicatorRing as ItemFilter<Image>);
+    const promisesToExecute = [];
+
     if (fowEnabled) {
       // Create a rect (around our fog area, needs autodetection or something), which we then carve out based on the path showing the currently visible area
       trailingFogRect.rect(offset[0], offset[1], size[0], size[1]);
@@ -624,7 +628,8 @@ async function computeShadow(event: any)
 
     let reuseFog:Image[] = [];
     if (persistenceEnabled) {
-        reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+        // This doesnt work yet:
+        // reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
     }
   
     for (const key of Object.keys(itemsPerPlayer) as any) {
@@ -639,7 +644,7 @@ async function computeShadow(event: any)
         });
 
         // @ts-ignore
-        const dedup:Image[] = await OBR.scene.local.getItems(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
+        const dedup:Image[] = localItemCache.filter(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
         if (dedup.length === 0) {
             if (false && persistenceEnabled && reuseFog.length > 0) {
@@ -676,14 +681,15 @@ async function computeShadow(event: any)
         item.delete();
     }
 
-    // can this come from sceneCache?
-    const oldTrailingFog = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>);
+    const oldTrailingFog = localItemCache.filter(isTrailingFog);
 
-    // what was i doing here? removing fog from other extensions?
-    // @ts-ignore
-    const oldFog = await OBR.scene.local.getItems((item) => isVisionFog(item) && dedup_digest[item.metadata[`${Constants.EXTENSIONID}/digest`]] === undefined);
+    // Performance optimisation: This detects fog items that were already created previously in the scene by earlier iterations of the fog path rendering, and effectively skips their creation/deletion.
+    // Hard to measure the impact, however it appears to cut about 20ms per token that didnt move since we last updated the fog.
+    const oldFog = localItemCache.filter((item) => {
+        const dedup_index = item.metadata[`${Constants.EXTENSIONID}/digest`] as string;
+        return isVisionFog(item) && dedup_digest[dedup_index] === undefined; 
+    });
 
-    computeTimer.pause(); awaitTimer.resume();
     if (fowEnabled) {
         const fowColor = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#000000") as string;
         const trailingFog = buildPath()
@@ -700,9 +706,7 @@ async function computeShadow(event: any)
             .name("Trailing Fog")
             .build();
 
-        // TODO: does this work?
         trailingFog.disableHit = true;
-        trailingFog.zIndex = 0;
 
         if (oldTrailingFog.length > 0) {
             // If the old item exists in the scene, reuse it, otherwise you get flickering. 
@@ -713,24 +717,25 @@ async function computeShadow(event: any)
                 }
             }, false);
         } else {
-            await OBR.scene.local.addItems([trailingFog]);
+            promisesToExecute.push(OBR.scene.local.addItems([trailingFog]));
         }
     } else {
-        const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>);
-        await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
+        // FOW disabled, remove any existing trailing fog items:
+        promisesToExecute.push(OBR.scene.local.deleteItems(localItemCache.filter(isTrailingFog).map(fogItem => fogItem.id)));
     }
-    
     trailingFogRect.delete();
 
-    const promisesToExecute = [
-        OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)),
-        OBR.scene.local.addItems(itemsToAdd.map(item =>
-        {
+    // *5th step* - add/remove items
+
+    computeTimer.pause(); awaitTimer.resume();
+
+    promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
+    promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item => {
             const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
             path.zIndex = item.zIndex;
             return path;
         }))
-    ];
+    );
 
     if (!persistenceEnabled) {
         promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
@@ -796,17 +801,30 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
     const fowEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] === true;
     const fowColor = sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] as string;
-  
-    if (backgroundImage === undefined)
-        return;
 
-    //const dpiRatio = sceneCache.gridDpi / backgroundImage.grid.dpi;      const size = [backgroundImage.width * backgroundImage.scale.x, backgroundImage.height * backgroundImage.scale.y];
-    const size = [backgroundImage.width * backgroundImage.scale.x, backgroundImage.height * backgroundImage.scale.y];
-    const scale = [backgroundImage.scale.x, backgroundImage.scale.y];
-    const offset = [backgroundImage.position.x, backgroundImage.position.y];
+    const size:number[] = [];
+    const scale:number[] = [];
+    const offset:number[] = [];
 
-    // This fixes images being offset from the original position in the earlier versions, though doesnt apply to smoke
-    // const offset = [backgroundImage.position.x - (backgroundImage.grid.offset.x * dpiRatio), backgroundImage.position.y - (backgroundImage.grid.offset.y * dpiRatio)];
+    if (backgroundImage === undefined) {
+        size[0] = 0; 
+        size[1] = 0;
+        scale[0] = 1; 
+        scale[1] = 1;
+        offset[0] = 0; 
+        offset[1] = 0;
+    } else {
+        size[0] = backgroundImage.width * backgroundImage.scale.x;
+        size[1] = backgroundImage.height * backgroundImage.scale.y;
+        scale[0] = backgroundImage.scale.x;
+        scale[1] = backgroundImage.scale.y;
+        offset[0] = backgroundImage.position.x;
+        offset[1] = backgroundImage.position.y;
+
+        // This fixes images being offset from the original position in the earlier versions, though doesnt apply to smoke:
+        // const offset = [backgroundImage.position.x - (backgroundImage.grid.offset.x * dpiRatio), backgroundImage.position.y - (backgroundImage.grid.offset.y * dpiRatio)];
+    }
+
 
     if (sceneCache.role == "GM")
     {

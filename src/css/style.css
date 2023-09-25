@@ -42,11 +42,13 @@
 }
 
 .tooltip {
-    position: relative;
-    font-size: larger;
-    float: right;
-    margin-right: 20px;
     cursor:pointer;
+    display: inline;
+}
+
+#vision_checkbox {
+    position: relative;
+    top: 2px;
 }
 
 .title {

@@ -15,57 +15,66 @@ import Coloris from "@melloware/coloris";
 // Find all Page Elements
 const app = document.getElementById('app')! as HTMLDivElement;
 app.innerHTML = `
-  <div>
+<div>
     <div>
-      <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;</div>
-      <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
-      <div class="tooltip" id="settingsbutton" title="Settings">&#x2699;</div>
-      <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
-    <hr>
-    <div style="text-align: center;">
-      <p>Autodetect Maps&nbsp;&nbsp;&nbsp;<input type="checkbox" id="autodetect_checkbox" checked></p>
-      <p id="boundry_options" style="display:none;"><span id="map_size">Boundary Size: 
-      <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
-      <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
-      <input type="button" id="mapSubmit" value="Update"/>
-      &nbsp;&nbsp;&nbsp;
-      Grid Snap:</span><input type="checkbox" id="snap_checkbox"></p>
-      <hr>
-      <p>Persistence&nbsp;&nbsp;&nbsp;<input type="checkbox" id="persistence_checkbox">&nbsp;&nbsp;<input type="button" id="persistence_reset" value="Reset"></p>
-      <p>Fog of War&nbsp;&nbsp;&nbsp;<input type="checkbox" id="fow_checkbox">&nbsp;&nbsp;<input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></p>
-      <hr>
-      <div class="visionTitle">Vision Radius</div>
-      <div><i>GM-owned tokens give universal vision.</i></div>
-      <p id="no_tokens_message">Enable vision on your character tokens.</p>
-      <div id="token_list_div" style="display: block;">
-        <table style="margin: auto; padding: 0;"><tbody id="token_list">
-        </tbody></table>
-      </div>
-      </div>
-      <hr>
-      <div class="visionTitle">Spectres!</div>
-      <div id="ghostContainer" style="display: block;">
-      <div id="spectreWarning"><i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i></br>
-      Enable vision here after it's been Spectred.</div>
-        <table style="margin: auto; padding: 0; width: 100%">
-        <colgroup>
-            <col style="width: 50%;">
-            <col style="width: 25%;">
-            <col style="width: 25%;">
-        </colgroup>
-        <tbody id="ghostList">
-        </tbody></table>
-    <div id="debug_div" style="display: none;">
-      <br><hr><br>
-      <h2>Debug</h2>
-      <h3>Performance Info</h3>
-      <ul>
-        <li><p>Compute time: <span id=compute_time>N/A</span></p></li>
-        <li><p>Communication time: <span id=communication_time>N/A</span></p></li>
-        <li><p>Cache hits/misses: <span id=cache_hits>?</span>/<span id=cache_misses>?</span></p></li>
-      </ul>
+        <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;
+        <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
+        <div class="tooltip" id="settings_button" title="Settings">&#x2699;</div>
+        <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
+        </div>
+        <br>
+        <hr>
+        <br>
+        <div style="text-align: centre;">
+        <div id="settings-ui" style="width: 100%; display: none; text-align:left; grid-template-columns: 10% 65% auto;">
+            <div class="visionTitle" style=" text-align:center; grid-column: span 3;">Settings</div>
+            <div><input type="checkbox" id="autodetect_checkbox" checked></div><div style="grid-column: span 2;"><label for="autodetect_checkbox">Autodetect Maps</label></div>
+            <div id="boundry_options" style="display:none; grid-column: span 3;">
+                <span id="map_size">Boundary Size: 
+                    <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
+                    <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
+                    <input type="button" id="mapSubmit" value="Update"/>
+                    &nbsp;&nbsp;&nbsp;
+                </span>
+            </div>
+            <div><input type="checkbox" id="snap_checkbox"></div><div style="grid-column: span 2;"><label for="snap_checkbox">Grid Snap</label></div>
+            <div><input type="checkbox" id="persistence_checkbox"></div><div><label for="persistence_checkbox">Persistence</label></div><div><input type="button" id="persistence_reset" value="Reset"></div>
+            <div><input type="checkbox" id="fow_checkbox"></div><div><label for="fow_checkbox">Trailing Fog</label></div><div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
+            <div>&nbsp;</div><div>Convert from <i>Dynamic Fog</i></div><div><input type="button" id="convert_button" value="Convert"></div>
+        </div>
+        <div id="main-ui" style="display: grid; grid-template-columns: 10% 50% auto;">
+            <div class="visionTitle" style="grid-column: span 3;">Vision Radius</div>
+            <div style="grid-column: span 3;"><i>GM-owned tokens give universal vision.</i></div>
+            <p style="grid-column: span 3;" id="no_tokens_message">Enable vision on your character tokens.</p>
+            <div id="token_list_div" style="grid-column: span 3; border-bottom: 1px solid white; padding-bottom: 8px;">
+                <table style="margin: auto; padding: 0;"><tbody id="token_list">
+                </tbody></table>
+            </div>
+            <div class="visionTitle" style="grid-column: span 3;">Spectres!</div>
+            <div id="ghostContainer" style="grid-column: span 3;">
+                <div id="spectreWarning"><i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i></br>
+                Enable vision here after it's been Spectred.</div>
+                <table style="margin: auto; padding: 0; width: 100%">
+                <colgroup>
+                    <col style="width: 50%;">
+                    <col style="width: 25%;">
+                    <col style="width: 25%;">
+                </colgroup>
+                <tbody id="ghostList">
+                </tbody></table>
+            </div> 
+        </div>
+        <div id="debug_div" style="display: none;">
+        <br><hr><br>
+        <h2>Debug</h2>
+        <h3>Performance Info</h3>
+        <ul>
+            <li><p>Compute time: <span id=compute_time>N/A</span></p></li>
+            <li><p>Communication time: <span id=communication_time>N/A</span></p></li>
+            <li><p>Cache hits/misses: <span id=cache_hits>?</span>/<span id=cache_misses>?</span></p></li>
+        </ul>
     </div>
-  </div>
+</div>
 `;
 
 app.parentElement!.style.placeItems = "start";
@@ -82,7 +91,11 @@ const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HT
 const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
 const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
 const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
-const boundryOptions = document.getElementById("boundry_options")! as HTMLParagraphElement;
+const convertButton = document.getElementById("convert_button")! as HTMLInputElement;
+const settingsButton = document.getElementById("settings_button")! as HTMLInputElement;
+const settingsUIDiv = document.getElementById("settings-ui")! as HTMLDivElement;
+const mainUIDiv = document.getElementById("main-ui")! as HTMLDivElement;
+const boundryOptions = document.getElementById("boundry_options")! as HTMLDivElement;
 
 Coloris.init();
 Coloris({themeMode: 'dark',
@@ -125,7 +138,18 @@ async function setButtonHandler()
         sceneCache.snap = target.checked;
     }, false);
 
-    
+    settingsButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+
+        if (settingsUIDiv.style.display === "grid") {
+            settingsUIDiv.style.display = "none";
+            mainUIDiv.style.display = "grid";
+        } else {
+            settingsUIDiv.style.display = "grid";
+            mainUIDiv.style.display = "none";
+        }
+    }, false);
+      
     persistenceCheckbox.addEventListener("click", async (event: MouseEvent) => {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
@@ -139,6 +163,13 @@ async function setButtonHandler()
 
         await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/autodetectEnabled`]: target.checked});
         boundryOptions.style.display = target.checked ? 'none' : '';
+
+        if (!target.checked) {
+            let drawing = createBackgroundBorder();
+            if (drawing) {
+                await OBR.scene.items.addItems([drawing]);
+            }
+        }
     }, false);
     
     fowCheckbox.addEventListener("click", async (event: MouseEvent) => {
@@ -170,8 +201,41 @@ async function setButtonHandler()
             const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
             await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
         }
-    
     }, false);
+
+    convertButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+
+        if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?")) {
+            const metadata = await OBR.scene.getMetadata();
+            console.log(metadata);
+            for (const meta in metadata) {
+                // Remove the old scene metadata, we dont need any of it
+                if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID) {
+                    OBR.scene.setMetadata({[`${meta}`]: undefined });
+                }
+            }
+
+            const convert_items = await OBR.scene.items.getItems();//isAnyFog as ItemFilter<Image>);
+            const itemsToRemove: Image[] = [];
+            console.log(convert_items);
+
+            await OBR.scene.items.updateItems(convert_items, items =>
+            {
+                for (const item of items)
+                {
+                    if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined) {
+                        // play nice here, dont break dyn fog's lines, despite what we said in the warning
+                        item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
+                    }
+                    if (item.metadata[`${Constants.ARMINDOID}/disabled`] !== undefined) {
+                        item.metadata[`${Constants.EXTENSIONID}/disabled`] = item.metadata[`${Constants.ARMINDOID}/disabled`];
+                    }
+                }
+            });
+        }
+    }, false);
+
 }
 
 function updateUI(items: Image[])
@@ -331,6 +395,19 @@ function updateUI(items: Image[])
     }
 }
 
+function createBackgroundBorder() {
+    // this should change, we should initialize this based on autodetect during scene meta updates
+    let drawing = undefined;
+    if (sceneCache.items.filter(isBackgroundBorder).length == 0)
+    {
+        drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
+        drawing.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
+        drawing.id = Constants.GRIDID;
+        sceneCache.items.push(drawing);
+    }
+    return drawing;
+}
+
 async function initScene(playerRole: string): Promise<void>
 {
     let fogFilled, fogColor;
@@ -358,13 +435,14 @@ async function initScene(playerRole: string): Promise<void>
         image = images[areas.indexOf(Math.max(...areas))];
     }
 
-    let drawing = undefined;
-    if (sceneCache.items.filter(isBackgroundBorder).length == 0)
-    {
-        drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
-        drawing.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
-        drawing.id = Constants.GRIDID;
-        sceneCache.items.push(drawing);
+    let drawing;
+
+    // turn map autodetect on by default:
+    if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === undefined) {
+        autodetectCheckbox.checked = true;
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/autodetectEnabled`]: true});
+    } else if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === false) {
+        drawing = createBackgroundBorder();
     }
 
     if (playerRole == "GM")
@@ -441,17 +519,6 @@ OBR.onReady(async () =>
             sceneCache.fog = fog;
         });
 
-        OBR.scene.onMetadataChange(async function(metadata) {
-            // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
-            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
-                const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-                OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
-
-                // Force an update:
-                onSceneDataChange(true);
-            }
-        });
-      
         OBR.scene.items.onChange(async (items) =>
         {
             const iItems = items as Image[];
@@ -488,9 +555,18 @@ OBR.onReady(async () =>
 
         OBR.scene.onMetadataChange(async (metadata) =>
         {
-            sceneCache.metadata = metadata;
-            if (sceneCache.ready)
-                await onSceneDataChange();
+            // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
+            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
+                const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+                OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
+
+                // Force an update:
+                onSceneDataChange(true);
+            } else {
+                sceneCache.metadata = metadata;
+                if (sceneCache.ready)
+                    await onSceneDataChange();
+            }
         });
 
         OBR.scene.onReadyChange(async (ready) =>
