@@ -214,7 +214,7 @@ input.token-vision-range {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    max-width: 10em;
+    max-width: 9em;
     vertical-align: middle;
 }
 
