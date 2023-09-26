@@ -5,6 +5,7 @@ import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVision
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
+import { updateMaps, importFog } from "./tools/import";
 
 import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
@@ -26,9 +27,9 @@ app.innerHTML = `
         <hr>
         <br>
         <div style="text-align: centre;">
-        <div id="settings-ui" style="width: 100%; display: none; text-align:left; grid-template-columns: 10% 65% auto;">
+        <div id="settings-ui" style="width: 100%; display: none; text-align:left; grid-template-columns: 60% 10% auto;">
             <div class="visionTitle" style=" text-align:center; grid-column: span 3;">Settings</div>
-            <div><input type="checkbox" id="autodetect_checkbox" checked></div><div style="grid-column: span 2;"><label for="autodetect_checkbox">Autodetect Maps</label></div>
+            <div><label for="autodetect_checkbox">Autodetect Maps</label></div><div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
             <div id="boundry_options" style="display:none; grid-column: span 3;">
                 <span id="map_size">Boundary Size: 
                     <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
@@ -37,10 +38,18 @@ app.innerHTML = `
                     &nbsp;&nbsp;&nbsp;
                 </span>
             </div>
-            <div><input type="checkbox" id="snap_checkbox"></div><div style="grid-column: span 2;"><label for="snap_checkbox">Grid Snap</label></div>
-            <div><input type="checkbox" id="persistence_checkbox"></div><div><label for="persistence_checkbox">Persistence</label></div><div><input type="button" id="persistence_reset" value="Reset"></div>
-            <div><input type="checkbox" id="fow_checkbox"></div><div><label for="fow_checkbox">Trailing Fog</label></div><div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
-            <div>&nbsp;</div><div>Convert from <i>Dynamic Fog</i></div><div><input type="button" id="convert_button" value="Convert"></div>
+            <div><label for="snap_checkbox">Grid Snap</label></div><div style="grid-column: span 2;"><input type="checkbox" id="snap_checkbox"></div>
+            <div><label for="persistence_checkbox">Persistence</label></div><div><input type="checkbox" id="persistence_checkbox"></div><div><input type="button" id="persistence_reset" value="Reset"></div>
+            <div><label for="fow_checkbox">Trailing Fog</label></div><div><input type="checkbox" id="fow_checkbox"></div><div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
+            <div>Convert from <i>Dynamic Fog</i></div><div>&nbsp;</div><div><input type="button" id="convert_button" value="Convert"></div>
+            
+            <div class="visionTitle" style="text-align:center; grid-column: span 3; margin-top: 16px;">Import</div>
+            <div style="grid-column: span 3; margin-bottom: 16px; text-align: center;">Import JSON files with fog data from<br><a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a> and other tools.</div>
+            <div>File Format</div><div></div><div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
+            <div><label for="dpi_autodetect">DPI Autodetect</label></div><div><input type="checkbox" id="dpi_autodetect" checked></div><div><input id="import_dpi" disabled type="text" value="150" size="1" maxlength="4"></div>
+            <div style="margin-bottom: 8px;">Map Alignment</div><div></div><div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
+            <div><input id="import_file" style="width: 190px;" type="file"></div><div></div><div><input style="padding: 6px" type="button" id="import_button" value="Import" disabled></div>
+            <div id="import_errors" style="grid-column: span 3;"></div>
         </div>
         <div id="main-ui" style="display: grid; grid-template-columns: 10% 50% auto;">
             <div class="visionTitle" style="grid-column: span 3;">Vision Radius</div>
@@ -79,6 +88,9 @@ app.innerHTML = `
 
 app.parentElement!.style.placeItems = "start";
 
+// Main UI
+const mainUIDiv = document.getElementById("main-ui")! as HTMLDivElement;
+const settingsUIDiv = document.getElementById("settings-ui")! as HTMLDivElement;
 const visionCheckbox = document.getElementById("vision_checkbox")! as HTMLInputElement;
 const snapCheckbox = document.getElementById("snap_checkbox")! as HTMLInputElement;
 const table = document.getElementById("token_list")! as HTMLDivElement;
@@ -86,6 +98,8 @@ const message = document.getElementById("no_tokens_message")! as HTMLParagraphEl
 const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
 const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
 const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
+
+// Settings
 const persistenceCheckbox = document.getElementById("persistence_checkbox")! as HTMLInputElement;
 const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HTMLInputElement;
 const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
@@ -93,9 +107,16 @@ const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
 const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
 const convertButton = document.getElementById("convert_button")! as HTMLInputElement;
 const settingsButton = document.getElementById("settings_button")! as HTMLInputElement;
-const settingsUIDiv = document.getElementById("settings-ui")! as HTMLDivElement;
-const mainUIDiv = document.getElementById("main-ui")! as HTMLDivElement;
 const boundryOptions = document.getElementById("boundry_options")! as HTMLDivElement;
+
+// Import
+const importButton = document.getElementById("import_button")! as HTMLInputElement;
+const importFile = document.getElementById("import_file")! as HTMLInputElement;
+const mapAlign = document.getElementById("map_align") as HTMLSelectElement;
+const importErrors = document.getElementById("import_errors") as HTMLDivElement;
+const dpiAutodetect = document.getElementById("dpi_autodetect")! as HTMLInputElement;
+const importDpi = document.getElementById("import_dpi")! as HTMLInputElement;
+const importFormat = document.getElementById("import_format")! as HTMLSelectElement;
 
 Coloris.init();
 Coloris({themeMode: 'dark',
@@ -235,6 +256,66 @@ async function setButtonHandler()
             });
         }
     }, false);
+
+    // TODO: this is a hack, need to pass json between different functions
+    var importObject: any;
+
+    importFile.addEventListener("change", async (event: Event) => {
+        type FileEventTarget = EventTarget & { files: FileList };
+        importButton.disabled = true;
+
+        if (!event || !event.target) return;
+        const target = event.target as FileEventTarget;
+        
+        if (!target.files) return;
+        const file = target.files[0];
+        
+        if(file.type !== "text/javascript" && file.type !== "application/x-javascript") { 
+            // importErrors.innerText = "Wrong file type " + file.type;
+            // return;
+            // do we care? this is likely browser specific
+        }
+        
+        if (file) {
+            type ReadFileTarget = EventTarget & { result: string };
+            var readFile = new FileReader();
+            readFile.onload = function(event: Event) { 
+                if (!event || !event.target) {
+                    importErrors.innerText = "Invalid import event";
+                    return;
+                }
+                const target = event.target as ReadFileTarget;
+                if (!target.result) {
+                    importErrors.innerText = "Unable to read imported file";
+                    return;
+                }
+                const fileContent = target.result;
+                importObject = JSON.parse(fileContent);
+                if (importObject && importObject.walls && importObject.walls.length) {
+                    // Good to go:
+                    importButton.disabled = false;
+                } else {
+                    importErrors.innerText = "Imported file has no walls";
+                }
+            };
+            readFile.readAsText(file);
+        } else { 
+            importErrors.innerText = "Failed to load file";
+        }
+    });
+
+        
+    importButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        if (importFormat.value == "foundry") {
+            importFog(importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value, importErrors);
+        } else {
+            importErrors.innerText = 'UniversalVTT coming soon!';
+        }
+    }, false);
+    
 
 }
 
@@ -525,7 +606,10 @@ OBR.onReady(async () =>
             sceneCache.items = iItems;
             if (sceneCache.ready)
             {
-                if (role == "GM") updateUI(iItems);
+                if (role == "GM") {
+                    updateUI(iItems);
+                    await updateMaps(mapAlign);
+                }
                 await onSceneDataChange();
             }
         });
@@ -586,6 +670,7 @@ OBR.onReady(async () =>
         {
             initScene(role);
             await onSceneDataChange();
+            if (role == "GM") await updateMaps(mapAlign);
         }
         else if (role == "GM")
             updateUI([]);
