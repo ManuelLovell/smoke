@@ -291,7 +291,9 @@ async function setButtonHandler()
                 }
                 const fileContent = target.result;
                 importObject = JSON.parse(fileContent);
-                if (importObject && importObject.walls && importObject.walls.length) {
+
+                // do we really need to validate this here? can do it inside the import functions for each vtt
+                if (importObject && ((importObject.walls && importObject.walls.length) || (importObject.line_of_sight && importObject.line_of_sight.length))) {
                     // Good to go:
                     importButton.disabled = false;
                 } else {
@@ -309,11 +311,7 @@ async function setButtonHandler()
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        if (importFormat.value == "foundry") {
-            importFog(importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value, importErrors);
-        } else {
-            importErrors.innerText = 'UniversalVTT coming soon!';
-        }
+        importFog(importFormat.value, importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value, importErrors);
     }, false);
     
 
