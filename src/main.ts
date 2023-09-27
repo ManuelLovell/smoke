@@ -51,7 +51,7 @@ app.innerHTML = `
 
             <div><label for="fow_checkbox">Trailing Fog</label></div>
             <div><input type="checkbox" id="fow_checkbox"></div>
-            <div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
+            <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
 
             <div>Convert from <i>Dynamic Fog</i></div>
             <div></div>
@@ -155,10 +155,6 @@ const importDpi = document.getElementById("import_dpi")! as HTMLInputElement;
 const importFormat = document.getElementById("import_format")! as HTMLSelectElement;
 
 Coloris.init();
-Coloris({themeMode: 'dark',
-        alpha: false,
-        el: "#fow_color",
-        });
 
 // const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
 // const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
@@ -264,7 +260,7 @@ async function setButtonHandler()
         const target = event.target as HTMLInputElement;
 
         //let fowColor = "#000000";
-        const fogRegex = /#[a-f0-9]{6}/
+        const fogRegex = /#[a-f0-9]{8}/
         if (fogRegex.test(target.value)) {
             // Remove existing fog, will be regenerated on update:
             await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowColor`]: target.value});
@@ -378,7 +374,7 @@ function updateUI(items: Image[])
         persistenceCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
         autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
         fowCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
-        fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#000000") as string;
+        fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
     }
 
     boundryOptions.style.display = autodetectCheckbox.checked ? "none" : "";
@@ -608,6 +604,13 @@ async function initScene(playerRole: string): Promise<void>
         };
 
         updateUI(sceneCache.items);
+
+        Coloris({
+            themeMode: 'dark',
+            alpha: true,
+            forceAlpha: true,
+            el: "#fow_color",
+        });
 
         // If an image is decided on, update it's metadata to be the chosen one
         if (image !== undefined)

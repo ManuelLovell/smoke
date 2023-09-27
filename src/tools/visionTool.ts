@@ -700,14 +700,21 @@ async function computeShadow(event: any)
     });
 
     if (fowEnabled) {
-        const fowColor = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#000000") as string;
+        let fowColor = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
+        let fowOpacity = 0.5;
+        if (fowColor.length == 9) {
+            console.log(fowColor.substring(7));
+            fowOpacity = Number.parseInt(fowColor.substring(7), 16) / 255;
+            fowColor = fowColor.substring(0, 7);
+        }
+
         const trailingFog = buildPath()
             .commands(trailingFogRect.toCmds())
             .locked(true)
             .fillRule("evenodd")
             .visible(true)
             .fillColor(fowColor)
-            .fillOpacity(0.5)
+            .fillOpacity(fowOpacity)
             .strokeWidth(0)
             .strokeColor("#000000")
             .layer("DRAWING")

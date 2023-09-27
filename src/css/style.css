@@ -262,7 +262,7 @@ li>p {
     text-align:left;
 
     display: grid;
-    grid-template-columns: 60% 10% auto;
+    grid-template-columns: 60% 8% auto;
 }
 
 .grid-debug {
