@@ -18,10 +18,11 @@ const app = document.getElementById('app')! as HTMLDivElement;
 app.innerHTML = `
 <div>
     <div>
-        <div class="title">Smoke! ˣ Dynamic Fog&nbsp;&nbsp;
-        <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
-        <div class="tooltip" id="settings_button" title="Settings">&#x2699;</div>
-        <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
+        <div class="title">
+            Smoke! ˣ Dynamic Fog
+            <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
+            <div class="tooltip" id="settings_button" title="Settings">&#x2699;</div>
+            <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
         </div>
         <br>
         <hr>
@@ -108,7 +109,7 @@ app.innerHTML = `
         </div>
 
         <div id="debug_div" style="display: none;" class="grid-debug">
-            <div class="visionTitle grid-2" style="margin-top: 16px">Performance Info</div>
+            <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
             <div>Compute time</div><div id="compute_time">N/A</div>
             <div>Communication time</div><div id="communication_time">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
