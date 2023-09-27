@@ -267,7 +267,11 @@ function updatePerformanceInformation(performanceInfo: { [key: string]: any }): 
     for (const [key, value] of Object.entries(performanceInfo))
     {
         const element = document.getElementById(key);
-        if (element) element.innerText = value;
+        if (key == "compute_time" || key == "communication_time") {
+            if (element) element.innerText = Number.parseFloat(value).toFixed(1) + 'ms';
+        } else {
+            if (element) element.innerText = value;
+        }
     }
 }
 
@@ -376,6 +380,7 @@ async function computeShadow(event: any)
     const polygons: Polygon[][] = [];
     const playerRings: Shape[] = [];
     const gmIds = sceneCache.players.filter(x => x.role == "GM");
+    let lineCounter: number = 0, skipCounter: number = 0;
     for (const token of tokensWithVision)
     {
         const myToken = (sceneCache.userId === token.createdUserId);
@@ -388,6 +393,7 @@ async function computeShadow(event: any)
         {
             continue; // The result is cached and will be used later, no need to do work
         }
+
         for (const line of visionLines)
         {
             const signedDistance = (token.position.x - line.startPosition.x) * (line.endPosition.y - line.startPosition.y) - (token.position.y - line.startPosition.y) * (line.endPosition.x - line.startPosition.x);
@@ -400,9 +406,12 @@ async function computeShadow(event: any)
             // exclude any lines outside of the fog area
             // can pathkit do this better / faster?
             let lsx = line.startPosition.x, lsy = line.startPosition.y, lex = line.endPosition.x, ley = line.endPosition.y;
-            if ((lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]) && (lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1])) {
+            if ((lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]) || (lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1])) {
+                skipCounter++;
                 continue;
             }
+
+            lineCounter++;
 
             // *1st step* - compute the points in the polygon representing the shadow
             // cast by `line` from the point of view of `player`.
@@ -628,7 +637,8 @@ async function computeShadow(event: any)
 
     let reuseFog:Image[] = [];
     if (persistenceEnabled) {
-        // This doesnt work yet:
+        // Reuse the same localItem and change the path.
+        // This doesnt work (yet)
         // reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
     }
   
@@ -643,20 +653,19 @@ async function computeShadow(event: any)
             return ([...new Uint8Array(hash)].map(x => x.toString(16).padStart(2, '0')).join(''));
         });
 
-        // @ts-ignore
         const dedup:Image[] = localItemCache.filter(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
         if (dedup.length === 0) {
             if (false && persistenceEnabled && reuseFog.length > 0) {
-                // TODO: New code, not fully tested.
+                // TODO: New code, doesnt work in some cases, something is wrong with the path calculations.
                 // This updates the existing paths in the scene rather than adding multiple local items.
-                // No general testing or performance testing has been done yet.
                 await OBR.scene.local.updateItems([reuseFog[0].id], (items) => {
                     const pathBuilder = new PathKit.SkOpBuilder();
                     let oldPath = PathKit.FromCmds(items[0].commands);
                     pathBuilder.add(oldPath, PathKit.PathOp.UNION);
                     pathBuilder.add(item, PathKit.PathOp.UNION);
                     let newPath = pathBuilder.resolve();
+                    newPath.simplify();
                     items[0].commands = newPath.toCmds();
                     oldPath.delete();
                     newPath.delete();
@@ -753,12 +762,19 @@ async function computeShadow(event: any)
     // Update all items
     await Promise.all(promisesToExecute);
 
+    // this is expensive, but useful:
+    let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+    let itemCounter = items.length;
+
     const [awaitTimerResult, computeTimerResult] = [awaitTimer.stop(), computeTimer.stop()];
     updatePerformanceInformation({
         "compute_time": `${computeTimerResult} ms`,
         "communication_time": `${awaitTimerResult} ms`,
         "cache_hits": cacheHits,
         "cache_misses": cacheMisses,
+        "line_counter": lineCounter,
+        "skip_counter": skipCounter,
+        "item_counter": itemCounter
     });
 
     busy = false;

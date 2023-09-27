@@ -256,3 +256,28 @@ li>p {
     margin: 0;
     padding: 0;
 }
+
+.grid-settings {
+    width: 100%;
+    text-align:left;
+
+    display: grid;
+    grid-template-columns: 60% 10% auto;
+}
+
+.grid-debug {
+    width: 100%;
+    text-align:left;
+
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+
+.grid-3 {
+    text-align:center;
+    grid-column: span 3;
+}
+
+.grid-2 {
+    grid-column: span 2;
+}

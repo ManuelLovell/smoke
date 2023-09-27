@@ -25,12 +25,14 @@ app.innerHTML = `
         </div>
         <br>
         <hr>
-        <br>
         <div style="text-align: centre;">
-        <div id="settings-ui" style="width: 100%; display: none; text-align:left; grid-template-columns: 60% 10% auto;">
-            <div class="visionTitle" style=" text-align:center; grid-column: span 3;">Settings</div>
-            <div><label for="autodetect_checkbox">Autodetect Maps</label></div><div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
-            <div id="boundry_options" style="display:none; grid-column: span 3;">
+        <div id="settings-ui" class="grid-settings" style="display:none;">
+            <div class="visionTitle grid-3">Settings</div>
+
+            <div><label for="autodetect_checkbox">Autodetect Maps</label></div>
+            <div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
+
+            <div id="boundry_options" class="grid-3" style="display:none;">
                 <span id="map_size">Boundary Size: 
                     <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
                     <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
@@ -38,29 +40,60 @@ app.innerHTML = `
                     &nbsp;&nbsp;&nbsp;
                 </span>
             </div>
-            <div><label for="snap_checkbox">Grid Snap</label></div><div style="grid-column: span 2;"><input type="checkbox" id="snap_checkbox"></div>
-            <div><label for="persistence_checkbox">Persistence</label></div><div><input type="checkbox" id="persistence_checkbox"></div><div><input type="button" id="persistence_reset" value="Reset"></div>
-            <div><label for="fow_checkbox">Trailing Fog</label></div><div><input type="checkbox" id="fow_checkbox"></div><div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
-            <div>Convert from <i>Dynamic Fog</i></div><div>&nbsp;</div><div><input type="button" id="convert_button" value="Convert"></div>
-            
-            <div class="visionTitle" style="text-align:center; grid-column: span 3; margin-top: 16px;">Import</div>
-            <div style="grid-column: span 3; margin-bottom: 16px; text-align: center;">Import JSON files with fog data from<br><a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a> and other tools.</div>
-            <div>File Format</div><div></div><div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
-            <div><label for="dpi_autodetect">DPI Autodetect</label></div><div><input type="checkbox" id="dpi_autodetect" checked></div><div><input id="import_dpi" disabled type="text" value="150" size="1" maxlength="4"></div>
-            <div style="margin-bottom: 8px;">Map Alignment</div><div></div><div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
-            <div><input id="import_file" style="width: 190px;" type="file"></div><div></div><div><input style="padding: 6px" type="button" id="import_button" value="Import" disabled></div>
-            <div id="import_errors" style="grid-column: span 3;"></div>
+
+            <div><label for="snap_checkbox">Grid Snap</label></div>
+            <div class="grid-2"><input type="checkbox" id="snap_checkbox"></div>
+
+            <div><label for="persistence_checkbox">Persistence</label></div>
+            <div><input type="checkbox" id="persistence_checkbox"></div>
+            <div><input type="button" id="persistence_reset" value="Reset"></div>
+
+            <div><label for="fow_checkbox">Trailing Fog</label></div>
+            <div><input type="checkbox" id="fow_checkbox"></div>
+            <div><input type="text" maxlength="7" size="7" id="fow_color" value="#000000"></div>
+
+            <div>Convert from <i>Dynamic Fog</i></div>
+            <div></div>
+            <div><input type="button" id="convert_button" value="Convert"></div>
+
+            <div></div>
+            <div></div>
+            <div><input type="button" id="debug_button" value="Enable Debugging"></div>
+
+            <div class="visionTitle grid-3" style="margin-top: 16px;">Import</div>
+
+            <div class="grid-3" style="margin-bottom: 16px;">Import JSON files with fog data from<br><a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a> and other tools.</div>
+
+            <div>File Format</div>
+            <div></div>
+            <div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
+
+            <div><label for="dpi_autodetect">DPI Autodetect</label></div>
+            <div><input type="checkbox" id="dpi_autodetect" checked></div>
+            <div><input id="import_dpi" disabled type="text" value="150" size="1" maxlength="4"></div>
+
+            <div style="margin-bottom: 8px;">Map Alignment</div>
+            <div></div>
+            <div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
+
+            <div><input id="import_file" style="width: 190px;" type="file"></div>
+            <div></div>
+            <div><input style="padding: 6px" type="button" id="import_button" value="Import" disabled></div>
+
+            <div id="import_errors" class="grid-3"></div>
         </div>
+
         <div id="main-ui" style="display: grid; grid-template-columns: 10% 50% auto;">
-            <div class="visionTitle" style="grid-column: span 3;">Vision Radius</div>
-            <div style="grid-column: span 3;"><i>GM-owned tokens give universal vision.</i></div>
-            <p style="grid-column: span 3;" id="no_tokens_message">Enable vision on your character tokens.</p>
-            <div id="token_list_div" style="grid-column: span 3; border-bottom: 1px solid white; padding-bottom: 8px;">
-                <table style="margin: auto; padding: 0;"><tbody id="token_list">
-                </tbody></table>
+            <div class="visionTitle grid-3">Vision Radius</div>
+            <div class="grid-3"><i>GM-owned tokens give universal vision.</i></div>
+            <p class="grid-3" id="no_tokens_message">Enable vision on your character tokens.</p>
+            <div id="token_list_div" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
+                <table style="margin: auto; padding: 0;">
+                <tbody id="token_list"></tbody>
+                </table>
             </div>
-            <div class="visionTitle" style="grid-column: span 3;">Spectres!</div>
-            <div id="ghostContainer" style="grid-column: span 3;">
+            <div class="visionTitle grid-3">Spectres!</div>
+            <div id="ghostContainer" class="grid-3">
                 <div id="spectreWarning"><i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i></br>
                 Enable vision here after it's been Spectred.</div>
                 <table style="margin: auto; padding: 0; width: 100%">
@@ -73,15 +106,15 @@ app.innerHTML = `
                 </tbody></table>
             </div> 
         </div>
-        <div id="debug_div" style="display: none;">
-        <br><hr><br>
-        <h2>Debug</h2>
-        <h3>Performance Info</h3>
-        <ul>
-            <li><p>Compute time: <span id=compute_time>N/A</span></p></li>
-            <li><p>Communication time: <span id=communication_time>N/A</span></p></li>
-            <li><p>Cache hits/misses: <span id=cache_hits>?</span>/<span id=cache_misses>?</span></p></li>
-        </ul>
+
+        <div id="debug_div" style="display: none;" class="grid-debug">
+            <div class="visionTitle grid-2" style="margin-top: 16px">Performance Info</div>
+            <div>Compute time</div><div id="compute_time">N/A</div>
+            <div>Communication time</div><div id="communication_time">N/A</div>
+            <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
+            <div>Vision Lines</div><div><span id="line_counter">?</span> (<span id="skip_counter">?</span> skipped)</div>
+            <div>Fog Objects</div><div id="item_counter">?</div>
+        </div>
     </div>
 </div>
 `;
@@ -108,6 +141,8 @@ const resetButton = document.getElementById("persistence_reset")! as HTMLInputEl
 const convertButton = document.getElementById("convert_button")! as HTMLInputElement;
 const settingsButton = document.getElementById("settings_button")! as HTMLInputElement;
 const boundryOptions = document.getElementById("boundry_options")! as HTMLDivElement;
+const debugDiv = document.getElementById("debug_div")! as HTMLDivElement;
+const debugButton = document.getElementById("debug_button")! as HTMLDivElement;
 
 // Import
 const importButton = document.getElementById("import_button")! as HTMLInputElement;
@@ -132,6 +167,10 @@ Coloris({themeMode: 'dark',
 
 async function setButtonHandler()
 {
+    //
+    // Main UI Handlers
+    //
+
     // The visionCheckbox element is responsible for toggling vision updates
     visionCheckbox.addEventListener("click", async (event: MouseEvent) =>
     {
@@ -146,7 +185,6 @@ async function setButtonHandler()
     }, false);
 
     snapCheckbox.checked = true;
-    // The visionCheckbox element is responsible for toggling vision updates
     snapCheckbox.addEventListener("click", async (event: MouseEvent) =>
     {
         if (!sceneCache.ready || !event.target)
@@ -158,6 +196,10 @@ async function setButtonHandler()
         const target = event.target as HTMLInputElement;
         sceneCache.snap = target.checked;
     }, false);
+
+    //
+    // Settings Handlers
+    //
 
     settingsButton.addEventListener("click", async (event: MouseEvent) => {
         if (!event || !event.target) return;
@@ -208,6 +250,13 @@ async function setButtonHandler()
         OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: true });
         OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: undefined });
     }, false);
+
+    debugButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        debugDiv.style.display = debugDiv.style.display == 'none' ? 'grid' : 'none';
+    }, false);
   
     fowColor.addEventListener("input", async (event: Event) => {
         if (!event || !event.target) return;
@@ -248,16 +297,18 @@ async function setButtonHandler()
                     if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined) {
                         // play nice here, dont break dyn fog's lines, despite what we said in the warning
                         item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
+                        delete item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                     }
                     if (item.metadata[`${Constants.ARMINDOID}/disabled`] !== undefined) {
                         item.metadata[`${Constants.EXTENSIONID}/disabled`] = item.metadata[`${Constants.ARMINDOID}/disabled`];
+                        delete item.metadata[`${Constants.ARMINDOID}/disabled`];
                     }
                 }
             });
         }
     }, false);
 
-    // TODO: this is a hack, need to pass json between different functions
+    // TODO: this is a hack, need to pass json between different event handlers
     var importObject: any;
 
     importFile.addEventListener("change", async (event: Event) => {
@@ -271,9 +322,9 @@ async function setButtonHandler()
         const file = target.files[0];
         
         if(file.type !== "text/javascript" && file.type !== "application/x-javascript") { 
+            // do we care about the mime type? this is likely browser specific, or file specific, so just ignore it for now.
             // importErrors.innerText = "Wrong file type " + file.type;
             // return;
-            // do we care? this is likely browser specific
         }
         
         if (file) {
@@ -313,7 +364,6 @@ async function setButtonHandler()
 
         importFog(importFormat.value, importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value, importErrors);
     }, false);
-    
 
 }
 
