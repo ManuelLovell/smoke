@@ -105,8 +105,7 @@ a {
     cursor: pointer;
 }
 
-.mysteryButton:hover,
-#mapSubmit:hover
+input[type=button]:hover
 {
     background-color: var(--OBR-Purple-Select);
 }
@@ -257,8 +256,14 @@ li>p {
     padding: 0;
 }
 
+.grid-main {
+    width: 355px;
+    display: grid;
+    grid-template-columns: 10% 50% auto;
+}
+
 .grid-settings {
-    width: 100%;
+    width: 355px;
     text-align:left;
 
     display: grid;
@@ -266,7 +271,7 @@ li>p {
 }
 
 .grid-debug {
-    width: 100%;
+    width: 355px;
     text-align:left;
 
     display: grid;

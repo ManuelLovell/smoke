@@ -26,7 +26,6 @@ app.innerHTML = `
         </div>
         <br>
         <hr>
-        <div style="text-align: centre;">
         <div id="settings-ui" class="grid-settings" style="display:none;">
             <div class="visionTitle grid-3">Settings</div>
 
@@ -84,7 +83,7 @@ app.innerHTML = `
             <div id="import_errors" class="grid-3"></div>
         </div>
 
-        <div id="main-ui" style="display: grid; grid-template-columns: 10% 50% auto;">
+        <div id="main-ui" class="grid-main">
             <div class="visionTitle grid-3">Vision Radius</div>
             <div class="grid-3"><i>GM-owned tokens give universal vision.</i></div>
             <p class="grid-3" id="no_tokens_message">Enable vision on your character tokens.</p>
@@ -95,8 +94,12 @@ app.innerHTML = `
             </div>
             <div class="visionTitle grid-3">Spectres!</div>
             <div id="ghostContainer" class="grid-3">
-                <div id="spectreWarning"><i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i></br>
-                Enable vision here after it's been Spectred.</div>
+                <div id="spectreWarning">
+                    <i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i>
+                    <br>
+                    <br>
+                    Enable vision here after it's been Spectred.
+                </div>
                 <table style="margin: auto; padding: 0; width: 100%">
                 <colgroup>
                     <col style="width: 50%;">
