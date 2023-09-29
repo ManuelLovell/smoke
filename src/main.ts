@@ -24,7 +24,6 @@ app.innerHTML = `
             <div class="tooltip" id="settings_button" title="Settings">&#x2699;</div>
             <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
         </div>
-        <br>
         <hr>
         <div id="settings-ui" class="grid-settings" style="display:none;">
             <div class="visionTitle grid-3">Settings</div>
@@ -70,7 +69,7 @@ app.innerHTML = `
 
             <div><label for="dpi_autodetect">DPI Autodetect</label></div>
             <div><input type="checkbox" id="dpi_autodetect" checked></div>
-            <div><input id="import_dpi" disabled type="text" value="150" size="1" maxlength="4"></div>
+            <div><input id="import_dpi" disabled type="text" value="150" style="width: 32px;" maxlength="4"></div>
 
             <div style="margin-bottom: 8px;">Map Alignment</div>
             <div></div>
