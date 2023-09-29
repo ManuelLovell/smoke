@@ -1,5 +1,18 @@
-import{O as e,C as t}from"./constants-4214fcbb.js";const n=document.querySelector("#smoke-whatsnew"),s=document.querySelector("#smoke-whatsnew-notes");n.innerHTML=`
+import{O as e,C as t}from"./constants-4214fcbb.js";const i=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");i.innerHTML=`
   <div>
+    <h1>Smoke & Spectre! 9/28</h1>
+    <b>New feature release, including:</b>
+    <ul>
+    <li>Persistent Fog! Previously revealed areas can optionally stay visible.</li>
+    <li>Trailing Fog with colour and opacity controls</li>
+    <li>Automatic map detection</li>
+    <li>Built-in Importer for Dungeon Alchemist / Foundry / UVTT</li>
+    <li>New Settings UI (cog icon at the top)</li>
+    <li>General bug fixes including vision lines outside of the map sometimes breaking</li>
+    </br>
+    Have fun! <i>Doggosaurus</i>.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 9/24</h1>
     Attaching tokens to a NOTE will let you toggle vision on/off via that Note's vision button.
     </br>
@@ -26,7 +39,7 @@ import{O as e,C as t}from"./constants-4214fcbb.js";const n=document.querySelecto
     'General Stability Fixes.'
     </br>
     </br>
-`;e.onReady(async()=>{s.innerHTML=`
+`;e.onReady(async()=>{n.innerHTML=`
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
