@@ -58,4 +58,15 @@ function isBackgroundBorder(item: Image)
         && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] || item.metadata[`${Constants.ARMINDOID}/isBackgroundImage`]);
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI };
+function isTrailingFog(item: Image) { 
+    return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`];
+}
+
+function isAnyFog(item: Image) { 
+    return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`] 
+        || item.metadata[`${Constants.EXTENSIONID}/isVisionFog`] 
+        || item.metadata[`${Constants.ARMINDOID}/isVisionFog`]
+        || item.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`];
+}
+
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog };

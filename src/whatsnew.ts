@@ -8,6 +8,19 @@ const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 whatsnew.innerHTML = `
   <div>
+    <h1>Smoke & Spectre! 9/28</h1>
+    <b>New feature release, including:</b>
+    <ul>
+    <li>Persistent Fog! Previously revealed areas can optionally stay visible.</li>
+    <li>Trailing Fog with colour and opacity controls</li>
+    <li>Automatic map detection</li>
+    <li>Built-in Importer for Dungeon Alchemist / Foundry / UVTT</li>
+    <li>New Settings UI (cog icon at the top)</li>
+    <li>General bug fixes including vision lines outside of the map sometimes breaking</li>
+    </br>
+    Have fun! <i>Doggosaurus</i>.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 9/24</h1>
     Attaching tokens to a NOTE will let you toggle vision on/off via that Note's vision button.
     </br>

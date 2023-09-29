@@ -42,11 +42,13 @@
 }
 
 .tooltip {
+    cursor: pointer;
+    display: inline;
+}
+
+#vision_checkbox {
     position: relative;
-    font-size: larger;
-    float: right;
-    margin-right: 20px;
-    cursor:pointer;
+    top: 2px;
 }
 
 .title {
@@ -71,6 +73,25 @@ input
     padding: 2px;
 }
 
+input[type=button] {
+    padding: 2px;
+}
+
+#import_dpi:disabled {
+    opacity: 50%;
+}
+
+a {
+    color: var(--light-letters);
+}
+
+.clr-field > button {
+    height: 16px !important;
+    width: 20px !important;
+    right: 2px !important;
+    margin-top: 2px !important;
+}
+
 .mysteryButton
 {
     vertical-align: middle;
@@ -84,8 +105,7 @@ input
     cursor: pointer;
 }
 
-.mysteryButton:hover,
-#mapSubmit:hover
+input[type=button]:hover
 {
     background-color: var(--OBR-Purple-Select);
 }
@@ -234,4 +254,35 @@ input.token-vision-range {
 li>p {
     margin: 0;
     padding: 0;
+}
+
+.grid-main {
+    width: 355px;
+    display: grid;
+    grid-template-columns: 10% 50% auto;
+}
+
+.grid-settings {
+    width: 355px;
+    text-align:left;
+
+    display: grid;
+    grid-template-columns: 60% 8% auto;
+}
+
+.grid-debug {
+    width: 355px;
+    text-align:left;
+
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+
+.grid-3 {
+    text-align:center;
+    grid-column: span 3;
+}
+
+.grid-2 {
+    grid-column: span 2;
 }
