@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, Item, Shape, ItemFilter } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, Item, Shape, ItemFilter, Vector2 } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -6,7 +6,7 @@ import { lineMode } from "./visionLineMode";
 import { Timer } from "./../utilities/debug";
 import { ObjectCache } from "./../utilities/cache";
 import { sceneCache } from "./../utilities/globals";
-import { squareDistance, comparePosition, isClose, mod } from "./../utilities/math";
+import { squareDistance, comparePosition, isClose, mod, Matrix, MathM, toRadians } from "./../utilities/math";
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
 
@@ -275,6 +275,14 @@ function updatePerformanceInformation(performanceInfo: { [key: string]: any }): 
     }
 }
 
+function getItemMatrix(item: Item): Matrix {
+    const t = MathM.translate(item.position);
+    const s = MathM.scale(item.scale);
+    const r = MathM.rotate(toRadians(item.rotation));
+
+    return MathM.multiply(MathM.multiply(t, r), s);
+}
+
 var PathKit: any;
 var busy = false;
 // Generally, only one player will move at one time, so let's cache the
@@ -363,11 +371,36 @@ async function computeShadow(event: any)
     const visionLines = [];
     for (const shape of visionShapes)
     {
+        // Get the transform matrix for this line
+        const transform = getItemMatrix(shape);
+
         for (let i = 0; i < shape.points.length - 1; i++)
         {
+            let start: Vector2, end: Vector2;
+
+            // rotate and scale the line in accordance with the item's position, scale, and rotation.
+            // this could be optimised by not recalculating the previous point when i > 0.
+            if (shape.rotation != 0) {
+                // Create a matrix for the relative start position point
+                const points = [MathM.translate(shape.points[i]), MathM.translate(shape.points[i+1])];
+                // Combine both for the final start position in world space
+                const final = [MathM.multiply(transform, points[0]), MathM.multiply(transform, points[1])];
+
+                // Decompose to get the final translation
+                const start_translation = MathM.decompose(final[0]);
+                const end_translation = MathM.decompose(final[1]);
+
+                start = start_translation.translation;
+                end = end_translation.translation;
+            } else {
+                // skip rotation and move the relative position by the shape's position & scale
+                start = {x: (shape.points[i].x * shape.scale.x + shape.position.x), y: (shape.points[i].y * shape.scale.y + shape.position.y) };
+                end = {x: (shape.points[i + 1].x * shape.scale.x + shape.position.x), y: (shape.points[i + 1].y * shape.scale.y + shape.position.y) };
+            }
+
             visionLines.push({
-                startPosition: { x: (shape.points[i].x * shape.scale.x + shape.position.x), y: (shape.points[i].y * shape.scale.y + shape.position.y) },
-                endPosition: { x: (shape.points[i + 1].x * shape.scale.x + shape.position.x), y: (shape.points[i + 1].y * shape.scale.y + shape.position.y) },
+                startPosition: start,
+                endPosition: end,
                 originalShape: shape,
                 oneSided: shape.metadata[`${Constants.EXTENSIONID}/oneSided`]
             });
