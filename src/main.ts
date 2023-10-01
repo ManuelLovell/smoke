@@ -28,7 +28,7 @@ app.innerHTML = `
         <div id="settings-ui" class="grid-settings" style="display:none;">
             <div class="visionTitle grid-3">Settings</div>
 
-            <div><label for="autodetect_checkbox">Autodetect Maps</label></div>
+            <div><label for="autodetect_checkbox" title="Automatically detect fog areas based on the current scene's maps">Autodetect Maps</label></div>
             <div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
 
             <div id="boundry_options" class="grid-3" style="display:none;">
@@ -43,11 +43,11 @@ app.innerHTML = `
             <div><label for="snap_checkbox">Grid Snap</label></div>
             <div class="grid-2"><input type="checkbox" id="snap_checkbox"></div>
 
-            <div><label for="persistence_checkbox">Persistence</label></div>
+            <div><label for="persistence_checkbox" title="Enabling fog persistence will retain the previously viewed areas of the map">Persistence</label></div>
             <div><input type="checkbox" id="persistence_checkbox"></div>
             <div><input type="button" id="persistence_reset" value="Reset"></div>
 
-            <div><label for="fow_checkbox">Trailing Fog</label></div>
+            <div><label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog</label></div>
             <div><input type="checkbox" id="fow_checkbox"></div>
             <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
 
@@ -57,7 +57,7 @@ app.innerHTML = `
 
             <div></div>
             <div></div>
-            <div><input type="button" id="debug_button" value="Enable Debugging"></div>
+            <div><input type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></div>
 
             <div class="visionTitle grid-3" style="margin-top: 16px;">Import</div>
 
@@ -67,11 +67,11 @@ app.innerHTML = `
             <div></div>
             <div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
 
-            <div><label for="dpi_autodetect">DPI Autodetect</label></div>
+            <div><label for="dpi_autodetect" title="Whether or not to automatically detect the DPI of imported data based">DPI Autodetect</label></div>
             <div><input type="checkbox" id="dpi_autodetect" checked></div>
             <div><input id="import_dpi" disabled type="text" value="150" style="width: 32px;" maxlength="4"></div>
 
-            <div style="margin-bottom: 8px;">Map Alignment</div>
+            <div style="margin-bottom: 8px;" title="Which map to align imported lines to">Map Alignment</div>
             <div></div>
             <div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
 
@@ -94,10 +94,12 @@ app.innerHTML = `
             <div class="visionTitle grid-3">Spectres!</div>
             <div id="ghostContainer" class="grid-3">
                 <div id="spectreWarning">
-                    <i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i>
-                    <br>
+                    Spectre tokens are only visible to specific players.
                     <br>
                     Enable vision here after it's been Spectred.
+                    <br>
+                    <br>
+                    <i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i>
                 </div>
                 <table style="margin: auto; padding: 0; width: 100%">
                 <colgroup>
