@@ -360,7 +360,7 @@ async function computeShadow(event: any)
     if (!shouldComputeVision || tokensWithVision.length == 0)
     {
         // Clear fog
-        const fogItems = await OBR.scene.items.getItems(isAnyFog as ItemFilter<Image>);
+        const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
         await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
 
         busy = false;
@@ -620,6 +620,11 @@ async function computeShadow(event: any)
             playerShadowCache.cacheValue(player.id, { shadowPath: path.copy(), player: player });
         }
     }
+
+    // NOTE: we can calulate path intersections for distant items here, because itemsPerPlayer contains the full path for what's visible.
+    // we can then use this to test against "torch" items that emit light at a distance by testing points around them (or just the object positions)
+    // what do we do when we find them?
+    // effectively we'd then need to include them in another pass of the previous loop to include them in the shadow calculations.... perhaps this is better done before that?
 
     // *3rd step* - compute vision ranges
     // Create vision circles that cut each player's fog
@@ -990,6 +995,7 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     const sVisionShapes = JSON.stringify(visionShapes);
     const sPlayersWithVision = JSON.stringify(tokensWithVision);
     const sBackgroundImage = JSON.stringify(backgroundImage);
+
     if (sBackgroundImage == previousMap
         && visionEnabled == previousVisionEnabled
         && previousFowColor == fowColor
