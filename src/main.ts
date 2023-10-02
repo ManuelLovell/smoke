@@ -279,7 +279,6 @@ async function setButtonHandler()
 
         if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?")) {
             const metadata = await OBR.scene.getMetadata();
-            console.log(metadata);
             for (const meta in metadata) {
                 // Remove the old scene metadata, we dont need any of it
                 if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID) {
@@ -287,16 +286,13 @@ async function setButtonHandler()
                 }
             }
 
-            const convert_items = await OBR.scene.items.getItems();//isAnyFog as ItemFilter<Image>);
-            const itemsToRemove: Image[] = [];
-            console.log(convert_items);
+            const convert_items = await OBR.scene.items.getItems();
 
             await OBR.scene.items.updateItems(convert_items, items =>
             {
                 for (const item of items)
                 {
                     if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined) {
-                        // play nice here, dont break dyn fog's lines, despite what we said in the warning
                         item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                         delete item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                     }
@@ -510,7 +506,6 @@ function updateUI(items: Image[])
                 if (target.checked)
                 {
                     rangeInput.setAttribute("disabled", "disabled");
-                    unlimitedCheckbox.checked = false;
                 }
                 else
                 {
