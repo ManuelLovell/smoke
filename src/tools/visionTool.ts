@@ -951,7 +951,7 @@ async function updateTokenVisibility(currentFogPath: any) {
         const tempPath = PathKit.NewPath();
 
         // this needs to be calulated dynamically, but looks like this should be based on the token.grid.dpi versus the image size? or scale? or both?
-        const radius = token.grid.dpi / 4;
+        const radius = (sceneCache.gridDpi / token.grid.dpi) * (token.image.width / 2);
 
         for (let i = 0; i < 6; i++) {
             const angle = (i * 60 * Math.PI) / 180;

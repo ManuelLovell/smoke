@@ -73,7 +73,9 @@ input
 }
 
 input[type=button] {
+    background-color: var(--OBR-light-blue);
     padding: 2px;
+    border: 2px solid black;
 }
 
 #import_dpi:disabled {
