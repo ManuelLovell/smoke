@@ -217,11 +217,14 @@ input.token-vision-range[type=number] {
 /* style for input element */
 input.token-vision-range {
     text-align: right;
+    padding-top: 5px;
     padding-right: 1.3em;
     /* adjust this value based on the width of the unit */
     box-sizing: border-box;
     /* include padding and border in the width */
     width: 3.5em;
+    background-color: var(--OBR-light-blue);
+    border: 2px solid black;
 }
 
 .token-list>* {
@@ -239,9 +242,9 @@ input.token-vision-range {
 
 .cbutton {
     margin-left: 4px;
-    background-color: var(--OBR-dark-blue);
+    background-color: var(--OBR-light-blue);
     border-radius: 4px;
-    border: 2px solid var(--OBR-light-blue);
+    border: 2px solid black;
     overflow: hidden;
     float: left;
     line-height: 1em;
@@ -250,28 +253,27 @@ input.token-vision-range {
 .cbutton label {
     float: left;
     cursor: pointer;
-    /*
-    line-height: 3.0em;
-    width: 8.0em;
-    height: 3.0em;
-    */
 }
 
 .cbutton label span {
     text-align: center;
-    padding: 3px 0;
+    padding: 3px;
     display: block;
 }
 
 .cbutton label input {
     position: absolute;
     display: none;
-    /*color: #fff !important;*/
 }
 
 .cbutton input:checked + span {
     background-color: var(--OBR-Purple-Select);
 }
+
+.cbutton:hover {
+    background-color: var(--OBR-Purple-Select);
+}
+
 /*
 .cbutton input:checked + span {
     color: #ffffff;
