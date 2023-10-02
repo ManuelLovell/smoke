@@ -69,4 +69,8 @@ function isAnyFog(item: Image) {
         || item.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`];
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog };
+function isTorch(item: Image) { 
+    return item.metadata[`${Constants.EXTENSIONID}/visionTorch`];
+}
+
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog, isTorch };

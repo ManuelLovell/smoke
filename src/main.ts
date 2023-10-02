@@ -428,12 +428,19 @@ function updateUI(items: Image[])
             const newTr = document.createElement("tr");
             newTr.id = `tr-${currentPlayer.id}`;
             newTr.className = "token-table-entry";
-            newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td><td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td><td>&nbsp;&nbsp;&infin;&nbsp<input type="checkbox" class="unlimited-vision">&nbsp;None <input type="checkbox" class="no-vision"></td>`;
+            newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td>
+                               <td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td>
+                               <td>
+                                <div class="cbutton"><label><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
+                                <div class="cbutton"><label><input type="checkbox" class="torch-vision"><span>&#128294;</span></label></div>
+                                <div class="cbutton"><label><input type="checkbox" class="no-vision"><span>None</span></label></div>
+                               </td>`;
             table.appendChild(newTr);
 
             // Register event listeners
             const rangeInput = newTr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
             const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
+            const torchCheckbox = newTr.getElementsByClassName("torch-vision")[0] as HTMLInputElement;
             const blindCheckbox = newTr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
 
             if (rangeInput)
@@ -444,6 +451,10 @@ function updateUI(items: Image[])
             if (unlimitedCheckbox)
             {
                 unlimitedCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionRange`] === 0;
+            }
+            if (torchCheckbox)
+            {
+                torchCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionTorch`] as boolean;
             }
             if (blindCheckbox)
             {
@@ -516,6 +527,20 @@ function updateUI(items: Image[])
                     items[0].metadata[`${Constants.EXTENSIONID}/visionBlind`] = target.checked;
                 });
             }, false);
+
+            torchCheckbox.addEventListener("click", async event =>
+            {
+                if (!event || !event.target) return;
+                // Grab from scene to avoid a snapshot of the playerstate
+                const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+
+                const target = event.target as HTMLInputElement;
+
+                await OBR.scene.items.updateItems([thisPlayer], items =>
+                {
+                    items[0].metadata[`${Constants.EXTENSIONID}/visionTorch`] = target.checked;
+                });
+            }, false);            
         }
     }
 }

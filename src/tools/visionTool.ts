@@ -7,7 +7,7 @@ import { Timer } from "./../utilities/debug";
 import { ObjectCache } from "./../utilities/cache";
 import { sceneCache } from "./../utilities/globals";
 import { squareDistance, comparePosition, isClose, mod, Matrix, MathM, toRadians } from "./../utilities/math";
-import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI } from "./../utilities/itemFilters";
+import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
 import findPathIntersections from 'path-intersection';
 
@@ -628,13 +628,13 @@ async function computeShadow(event: any)
     // effectively we'd then need to include them in another pass of the previous loop to include them in the shadow calculations.... perhaps this is better done before that?
 
     // soo we need a line from our player....... to each torch
-    const torches = sceneCache.items.filter((item) => { return item.name == 'Torch'});
+    const torches = sceneCache.items.filter(isTorch);
     const playersCanSeeTorch:any = {};
 
     for (let i = 0; i < tokensWithVision.length; i++) {
 
         // skip ourselves
-        if (tokensWithVision[i].name == 'Torch') continue;
+        if (isTorch(tokensWithVision[i])) continue;
 
         const playerPath = itemsPerPlayer[i].toSVGString();
         const token = tokensWithVision[i];
@@ -663,18 +663,18 @@ async function computeShadow(event: any)
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
-        const isTorch = token.name == "Torch";
+        const tokenIsTorch = isTorch(token);
         const canSeeTorch = playersCanSeeTorch[sceneCache.userId] ? playersCanSeeTorch[sceneCache.userId][token.id] === true : false;
 
-        console.log('imatorch', isTorch, 'can see me', canSeeTorch, sceneCache.userId, token.id);
+        console.log('imatorch', isTorch(token), 'can see me', canSeeTorch, sceneCache.userId, token.id);
 
         // This currently means that torches are not shown for the GM unless a GM token has LOS too
-        if (isTorch && !canSeeTorch) {
+        if (tokenIsTorch && !canSeeTorch) {
             console.log('bye bye torch');
             delete tokensWithVision[i];
             delete itemsPerPlayer[i];
             continue; 
-        } else if (isTorch) {
+        } else if (tokenIsTorch) {
             intersectTorches[i] = true;
         } else {
             intersectFullVision.op(itemsPerPlayer[i], PathKit.PathOp.UNION);
@@ -695,7 +695,7 @@ async function computeShadow(event: any)
 
             // Get Color for Players
             const owner = sceneCache.players.find(x => x.id === token.createdUserId);
-            if (owner && sceneCache.role === "GM" && !isTorch)
+            if (owner && sceneCache.role === "GM" && !tokenIsTorch)
             {
                 // Add indicator rings intended for the GM
                 const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
