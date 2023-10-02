@@ -9,6 +9,7 @@ import { sceneCache } from "./../utilities/globals";
 import { squareDistance, comparePosition, isClose, mod, Matrix, MathM, toRadians } from "./../utilities/math";
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
+import findPathIntersections from 'path-intersection';
 
 export async function setupContextMenus(): Promise<void>
 {
@@ -626,6 +627,34 @@ async function computeShadow(event: any)
     // what do we do when we find them?
     // effectively we'd then need to include them in another pass of the previous loop to include them in the shadow calculations.... perhaps this is better done before that?
 
+    // soo we need a line from our player....... to each torch
+    const torches = sceneCache.items.filter((item) => { return item.name == 'Torch'});
+    const playersCanSeeTorch:any = {};
+
+    for (let i = 0; i < tokensWithVision.length; i++) {
+
+        // skip ourselves
+        if (tokensWithVision[i].name == 'Torch') continue;
+
+        const playerPath = itemsPerPlayer[i].toSVGString();
+        const token = tokensWithVision[i];
+        playersCanSeeTorch[token.createdUserId] = {};
+
+        for (let j = 0; j < torches.length; j++) {
+            // This can be redone to avoid having to translate into svg, but for now..
+            let line = 'M'+token.position.x+","+token.position.y+"L"+torches[j].position.x+","+torches[j].position.y;
+            let intersects = findPathIntersections(line, playerPath, true);
+
+            playersCanSeeTorch[token.createdUserId][torches[j].id] = !intersects;
+
+            console.log(intersects);
+        }
+    }
+    console.log(playersCanSeeTorch);
+
+    const intersectTorches = [];
+    const intersectFullVision = PathKit.NewPath();
+
     // *3rd step* - compute vision ranges
     // Create vision circles that cut each player's fog
     for (let i = 0; i < tokensWithVision.length; i++)
@@ -634,6 +663,27 @@ async function computeShadow(event: any)
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
+        const isTorch = token.name == "Torch";
+        const canSeeTorch = playersCanSeeTorch[sceneCache.userId] ? playersCanSeeTorch[sceneCache.userId][token.id] === true : false;
+
+        console.log('imatorch', isTorch, 'can see me', canSeeTorch, sceneCache.userId, token.id);
+
+        // This currently means that torches are not shown for the GM unless a GM token has LOS too
+        if (isTorch && !canSeeTorch) {
+            console.log('bye bye torch');
+            delete tokensWithVision[i];
+            delete itemsPerPlayer[i];
+            continue; 
+        } else if (isTorch) {
+            intersectTorches[i] = true;
+        } else {
+            intersectFullVision.op(itemsPerPlayer[i], PathKit.PathOp.UNION);
+        }
+
+        // so at this point, we can see the torch - but can we then intersect with the infinity range of the player?
+        // probably!
+
+        
         if (visionRangeMeta)
         {
             if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
@@ -645,7 +695,7 @@ async function computeShadow(event: any)
 
             // Get Color for Players
             const owner = sceneCache.players.find(x => x.id === token.createdUserId);
-            if (owner && sceneCache.role === "GM")
+            if (owner && sceneCache.role === "GM" && !isTorch)
             {
                 // Add indicator rings intended for the GM
                 const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
@@ -656,6 +706,18 @@ async function computeShadow(event: any)
             }
         }
     }
+
+    // *3.7th Step* - intersect torches based on available view
+    intersectFullVision.simplify();
+    for (let i = 0; i < intersectTorches.length; i++) {
+        if (intersectTorches[i] === true) {
+            // intersect torch(i) against the full range of vision of the player token(j):
+            itemsPerPlayer[i].op(intersectFullVision, PathKit.PathOp.INTERSECT);
+            itemsPerPlayer[i].simplify();
+        }
+    }
+
+    intersectFullVision.delete();
 
     // *4th step* - persistent and trailing fog
 
