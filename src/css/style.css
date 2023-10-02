@@ -249,6 +249,7 @@ input.token-vision-range {
 
 .cbutton label {
     float: left;
+    cursor: pointer;
     /*
     line-height: 3.0em;
     width: 8.0em;
