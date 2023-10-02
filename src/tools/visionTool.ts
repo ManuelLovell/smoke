@@ -641,16 +641,35 @@ async function computeShadow(event: any)
         playersCanSeeTorch[token.createdUserId] = {};
 
         for (let j = 0; j < torches.length; j++) {
-            // This can be redone to avoid having to translate into svg, but for now..
-            let line = 'M'+token.position.x+","+token.position.y+"L"+torches[j].position.x+","+torches[j].position.y;
-            let intersects = findPathIntersections(line, playerPath, true);
+            const torch = torches[j];
+
+            const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
+
+            let intersects = true;
+            let calcPoints = 8;
+
+            for (let i = 0; i < calcPoints && intersects === true; i++) {
+                const angle = (i * (360 / calcPoints) * Math.PI) / 180;
+                const x = torch.position.x + radius * Math.cos(angle);
+                const y = torch.position.y + radius * Math.sin(angle);
+
+                // This can be redone to avoid having to translate into svg, but for now..
+                let line = 'M'+token.position.x+","+token.position.y+"L"+x+","+y;
+                intersects = findPathIntersections(line, playerPath, true) > 0 ? true : false;
+
+                if (false) {
+                    // note to self, write function to enable these debug points when debugging is turned on in the ui
+                    const playerRing = buildShape().strokeColor('#ff0000').fillOpacity(1)
+                    .position({ x: x, y: y }).width(30)
+                    .height(30).shapeType("CIRCLE").metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
+
+                    playerRings.push(playerRing);
+                }
+            }
 
             playersCanSeeTorch[token.createdUserId][torches[j].id] = !intersects;
-
-            console.log(intersects);
         }
     }
-    console.log(playersCanSeeTorch);
 
     const intersectTorches = [];
     const intersectFullVision = PathKit.NewPath();
@@ -666,24 +685,21 @@ async function computeShadow(event: any)
         const tokenIsTorch = isTorch(token);
         const canSeeTorch = playersCanSeeTorch[sceneCache.userId] ? playersCanSeeTorch[sceneCache.userId][token.id] === true : false;
 
-        console.log('imatorch', isTorch(token), 'can see me', canSeeTorch, sceneCache.userId, token.id);
+        // console.log('im a torch', isTorch(token), 'can see me', canSeeTorch, sceneCache.userId, token.id);
 
-        // This currently means that torches are not shown for the GM unless a GM token has LOS too
+        // This currently means that torches are not shown for the GM unless a GM token has LOS too (which feels kinda right)
         if (tokenIsTorch && !canSeeTorch) {
-            console.log('bye bye torch');
+            // console.log('bye bye torch');
             delete tokensWithVision[i];
             delete itemsPerPlayer[i];
             continue; 
         } else if (tokenIsTorch) {
             intersectTorches[i] = true;
         } else {
+            // calculate the vision areas of all non-torch tokens into one path, so we can intersect this with the torches to limit the visibility to only what the players can see:
             intersectFullVision.op(itemsPerPlayer[i], PathKit.PathOp.UNION);
         }
 
-        // so at this point, we can see the torch - but can we then intersect with the infinity range of the player?
-        // probably!
-
-        
         if (visionRangeMeta)
         {
             if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
