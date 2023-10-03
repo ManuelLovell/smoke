@@ -47,7 +47,7 @@ app.innerHTML = `
             <div><input type="checkbox" id="persistence_checkbox"></div>
             <div><input type="button" id="persistence_reset" value="Reset"></div>
 
-            <div><label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog</label></div>
+            <div><label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog + Autohide</label></div>
             <div><input type="checkbox" id="fow_checkbox"></div>
             <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
 
@@ -431,9 +431,9 @@ function updateUI(items: Image[])
             newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td>
                                <td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td>
                                <td>
-                                <div class="cbutton"><label><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
-                                <div class="cbutton"><label><input type="checkbox" class="torch-vision"><span>&#128294;</span></label></div>
-                                <div class="cbutton"><label><input type="checkbox" class="no-vision"><span>None</span></label></div>
+                                <div class="cbutton"><label title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
+                                <div class="cbutton"><label title="Turn token into a light source"><input type="checkbox" class="torch-vision"><span>&#128294;</span></label></div>
+                                <div class="cbutton"><label title="Disable vision on this token"><input type="checkbox" class="no-vision"><span>None</span></label></div>
                                </td>`;
             table.appendChild(newTr);
 

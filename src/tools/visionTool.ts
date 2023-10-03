@@ -9,6 +9,8 @@ import { sceneCache } from "./../utilities/globals";
 import { squareDistance, comparePosition, isClose, mod, Matrix, MathM, toRadians } from "./../utilities/math";
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
+
+// TODO: For anyone watching, i'm not happy about this, would like to have something that works natively with pathkit instead of transcoding to svg, but it does the job for now.
 import findPathIntersections from 'path-intersection';
 
 export async function setupContextMenus(): Promise<void>
@@ -204,6 +206,47 @@ export async function setupContextMenus(): Promise<void>
             });
         }
     });
+
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
+        icons: [
+            {
+                icon: "/autohide-off.svg",
+                label: "Enable Autohide",
+                filter: {
+                    every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined }],
+                },
+            },
+            {
+                icon: "/autohide-on.svg",
+                label: "Disable Autohide",
+                filter: {
+                    every: [{ key: "layer", value: "CHARACTER" }],
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            const enableFog = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
+
+            await OBR.scene.items.updateItems(ctx.items, items =>
+            {
+                for (const item of items)
+                {
+                    if (!enableFog)
+                    {
+                        delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
+                    }
+                    else
+                    {
+                        item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
+                    }
+                }
+            });
+        },
+    });
+
 }
 
 export async function createTool(): Promise<void>
@@ -630,6 +673,7 @@ async function computeShadow(event: any)
     // soo we need a line from our player....... to each torch
     const torches = sceneCache.items.filter(isTorch);
     const playersCanSeeTorch:any = {};
+    const tokensCanSeeTorch = [];
 
     for (let i = 0; i < tokensWithVision.length; i++) {
 
@@ -667,7 +711,9 @@ async function computeShadow(event: any)
                 }
             }
 
+            // this is possibly wrong.. should be token based
             playersCanSeeTorch[token.createdUserId][torches[j].id] = !intersects;
+            tokensCanSeeTorch.push({token: token, torch: torches[j], visible: !intersects});
         }
     }
 
@@ -678,16 +724,20 @@ async function computeShadow(event: any)
     // Create vision circles that cut each player's fog
     for (let i = 0; i < tokensWithVision.length; i++)
     {
+
         const token = tokensWithVision[i];
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
         const tokenIsTorch = isTorch(token);
-        const canSeeTorch = playersCanSeeTorch[sceneCache.userId] ? playersCanSeeTorch[sceneCache.userId][token.id] === true : false;
 
-        // console.log('im a torch', isTorch(token), 'can see me', canSeeTorch, sceneCache.userId, token.id);
+        // there's probably a better way to handle this:
+        const canSeeTorch = tokensCanSeeTorch.some(i => {
+            return i.torch.id == token.id && i.visible;
+        });
 
-        // This currently means that torches are not shown for the GM unless a GM token has LOS too (which feels kinda right)
+        // if (isTorch(token)) console.log('im a torch, can anyone see me?', canSeeTorch, sceneCache.userId, token.id);
+
         if (tokenIsTorch && !canSeeTorch) {
             // console.log('bye bye torch');
             delete tokensWithVision[i];
@@ -940,7 +990,7 @@ function doStuff() {
 async function updateTokenVisibility(currentFogPath: any) {
     const toggleTokens: Image[] = [];
     const tokens = sceneCache.items.filter((token_filter) => {
-        return token_filter.layer == "CHARACTER" && !isTokenWithVisionForUI(token_filter);
+        return token_filter.layer == "CHARACTER" && !isTokenWithVisionForUI(token_filter) && token_filter.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
     });
 
     // this might not be the right thing to do with complex paths.. union should be sufficient when we intersect later..
@@ -1028,7 +1078,9 @@ export async function onSceneDataChange(forceUpdate?: boolean)
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`]);
 
-    const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
+    const allTokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
+    const tokensWithVision = allTokensWithVision.filter((item) => { return !isTorch(item) || item.visible === true; });
+
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
     const backgroundImage = sceneCache.items.filter(isBackgroundBorder)?.[0] as any as Shape;
     const visionEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
