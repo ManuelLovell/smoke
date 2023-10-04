@@ -1,0 +1,15 @@
+{
+    "name": "Smoke Testing!",
+    "description": "Dynamic fog of war for Battlemaps(inherited from Dynamic Fog of War) with Per-Player fog and 'Ghost' tokens.",
+    "version": "2.0.x",
+    "author": "Doggosaurus test build - send feedback via discord",
+    "icon": "/logo.png",
+    "manifest_version": 1,
+    "action": {
+        "title": "Smoke & Spectre!",
+        "icon": "/icon.svg",
+        "popover": "/",
+        "height": 500,
+        "width": 400
+    }
+}
