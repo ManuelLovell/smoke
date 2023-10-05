@@ -341,7 +341,7 @@ interface Polygon {
 }
 
 function createObstructionLines(visionShapes: any): ObstructionLine[] {
-    let visionLines: ObstructionLine[] = [];
+    let obstructionLines: ObstructionLine[] = [];
     for (const shape of visionShapes)
     {
         // Get the transform matrix for this line
@@ -371,7 +371,7 @@ function createObstructionLines(visionShapes: any): ObstructionLine[] {
                 end = {x: (shape.points[i + 1].x * shape.scale.x + shape.position.x), y: (shape.points[i + 1].y * shape.scale.y + shape.position.y) };
             }
 
-            visionLines.push({
+            obstructionLines.push({
                 startPosition: start,
                 endPosition: end,
                 originalShape: shape,
@@ -379,9 +379,10 @@ function createObstructionLines(visionShapes: any): ObstructionLine[] {
             });
         }
     }
-    return visionLines;
+    return obstructionLines;
 }
 
+// Main fog visibility calculation occurs here.
 
 function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, width: number, height:number, offset: [number, number], scale: [number, number]): Polygon[][] {
     let polygons: Polygon[][] = [];
@@ -729,21 +730,26 @@ async function computeShadow(event: any)
                 const x = torch.position.x + radius * Math.cos(angle);
                 const y = torch.position.y + radius * Math.sin(angle);
 
-                // This can be redone to avoid having to translate into svg, but for now..
+                // TODO: This can be redone to avoid having to translate into svg, but for now..
                 let line = 'M'+token.position.x+","+token.position.y+"L"+x+","+y;
                 intersects = findPathIntersections(line, playerPath, true) > 0 ? true : false;
 
-                if (false) {
-                    // note to self, write function to enable these debug points when debugging is turned on in the ui
-                    const playerRing = buildShape().strokeColor('#ff0000').fillOpacity(1)
-                    .position({ x: x, y: y }).width(30)
-                    .height(30).shapeType("CIRCLE").metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
+                if (enableDebug) {
+                    const lightLOS = buildShape()
+                        .strokeColor('#ff0000')
+                        .fillOpacity(1)
+                        .position({ x: x, y: y })
+                        .width(30)
+                        .height(30)
+                        .shapeType("CIRCLE")
+                        .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
+                        .build();
 
-                    playerRings.push(playerRing);
+                    // hijack rings for debug, this will get deleted afterwards:
+                    playerRings.push(lightLOS);
                 }
             }
 
-            // this is possibly wrong.. should be token based
             tokensCanSeeTorch.push({token: token, torch: torches[j], visible: !intersects});
         }
     }
@@ -759,7 +765,6 @@ async function computeShadow(event: any)
 
     for (let i = 0; i < tokensWithVision.length; i++)
     {
-
         const token = tokensWithVision[i];
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
         const gmIds = sceneCache.players.filter(x => x.role == "GM");
@@ -767,7 +772,6 @@ async function computeShadow(event: any)
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
         const tokenIsTorch = isTorch(token);
 
-        // there's probably a better way to handle this:
         const canSeeTorch = tokensCanSeeTorch.some(i => {
             return i.torch.id == token.id && i.visible;
         });
@@ -783,8 +787,8 @@ async function computeShadow(event: any)
             intersectFullVision.op(itemsPerPlayer[i], PathKit.PathOp.UNION);
         }
 
-        if (visionRangeMeta)
-        {
+        // if vision range isnt unlimited, intersect it with a circle:
+        if (visionRangeMeta) {
             if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
 
             const visionRange = sceneCache.gridDpi * (visionRangeMeta / sceneCache.gridScale + .5);
@@ -980,6 +984,7 @@ async function computeShadow(event: any)
         if (oldTrailingFog.length > 0) {
             // If the old item exists in the scene, reuse it, otherwise you get flickering.
             // Warning: In theory this can use fastUpdate since we only change the path, though it seemed to break with it turned on.
+            // Also worth noting that this seems to fail if we use trailingFogRect directly - does buildPath transform it somehow? possibly by the fill rule?
             OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items => {
                 for (const item of items) {
                     item.commands = trailingFog.commands;
@@ -996,7 +1001,9 @@ async function computeShadow(event: any)
 
     trailingFogRect.delete();
 
-    // *5th step* - add/remove items
+    /*
+     * Stage 5: Add/remove items in the scene
+     */
 
     computeTimer.pause(); awaitTimer.resume();
 
@@ -1024,9 +1031,13 @@ async function computeShadow(event: any)
     // Update all items
     await Promise.all(promisesToExecute);
 
-    // this is expensive, but useful:
+    // this is mildly expensive, but useful for debugging:
     let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
     let itemCounter = items.length;
+
+    /*
+     * Stage 6: Update token visibility for autohide
+     */
 
     if (useTokenVisibility) {
         await updateTokenVisibility(currentFogPath);
