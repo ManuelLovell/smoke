@@ -1,5 +1,5 @@
 import "./css/style.css";
-import OBR, { ItemFilter, Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { ItemFilter, Image, Shape, buildShape, Player } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVisionFog, isTrailingFog, isAnyFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
@@ -541,6 +541,10 @@ function updateUI(items: Image[])
                     items[0].metadata[`${Constants.EXTENSIONID}/visionTorch`] = target.checked;
                 });
             }, false);            
+
+            rangeInput.addEventListener("mousewheel", async () => {
+                // default behavior is fine here - this allows mousewheel to adjust the number up and down when the input is selected
+            });
         }
     }
 }
@@ -674,6 +678,19 @@ OBR.onReady(async () =>
         OBR.scene.fog.onChange(fog =>
         {
             sceneCache.fog = fog;
+        });
+
+        // Identify selected tokens in the token ui
+        OBR.player.onChange(async (player: Player) => {
+            const tokens = document.querySelectorAll(".token-table-entry");
+            for (let token of tokens) {
+                let tokenId = token.id.substring(3);
+                if (player.selection !== undefined && player.selection.includes(tokenId)) {
+                    token.classList.add("token-table-selected");
+                } else {
+                    token.classList.remove("token-table-selected");
+                }
+            }
         });
 
         OBR.scene.items.onChange(async (items) =>

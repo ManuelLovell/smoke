@@ -242,6 +242,10 @@ input.token-vision-range {
     text-align: left;
 }
 
+.token-table-selected .token-name {
+    font-weight: bold;
+}
+
 .cbutton {
     margin-left: 4px;
     background-color: var(--OBR-light-blue);
