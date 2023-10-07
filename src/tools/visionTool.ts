@@ -869,6 +869,7 @@ async function computeShadow(event: any)
             // Create a new visionFog item with an empty path, so we can add to it.
             // Note that the digest is forced, which avoids the object being reused by the deduplication code.
             const path = buildPath().commands([]).fillRule("nonzero").locked(true).visible(false).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: "reuse"}).build();
+            path.zIndex = 3;
             await OBR.scene.local.addItems([path]);
             reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
         } else {
@@ -1059,14 +1060,8 @@ async function computeShadow(event: any)
 document.addEventListener("updateVision", computeShadow)
 
 
-function doStuff() {
-    /*
-    for each meta/autohide {
-        move the autohide tokens somewhere out of the way (why? can they just do this themselves?)
-        put a local copy in the same spot (based on meta of the autohides?)
-        when the copies are moved, replicate hte position to the metadata of the main token?
-    }
-    */
+function updateDoors() {
+    
 }
 
 async function updateTokenVisibility(currentFogPath: any) {
