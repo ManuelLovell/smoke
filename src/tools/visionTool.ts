@@ -1041,7 +1041,7 @@ async function computeShadow(event: any)
      */
 
     if (useTokenVisibility) {
-        await updateTokenVisibility(currentFogPath);
+        updateTokenVisibility(currentFogPath);
         currentFogPath.delete();
     }
 
