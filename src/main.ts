@@ -114,14 +114,12 @@ app.innerHTML = `
 
         <div id="debug_div" style="display: none;" class="grid-debug">
             <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
-            <div>Stage 1</div><div id="stage1">N/A</div>
-            <div>Stage 2</div><div id="stage2">N/A</div>
-            <div>Stage 3</div><div id="stage3">N/A</div>
-            <div>Stage 4</div><div id="stage4">N/A</div>
-            <div>Stage 5</div><div id="stage5">N/A</div>
-            <div>Stage 6</div><div id="stage6">N/A</div>
-            <div>Compute time</div><div id="compute_time">N/A</div>
-            <div>Communication time</div><div id="communication_time">N/A</div>
+            <div>Stage 1: Fog Shapes</div><div id="stage1">N/A</div>
+            <div>Stage 2: Player Vision</div><div id="stage2">N/A</div>
+            <div>Stage 3: Vision Ranges</div><div id="stage3">N/A</div>
+            <div>Stage 4: Persistence+Trailing</div><div id="stage4">N/A</div>
+            <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
+            <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
             <div>Vision Lines</div><div><span id="line_counter">?</span> (<span id="skip_counter">?</span> skipped)</div>
             <div>Fog Objects</div><div id="item_counter">?</div>

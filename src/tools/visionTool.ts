@@ -10,8 +10,8 @@ import { squareDistance, comparePosition, isClose, mod, Matrix, MathM, toRadians
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
 
-// TODO: For anyone watching, i'm not happy about this, would like to have something that works natively with pathkit instead of transcoding to svg, but it does the job for now.
-import findPathIntersections from 'path-intersection';
+// We no longer need this for torch LOS calculations
+// import findPathIntersections from 'path-intersection';
 
 export async function setupContextMenus(): Promise<void>
 {
@@ -728,15 +728,19 @@ async function computeShadow(event: any)
         for (let j = 0; j < torches.length; j++) {
             const torch = torches[j];
 
+            // For a torch this is incorrect - we dont want it's token size, we want the light radius.
             const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
 
             let intersects = true;
             let calcPoints = 8;
 
-            // skipping all this, and just assuming we can see the light doesnt actually affect the rendering since we intersect the paths later,
-            // however it saves about 10ms of processing time, likely due to findPathIntersections being slow:
+            // This has been turned off because we simply by setting intersects = false and letting the path intersection do all the work,
+            // If we use the light radius we need to make sure it doesnt project the LOS points through obstruction lines, and this gets complex.
+            // Turning it off is faster and seems to have a better overall result.
             intersects = false;
 
+            // If we dont need to LOS here, we can remove the path intersection library:
+            /*
             for (let i = 0; i < calcPoints && intersects === true; i++) {
                 const angle = (i * (360 / calcPoints) * Math.PI) / 180;
                 const x = torch.position.x + radius * Math.cos(angle);
@@ -757,10 +761,10 @@ async function computeShadow(event: any)
                         .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
                         .build();
 
-                    // hijack rings for debug, this will get deleted afterwards:
                     playerRings.push(lightLOS);
                 }
             }
+            */
             tokensCanSeeTorch.push({token: token, torch: torches[j], visible: !intersects});
         }
     }
@@ -951,7 +955,6 @@ async function computeShadow(event: any)
             items[0].commands = newPath.toCmds();
             newPath.delete();
         });
-
         reuseNewFog.delete();
     }
 
@@ -1009,7 +1012,6 @@ async function computeShadow(event: any)
                 }
             }, false);
         } else {
-
             promisesToExecute.push(OBR.scene.local.addItems([trailingFog]));
         }
     } else {
@@ -1018,7 +1020,7 @@ async function computeShadow(event: any)
     }
 
     trailingFogRect.delete();
-
+    
     stages[4].pause();
     stages[5].start();
 
