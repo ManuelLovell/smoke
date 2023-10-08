@@ -39,11 +39,21 @@
         --invert-click: none;
         --slider-color: #4b4b4b;
     }
+
+    .tooltip img {
+        filter: contrast(60%);
+    }
 }
 
 .tooltip {
     cursor: pointer;
     display: inline;
+}
+.tooltip svg {
+    height: 0.9em;
+    position: relative;
+    top: 3px;
+    fill: var(--OBR-offset-fore) !important;
 }
 
 #vision_checkbox {
@@ -305,13 +315,13 @@ li>p {
 }
 
 .grid-main {
-    width: 355px;
+    width: 350px;
     display: grid;
     grid-template-columns: 10% 50% auto;
 }
 
 .grid-settings {
-    width: 355px;
+    width: 350px;
     text-align:left;
 
     display: grid;
@@ -319,7 +329,7 @@ li>p {
 }
 
 .grid-debug {
-    width: 355px;
+    width: 350px;
     text-align:left;
 
     display: grid;
