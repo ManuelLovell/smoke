@@ -521,11 +521,13 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
     }
-
+    /*
+    // Dont bother - this only takes 5ms on complex scenes, probably takes longer to update the dom and repaint:
     updatePerformanceInformation({
         "line_counter": lineCounter,
         "skip_counter": skipCounter
     });
+    */
 
     return polygons;
 }
@@ -644,6 +646,9 @@ async function computeShadow(event: any)
      * merging all polygons created previously (this can probably be merged into the last step)
      */
 
+    // This could be optimised by using separate fog areas on separate map tiles to avoid having to process so many obstruction lines..
+    // However it might not be what people want in some cases with stiched maps
+
     const itemsPerPlayer: Record<number, any> = {};
     for (let j = 0; j < polygons.length; j++)
     {
@@ -722,14 +727,15 @@ async function computeShadow(event: any)
         // skip ourselves
         if (isTorch(tokensWithVision[i])) continue;
 
-        const playerPath = itemsPerPlayer[i].toSVGString();
+        //const playerPath = itemsPerPlayer[i].toSVGString();
         const token = tokensWithVision[i];
 
         for (let j = 0; j < torches.length; j++) {
+            /*
             const torch = torches[j];
 
             // For a torch this is incorrect - we dont want it's token size, we want the light radius.
-            const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
+            //const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
 
             let intersects = true;
             let calcPoints = 8;
@@ -740,7 +746,6 @@ async function computeShadow(event: any)
             intersects = false;
 
             // If we dont need to LOS here, we can remove the path intersection library:
-            /*
             for (let i = 0; i < calcPoints && intersects === true; i++) {
                 const angle = (i * (360 / calcPoints) * Math.PI) / 180;
                 const x = torch.position.x + radius * Math.cos(angle);
@@ -765,7 +770,7 @@ async function computeShadow(event: any)
                 }
             }
             */
-            tokensCanSeeTorch.push({token: token, torch: torches[j], visible: !intersects});
+            tokensCanSeeTorch.push({token: token, torch: torches[j], visible: true}); // visible: !intersects
         }
     }
 
@@ -797,7 +802,7 @@ async function computeShadow(event: any)
         if (tokenIsTorch && !canSeeTorch) {
             delete tokensWithVision[i];
             delete itemsPerPlayer[i];
-            continue; 
+            continue;
         } else if (tokenIsTorch) {
             intersectTorches[i] = true;
         } else {
@@ -890,7 +895,10 @@ async function computeShadow(event: any)
             // Create a new visionFog item with an empty path, so we can add to it.
             // Note that the digest is forced, which avoids the object being reused by the deduplication code.
             const path = buildPath().commands([]).fillRule("nonzero").locked(true).visible(false).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: "reuse"}).build();
+
+            // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
             path.zIndex = 3;
+
             await OBR.scene.local.addItems([path]);
             reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
         } else {
@@ -1020,7 +1028,7 @@ async function computeShadow(event: any)
     }
 
     trailingFogRect.delete();
-    
+
     stages[4].pause();
     stages[5].start();
 
@@ -1030,29 +1038,56 @@ async function computeShadow(event: any)
 
     computeTimer.pause(); awaitTimer.resume();
 
-    promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
-    promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item => {
-            const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
-            path.zIndex = item.zIndex;
-            return path;
-        }))
-    );
+    // So this doesnt make a huge amount of sense to me, however i think batching promises in this way only executes them when you call Promise.all,
+    // and for some reason this causes issues with some of the procedural code below IF you remove the await on the Promise.all.
+    // However, per the above, if we simply just call them individually and dont await any of them, everything is fine.. and we get a bit more of reponsiveness in the UI
 
-    if (!persistenceEnabled) {
-        promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
+    if (true) {
+        OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id));
+        OBR.scene.local.addItems(itemsToAdd.map(item => {
+                const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
+                path.zIndex = item.zIndex;
+                return path;
+        }));
+
+        if (!persistenceEnabled) {
+            OBR.scene.local.deleteItems(oldFog.map((item) => item.id));
+        }
+
+        // Include the rings in the promise, if available
+        if (playerRings.length > 0) {
+            OBR.scene.local.addItems(playerRings);
+        }
+
+        if (!sceneCache.fog.filled) {
+            OBR.scene.fog.setFilled(true);
+        }
+    } else {
+        promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
+        promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item => {
+                const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
+                path.zIndex = item.zIndex;
+                return path;
+            }))
+        );
+
+        if (!persistenceEnabled) {
+            promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
+        }
+
+        // Include the rings in the promise, if available
+        if (playerRings.length > 0) {
+            promisesToExecute.push(OBR.scene.local.addItems(playerRings));
+        }
+
+        if (!sceneCache.fog.filled) {
+            promisesToExecute.push(OBR.scene.fog.setFilled(true));
+        }
+
+        // Update all items
+        await Promise.all(promisesToExecute);
     }
 
-    // Include the rings in the promise, if available
-    if (playerRings.length > 0) {
-        promisesToExecute.push(OBR.scene.local.addItems(playerRings));
-    }
-
-    if (!sceneCache.fog.filled) {
-        promisesToExecute.push(OBR.scene.fog.setFilled(true));
-    }
-
-    // Update all items
-    await Promise.all(promisesToExecute);
 
     // this is mildly expensive, but useful for debugging:
     //let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
@@ -1094,7 +1129,7 @@ document.addEventListener("updateVision", computeShadow)
 
 
 function updateDoors() {
-    
+
 }
 
 async function updateTokenVisibility(currentFogPath: any) {
@@ -1104,6 +1139,12 @@ async function updateTokenVisibility(currentFogPath: any) {
     // this might not be the right thing to do with complex paths.. union should be sufficient when we intersect later..
     currentFogPath.simplify();
 
+    /*
+     * Token LOS calculations:
+     *   Create a hexagon around each autohide token
+     *   Intersect the hexagon against the current visible fog path (for all players)
+     *   If the intersected path isnt empty, then at least a part of the hexagon is visible.
+     */
     for (const token of tokens) {
         const pathBuilder = new PathKit.SkOpBuilder();
         const tempPath = PathKit.NewPath();

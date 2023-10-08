@@ -121,8 +121,6 @@ app.innerHTML = `
             <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
             <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-            <div>Vision Lines</div><div><span id="line_counter">?</span> (<span id="skip_counter">?</span> skipped)</div>
-            <div>Fog Objects</div><div id="item_counter">?</div>
         </div>
     </div>
 </div>
