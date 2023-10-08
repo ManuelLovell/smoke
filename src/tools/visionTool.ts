@@ -311,7 +311,7 @@ function updatePerformanceInformation(performanceInfo: { [key: string]: any }): 
     for (const [key, value] of Object.entries(performanceInfo))
     {
         const element = document.getElementById(key);
-        if (key == "compute_time" || key == "communication_time") {
+        if (key == "compute_time" || key == "communication_time" || key[0] == 's') {
             if (element) element.innerText = Number.parseFloat(value).toFixed(1) + 'ms';
         } else {
             if (element) element.innerText = value;
@@ -553,6 +553,11 @@ async function computeShadow(event: any)
         return;
     }
 
+    const stages = [];
+    for (let i = 0; i <= 6; i++) stages.push(new Timer());
+
+    stages[1].start();
+
     // Load information from the event
     const {
         awaitTimer,
@@ -631,6 +636,8 @@ async function computeShadow(event: any)
     }
 
     const playerRings: Shape[] = [];
+    stages[1].pause();
+    stages[2].start();
 
     /*
      * Stage 2: Compute shadow polygons for each player,
@@ -649,6 +656,7 @@ async function computeShadow(event: any)
             cacheHits++;
             continue;
         }
+
         cacheMisses++;
         const playerPolygons: Polygon[] = polygons[j];
         const pathBuilder = new PathKit.SkOpBuilder();
@@ -725,6 +733,10 @@ async function computeShadow(event: any)
             let intersects = true;
             let calcPoints = 8;
 
+            // skipping all this, and just assuming we can see the light doesnt actually affect the rendering since we intersect the paths later,
+            // however it saves about 10ms of processing time, likely due to findPathIntersections being slow:
+            intersects = false;
+
             for (let i = 0; i < calcPoints && intersects === true; i++) {
                 const angle = (i * (360 / calcPoints) * Math.PI) / 180;
                 const x = torch.position.x + radius * Math.cos(angle);
@@ -749,10 +761,12 @@ async function computeShadow(event: any)
                     playerRings.push(lightLOS);
                 }
             }
-
             tokensCanSeeTorch.push({token: token, torch: torches[j], visible: !intersects});
         }
     }
+
+    stages[2].pause();
+    stages[3].start();
 
     const intersectTorches = [];
     const intersectFullVision = PathKit.NewPath();
@@ -821,6 +835,9 @@ async function computeShadow(event: any)
     }
 
     intersectFullVision.delete();
+
+    stages[3].pause();
+    stages[4].start();
 
     /*
      * Stage 4: Persistent and trailing fog
@@ -1002,6 +1019,9 @@ async function computeShadow(event: any)
 
     trailingFogRect.delete();
 
+    stages[4].pause();
+    stages[5].start();
+
     /*
      * Stage 5: Add/remove items in the scene
      */
@@ -1033,8 +1053,11 @@ async function computeShadow(event: any)
     await Promise.all(promisesToExecute);
 
     // this is mildly expensive, but useful for debugging:
-    let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-    let itemCounter = items.length;
+    //let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+    let itemCounter = 0;//items.length;
+
+    stages[5].pause();
+    stages[6].start();
 
     /*
      * Stage 6: Update token visibility for autohide
@@ -1044,15 +1067,23 @@ async function computeShadow(event: any)
         updateTokenVisibility(currentFogPath);
         currentFogPath.delete();
     }
+    stages[6].pause();
 
     const [awaitTimerResult, computeTimerResult] = [awaitTimer.stop(), computeTimer.stop()];
-    updatePerformanceInformation({
+    const timers: Record<string, string> = {
         "compute_time": `${computeTimerResult} ms`,
         "communication_time": `${awaitTimerResult} ms`,
-        "cache_hits": cacheHits,
-        "cache_misses": cacheMisses,
-        "item_counter": itemCounter
-    });
+        "cache_hits": cacheHits.toString(),
+        "cache_misses": cacheMisses.toString(),
+        "item_counter": itemCounter.toString()
+    };
+
+    for (let i = 1; i <= 6; i++) {
+        const result = stages[i].stop();
+        timers['stage'+i] = `${result} ms`;
+    }
+
+    updatePerformanceInformation(timers);
 
     busy = false;
 
