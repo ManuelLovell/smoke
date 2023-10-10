@@ -559,8 +559,8 @@ async function computeShadow(event: any)
         let mapbox = [];
         for (let map of maps) {
             let dpiRatio = sceneCache.gridDpi / map.grid.dpi;
-            let left = map.position.x - (dpiRatio * map.grid.offset.x), top = map.position.y - (dpiRatio * map.grid.offset.y);
-            let right = (left + (dpiRatio * map.image.width)) * map.scale.x, bottom = (top +  (dpiRatio *map.image.height)) * map.scale.y;
+            let left = map.position.x - (dpiRatio * map.grid.offset.x) * map.scale.x, top = map.position.y - (dpiRatio * map.grid.offset.y) * map.scale.y;
+            let right = left + (dpiRatio * map.image.width) * map.scale.x, bottom = top +  (dpiRatio *map.image.height) * map.scale.y;
 
             if (!mapbox.length) {
                 mapbox[0] = left;
