@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, Item, Shape, Line, Curve, ItemFilter, Vector2, Math2 } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, Item, Shape, Line, Curve, ItemFilter, Vector2, Math2, MathM } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -339,17 +339,12 @@ function createObstructionLines(visionShapes: any): ObstructionLine[] {
         {
             let start: Vector2, end: Vector2;
 
-            // rotate and scale the line in accordance with the item's position, scale, and rotation.
-            // this could be optimised by not recalculating the previous point when i > 0.
-            if (shape.rotation != 0) {
-                start = Math2.rotate(shape.points[i], shape.position, shape.rotation);
-                end = Math2.rotate(shape.points[i+1], shape.position, shape.rotation);
-            } else {
-                // this is minor code duplication, but will perform slightly better than passing it through the rotation methods. possibly not enough to matter.
-                // skip rotation and move the relative position by the shape's position & scale
-                start = {x: (shape.points[i].x * shape.scale.x + shape.position.x), y: (shape.points[i].y * shape.scale.y + shape.position.y) };
-                end = {x: (shape.points[i + 1].x * shape.scale.x + shape.position.x), y: (shape.points[i + 1].y * shape.scale.y + shape.position.y) };
-            }
+            const shapeTransform = MathM.fromItem(shape);
+            const startTransform = MathM.fromPosition(shape.points[i]);
+            const endTransform = MathM.fromPosition(shape.points[i+1]);
+
+            start = MathM.decompose(MathM.multiply(shapeTransform, startTransform)).position;
+            end = MathM.decompose(MathM.multiply(shapeTransform, endTransform)).position;
 
             obstructionLines.push({
                 startPosition: start,
@@ -514,10 +509,12 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
 
 var PathKit: any;
 var busy = false;
+
 // Generally, only one player will move at one time, so let's cache the
 // computed shadows for all players and only update if something has
 // changed
 const playerShadowCache = new ObjectCache(false);
+
 // This is the function responsible for computing the shadows and the FoW
 async function computeShadow(event: any)
 {
