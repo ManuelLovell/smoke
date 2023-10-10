@@ -1,5 +1,5 @@
 import "./css/style.css";
-import OBR, { ItemFilter, Image, Shape, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { ItemFilter, Image, Shape, buildShape, Player } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVisionFog, isTrailingFog, isAnyFog } from './utilities/itemFilters';
 import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
@@ -21,15 +21,14 @@ app.innerHTML = `
         <div class="title">
             Smoke! ˣ Dynamic Fog
             <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
-            <div class="tooltip" id="settings_button" title="Settings">&#x2699;</div>
-            <div class="tooltip" id="whatsnewbutton" title="Whats New">&#x1F6C8;</div>
+            <div class="tooltip" id="settings_button" title="Settings"><svg fill="currentColor" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M.63 11.08zm.21.41v-.1zm.23.38L1 11.68zM1 11.68l-.11-.19zm-.21-.29c-.06-.1-.11-.21-.16-.31.05.1.1.21.16.31zm.32.54v-.06z"/><path d="m11.26 12.63 1.83 1.09a7.34 7.34 0 0 0 1-.94 7.48 7.48 0 0 0 1.56-2.86l-1.74-1A5.29 5.29 0 0 0 14 8a5.29 5.29 0 0 0-.08-.9l1.74-1a7.45 7.45 0 0 0-1.33-2.58 7.54 7.54 0 0 0-1.24-1.22l-1.83 1.04a6 6 0 0 0-1.11-.53v-2A8.55 8.55 0 0 0 7.94.53a8.39 8.39 0 0 0-2.26.3v2a7.23 7.23 0 0 0-1.12.54L2.78 2.28A7.46 7.46 0 0 0 .2 6.06l1.72 1a5.29 5.29 0 0 0-.08.9 5.29 5.29 0 0 0 .08.9l-1.73 1a8 8 0 0 0 .43 1.15c.05.1.1.21.16.31v.1l.11.19.12.19v.06a7.69 7.69 0 0 0 1.64 1.78l1.81-1.08a7.23 7.23 0 0 0 1.12.54v2a8.39 8.39 0 0 0 2.26.31 8.56 8.56 0 0 0 2.22-.3v-2a6 6 0 0 0 1.2-.48zm-2.39 1.52a7.57 7.57 0 0 1-.95.06 7.73 7.73 0 0 1-1-.06v-1.69a4.92 4.92 0 0 1-2.53-1.27l-1.54.92a6.22 6.22 0 0 1-1.08-1.61l1.56-.93a4.27 4.27 0 0 1 0-3.17l-1.56-.92a6.11 6.11 0 0 1 1.12-1.62l1.56.93A5 5 0 0 1 7 3.53V1.82a7.73 7.73 0 0 1 1-.06 7.57 7.57 0 0 1 .95.06v1.72a4.9 4.9 0 0 1 2.4 1.26l1.59-.94a6.31 6.31 0 0 1 1.11 1.62l-1.6.94a4.35 4.35 0 0 1 .3 1.58 4.44 4.44 0 0 1-.29 1.55l1.56.93a6.43 6.43 0 0 1-1.11 1.61l-1.58-.93a5 5 0 0 1-2.49 1.28z"/><path d="M7.92 5.49A2.59 2.59 0 0 0 5.25 8a2.59 2.59 0 0 0 2.67 2.51A2.6 2.6 0 0 0 10.6 8a2.6 2.6 0 0 0-2.68-2.51zM8 9.2A1.35 1.35 0 0 1 6.55 8 1.35 1.35 0 0 1 8 6.7 1.35 1.35 0 0 1 9.39 8 1.35 1.35 0 0 1 8 9.2z"/></svg></div>
+            <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
         </div>
-        <br>
         <hr>
         <div id="settings-ui" class="grid-settings" style="display:none;">
             <div class="visionTitle grid-3">Settings</div>
 
-            <div><label for="autodetect_checkbox">Autodetect Maps</label></div>
+            <div><label for="autodetect_checkbox" title="Automatically detect fog areas based on the current scene's maps">Autodetect Maps</label></div>
             <div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
 
             <div id="boundry_options" class="grid-3" style="display:none;">
@@ -44,11 +43,11 @@ app.innerHTML = `
             <div><label for="snap_checkbox">Grid Snap</label></div>
             <div class="grid-2"><input type="checkbox" id="snap_checkbox"></div>
 
-            <div><label for="persistence_checkbox">Persistence</label></div>
+            <div><label for="persistence_checkbox" title="Enabling fog persistence will retain the previously viewed areas of the map">Persistence</label></div>
             <div><input type="checkbox" id="persistence_checkbox"></div>
             <div><input type="button" id="persistence_reset" value="Reset"></div>
 
-            <div><label for="fow_checkbox">Trailing Fog</label></div>
+            <div><label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog + Autohide</label></div>
             <div><input type="checkbox" id="fow_checkbox"></div>
             <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
 
@@ -58,7 +57,7 @@ app.innerHTML = `
 
             <div></div>
             <div></div>
-            <div><input type="button" id="debug_button" value="Enable Debugging"></div>
+            <div><input type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></div>
 
             <div class="visionTitle grid-3" style="margin-top: 16px;">Import</div>
 
@@ -68,11 +67,11 @@ app.innerHTML = `
             <div></div>
             <div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
 
-            <div><label for="dpi_autodetect">DPI Autodetect</label></div>
+            <div><label for="dpi_autodetect" title="Whether or not to automatically detect the DPI of imported data based">DPI Autodetect</label></div>
             <div><input type="checkbox" id="dpi_autodetect" checked></div>
-            <div><input id="import_dpi" disabled type="text" value="150" size="1" maxlength="4"></div>
+            <div><input id="import_dpi" disabled type="text" value="150" style="width: 32px;" maxlength="4"></div>
 
-            <div style="margin-bottom: 8px;">Map Alignment</div>
+            <div style="margin-bottom: 8px;" title="Which map to align imported lines to">Map Alignment</div>
             <div></div>
             <div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
 
@@ -95,10 +94,12 @@ app.innerHTML = `
             <div class="visionTitle grid-3">Spectres!</div>
             <div id="ghostContainer" class="grid-3">
                 <div id="spectreWarning">
-                    <i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i>
-                    <br>
+                    Spectre tokens are only visible to specific players.
                     <br>
                     Enable vision here after it's been Spectred.
+                    <br>
+                    <br>
+                    <i>Turning a token into a Spectre is one-way. You'll need to drag a new token in if you want it normal.</i>
                 </div>
                 <table style="margin: auto; padding: 0; width: 100%">
                 <colgroup>
@@ -113,11 +114,13 @@ app.innerHTML = `
 
         <div id="debug_div" style="display: none;" class="grid-debug">
             <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
-            <div>Compute time</div><div id="compute_time">N/A</div>
-            <div>Communication time</div><div id="communication_time">N/A</div>
+            <div>Stage 1: Fog Shapes</div><div id="stage1">N/A</div>
+            <div>Stage 2: Player Vision</div><div id="stage2">N/A</div>
+            <div>Stage 3: Vision Ranges</div><div id="stage3">N/A</div>
+            <div>Stage 4: Persistence+Trailing</div><div id="stage4">N/A</div>
+            <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
+            <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-            <div>Vision Lines</div><div><span id="line_counter">?</span> (<span id="skip_counter">?</span> skipped)</div>
-            <div>Fog Objects</div><div id="item_counter">?</div>
         </div>
     </div>
 </div>
@@ -256,6 +259,7 @@ async function setButtonHandler()
         const target = event.target as HTMLInputElement;
 
         debugDiv.style.display = debugDiv.style.display == 'none' ? 'grid' : 'none';
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/debug`]: debugDiv.style.display === 'grid' ? true : false});
     }, false);
   
     fowColor.addEventListener("input", async (event: Event) => {
@@ -278,7 +282,6 @@ async function setButtonHandler()
 
         if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?")) {
             const metadata = await OBR.scene.getMetadata();
-            console.log(metadata);
             for (const meta in metadata) {
                 // Remove the old scene metadata, we dont need any of it
                 if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID) {
@@ -286,16 +289,13 @@ async function setButtonHandler()
                 }
             }
 
-            const convert_items = await OBR.scene.items.getItems();//isAnyFog as ItemFilter<Image>);
-            const itemsToRemove: Image[] = [];
-            console.log(convert_items);
+            const convert_items = await OBR.scene.items.getItems();
 
             await OBR.scene.items.updateItems(convert_items, items =>
             {
                 for (const item of items)
                 {
                     if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined) {
-                        // play nice here, dont break dyn fog's lines, despite what we said in the warning
                         item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                         delete item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                     }
@@ -370,6 +370,7 @@ async function setButtonHandler()
 function updateUI(items: Image[])
 {
     const playersWithVision = items.filter(isTokenWithVisionForUI);
+    let debug = false;
 
     if (sceneCache.metadata) {
         visionCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
@@ -378,7 +379,10 @@ function updateUI(items: Image[])
         autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
         fowCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
         fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
+        debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
     }
+
+    debugDiv.style.display = debug ? 'grid' : 'none';
 
     boundryOptions.style.display = autodetectCheckbox.checked ? "none" : "";
     message.style.display = playersWithVision.length > 0 ? "none" : "block";
@@ -431,12 +435,19 @@ function updateUI(items: Image[])
             const newTr = document.createElement("tr");
             newTr.id = `tr-${currentPlayer.id}`;
             newTr.className = "token-table-entry";
-            newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td><td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td><td>&nbsp;&nbsp;&infin;&nbsp<input type="checkbox" class="unlimited-vision">&nbsp;None <input type="checkbox" class="no-vision"></td>`;
+            newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td>
+                               <td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td>
+                               <td>
+                                <div class="cbutton"><label title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
+                                <div class="cbutton"><label title="Turn token into a light source"><input type="checkbox" class="torch-vision"><span>&#128294;</span></label></div>
+                                <div class="cbutton"><label title="Disable vision on this token"><input type="checkbox" class="no-vision"><span>None</span></label></div>
+                               </td>`;
             table.appendChild(newTr);
 
             // Register event listeners
             const rangeInput = newTr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
             const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
+            const torchCheckbox = newTr.getElementsByClassName("torch-vision")[0] as HTMLInputElement;
             const blindCheckbox = newTr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
 
             if (rangeInput)
@@ -447,6 +458,10 @@ function updateUI(items: Image[])
             if (unlimitedCheckbox)
             {
                 unlimitedCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionRange`] === 0;
+            }
+            if (torchCheckbox)
+            {
+                torchCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionTorch`] as boolean;
             }
             if (blindCheckbox)
             {
@@ -509,7 +524,6 @@ function updateUI(items: Image[])
                 if (target.checked)
                 {
                     rangeInput.setAttribute("disabled", "disabled");
-                    unlimitedCheckbox.checked = false;
                 }
                 else
                 {
@@ -520,6 +534,24 @@ function updateUI(items: Image[])
                     items[0].metadata[`${Constants.EXTENSIONID}/visionBlind`] = target.checked;
                 });
             }, false);
+
+            torchCheckbox.addEventListener("click", async event =>
+            {
+                if (!event || !event.target) return;
+                // Grab from scene to avoid a snapshot of the playerstate
+                const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+
+                const target = event.target as HTMLInputElement;
+
+                await OBR.scene.items.updateItems([thisPlayer], items =>
+                {
+                    items[0].metadata[`${Constants.EXTENSIONID}/visionTorch`] = target.checked;
+                });
+            }, false);            
+
+            rangeInput.addEventListener("mousewheel", async () => {
+                // default behavior is fine here - this allows mousewheel to adjust the number up and down when the input is selected
+            });
         }
     }
 }
@@ -653,6 +685,19 @@ OBR.onReady(async () =>
         OBR.scene.fog.onChange(fog =>
         {
             sceneCache.fog = fog;
+        });
+
+        // Identify selected tokens in the token ui
+        OBR.player.onChange(async (player: Player) => {
+            const tokens = document.querySelectorAll(".token-table-entry");
+            for (let token of tokens) {
+                let tokenId = token.id.substring(3);
+                if (player.selection !== undefined && player.selection.includes(tokenId)) {
+                    token.classList.add("token-table-selected");
+                } else {
+                    token.classList.remove("token-table-selected");
+                }
+            }
         });
 
         OBR.scene.items.onChange(async (items) =>

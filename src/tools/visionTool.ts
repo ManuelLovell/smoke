@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, Item, Shape, ItemFilter } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, Item, Shape, Line, Curve, ItemFilter, Vector2, Math2, MathM } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -7,8 +7,11 @@ import { Timer } from "./../utilities/debug";
 import { ObjectCache } from "./../utilities/cache";
 import { sceneCache } from "./../utilities/globals";
 import { squareDistance, comparePosition, isClose, mod } from "./../utilities/math";
-import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog } from "./../utilities/itemFilters";
+import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
+
+// We no longer need this for torch LOS calculations
+// import findPathIntersections from 'path-intersection';
 
 export async function setupContextMenus(): Promise<void>
 {
@@ -203,6 +206,47 @@ export async function setupContextMenus(): Promise<void>
             });
         }
     });
+
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
+        icons: [
+            {
+                icon: "/autohide-off.svg",
+                label: "Enable Autohide",
+                filter: {
+                    every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined }],
+                },
+            },
+            {
+                icon: "/autohide-on.svg",
+                label: "Disable Autohide",
+                filter: {
+                    every: [{ key: "layer", value: "CHARACTER" }],
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            const enableFog = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
+
+            await OBR.scene.items.updateItems(ctx.items, items =>
+            {
+                for (const item of items)
+                {
+                    if (!enableFog)
+                    {
+                        delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
+                    }
+                    else
+                    {
+                        item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
+                    }
+                }
+            });
+        },
+    });
+
 }
 
 export async function createTool(): Promise<void>
@@ -267,7 +311,7 @@ function updatePerformanceInformation(performanceInfo: { [key: string]: any }): 
     for (const [key, value] of Object.entries(performanceInfo))
     {
         const element = document.getElementById(key);
-        if (key == "compute_time" || key == "communication_time") {
+        if (key == "compute_time" || key == "communication_time" || key[0] == 's') {
             if (element) element.innerText = Number.parseFloat(value).toFixed(1) + 'ms';
         } else {
             if (element) element.innerText = value;
@@ -275,112 +319,52 @@ function updatePerformanceInformation(performanceInfo: { [key: string]: any }): 
     }
 }
 
-var PathKit: any;
-var busy = false;
-// Generally, only one player will move at one time, so let's cache the
-// computed shadows for all players and only update if something has 
-// changed
-const playerShadowCache = new ObjectCache(false);
-// This is the function responsible for computing the shadows and the FoW
-async function computeShadow(event: any)
-{
-    busy = true;
-    if (!PathKit)
-    {
-        // Is this allowed?
-        PathKit = await PathKitInit({ locateFile: () => wasm });
-    }
-    if (!(await OBR.scene.isReady()))
-    {
-        // If we change scenes we should invalidate the cache
-        playerShadowCache.invalidate((_, value) => value.shadowPath.delete());
-        busy = false;
-        return;
-    }
+interface ObstructionLine {
+    startPosition: Vector2,
+    endPosition: Vector2,
+    originalShape: any,
+    oneSided: string
+}
 
-    // Load information from the event
-    const {
-        awaitTimer,
-        computeTimer,
-        metadata,
-        visionShapes,
-        tokensWithVision,
-        invalidateCache,
-    } = event.detail;
+interface Polygon {
+    pointset: Vector2[],
+    fromShape: any
+}
 
-
-    let size = event.detail.size, offset = event.detail.offset, scale = event.detail.scale;
-    let [width, height] = size;
-
-    const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
-    if (autodetectEnabled) {
-        // draw a big box around all the maps
-        const maps:Image[] = await OBR.scene.items.getItems((item) => item.layer === "MAP");
-
-        let mapbox = [];
-        for (let map of maps) {
-            let dpiRatio = sceneCache.gridDpi / map.grid.dpi;
-            let left = map.position.x - (dpiRatio * map.grid.offset.x), top = map.position.y - (dpiRatio * map.grid.offset.y);
-            let right = (left + (dpiRatio * map.image.width)) * map.scale.x, bottom = (top +  (dpiRatio *map.image.height)) * map.scale.y;
-
-            if (!mapbox.length) {
-                mapbox[0] = left;
-                mapbox[1] = top;
-                mapbox[2] = right;
-                mapbox[3] = bottom;
-            } else {
-                if (left < mapbox[0]) mapbox[0] = left;
-                if (top < mapbox[1]) mapbox[1] = top;
-                if (right > mapbox[2]) mapbox[2] = right;
-                if (bottom > mapbox[3]) mapbox[3] = bottom;
-            }
-        }
-
-        offset = [mapbox[0], mapbox[1]];
-        size = [mapbox[2] - mapbox[0], mapbox[3] - mapbox[1]];
-        scale = [1, 1];
-        [width, height] = size;
-    }
-
-    let cacheHits = 0, cacheMisses = 0;
-    if (invalidateCache)  // Something significant changed => invalidate cache
-        playerShadowCache.invalidate((_, value) => value.shadowPath.delete());
-
-    computeTimer.resume();
-
-    const shouldComputeVision = metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
-    if (!shouldComputeVision || tokensWithVision.length == 0)
-    {
-        // Clear fog
-        const fogItems = await OBR.scene.items.getItems(isAnyFog as ItemFilter<Image>);
-        await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
-    
-        busy = false;
-        return;
-    }
-
-    // Extract all lines from the drawn shapes
-    const visionLines = [];
+function createObstructionLines(visionShapes: any): ObstructionLine[] {
+    let obstructionLines: ObstructionLine[] = [];
     for (const shape of visionShapes)
     {
         for (let i = 0; i < shape.points.length - 1; i++)
         {
-            visionLines.push({
-                startPosition: { x: (shape.points[i].x * shape.scale.x + shape.position.x), y: (shape.points[i].y * shape.scale.y + shape.position.y) },
-                endPosition: { x: (shape.points[i + 1].x * shape.scale.x + shape.position.x), y: (shape.points[i + 1].y * shape.scale.y + shape.position.y) },
+            let start: Vector2, end: Vector2;
+
+            const shapeTransform = MathM.fromItem(shape);
+            const startTransform = MathM.fromPosition(shape.points[i]);
+            const endTransform = MathM.fromPosition(shape.points[i+1]);
+
+            start = MathM.decompose(MathM.multiply(shapeTransform, startTransform)).position;
+            end = MathM.decompose(MathM.multiply(shapeTransform, endTransform)).position;
+
+            obstructionLines.push({
+                startPosition: start,
+                endPosition: end,
                 originalShape: shape,
                 oneSided: shape.metadata[`${Constants.EXTENSIONID}/oneSided`]
             });
         }
     }
+    return obstructionLines;
+}
 
-    // `polygons` is a an array of arrays. Each element in the main array is
-    // another array containing the individual shadows cast by a vision line
-    // from the point of view of one player.
-    const polygons: Polygon[][] = [];
-    const playerRings: Shape[] = [];
+// Main fog visibility calculation occurs here.
+
+function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, width: number, height:number, offset: [number, number], scale: [number, number]): Polygon[][] {
+    let polygons: Polygon[][] = [];
+    let lineCounter = 0, skipCounter = 0;
+    let size = [width, height];
     const gmIds = sceneCache.players.filter(x => x.role == "GM");
-    let lineCounter: number = 0, skipCounter: number = 0;
+
     for (const token of tokensWithVision)
     {
         const myToken = (sceneCache.userId === token.createdUserId);
@@ -512,14 +496,136 @@ async function computeShadow(event: any)
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
     }
+    /*
+    // Dont bother - this only takes 5ms on complex scenes, probably takes longer to update the dom and repaint:
+    updatePerformanceInformation({
+        "line_counter": lineCounter,
+        "skip_counter": skipCounter
+    });
+    */
+
+    return polygons;
+}
+
+var PathKit: any;
+var busy = false;
+
+// Generally, only one player will move at one time, so let's cache the
+// computed shadows for all players and only update if something has
+// changed
+const playerShadowCache = new ObjectCache(false);
+
+// This is the function responsible for computing the shadows and the FoW
+async function computeShadow(event: any)
+{
+    busy = true;
+    if (!PathKit)
+    {
+        // Is this allowed?
+        PathKit = await PathKitInit({ locateFile: () => wasm });
+    }
+    if (!(await OBR.scene.isReady()))
+    {
+        // If we change scenes we should invalidate the cache
+        playerShadowCache.invalidate((_, value) => value.shadowPath.delete());
+        busy = false;
+        return;
+    }
+
+    const stages = [];
+    for (let i = 0; i <= 6; i++) stages.push(new Timer());
+
+    stages[1].start();
+
+    // Load information from the event
+    const {
+        awaitTimer,
+        computeTimer,
+        metadata,
+        visionShapes,
+        tokensWithVision,
+        invalidateCache,
+    } = event.detail;
+
+
+    let size = event.detail.size, offset = event.detail.offset, scale = event.detail.scale;
+    let [width, height] = size;
+
+    const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
+    if (autodetectEnabled) {
+        // draw a big box around all the maps
+        const maps:Image[] = await OBR.scene.items.getItems((item) => item.layer === "MAP");
+
+        let mapbox = [];
+        for (let map of maps) {
+            let dpiRatio = sceneCache.gridDpi / map.grid.dpi;
+            let left = map.position.x - (dpiRatio * map.grid.offset.x) * map.scale.x, top = map.position.y - (dpiRatio * map.grid.offset.y) * map.scale.y;
+            let right = left + (dpiRatio * map.image.width) * map.scale.x, bottom = top +  (dpiRatio *map.image.height) * map.scale.y;
+
+            if (!mapbox.length) {
+                mapbox[0] = left;
+                mapbox[1] = top;
+                mapbox[2] = right;
+                mapbox[3] = bottom;
+            } else {
+                if (left < mapbox[0]) mapbox[0] = left;
+                if (top < mapbox[1]) mapbox[1] = top;
+                if (right > mapbox[2]) mapbox[2] = right;
+                if (bottom > mapbox[3]) mapbox[3] = bottom;
+            }
+        }
+
+        offset = [mapbox[0], mapbox[1]];
+        size = [mapbox[2] - mapbox[0], mapbox[3] - mapbox[1]];
+        scale = [1, 1];
+        [width, height] = size;
+    }
+
+    let cacheHits = 0, cacheMisses = 0;
+    if (invalidateCache)  // Something significant changed => invalidate cache
+        playerShadowCache.invalidate((_, value) => value.shadowPath.delete());
+
+    computeTimer.resume();
+
+    const shouldComputeVision = metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
+    if (!shouldComputeVision || tokensWithVision.length == 0)
+    {
+        // Clear fog
+        const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+        await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
+
+        busy = false;
+        return;
+    }
+
+    /*
+     * Stage 1: Calculate obstruction lines and fog shapes
+     */
+
+    // Extract all obstruction lines
+    const obstructionLines: ObstructionLine[] = createObstructionLines(visionShapes);
+
+    // Create polygons containing the individual shadows cast by a vision line from the point of view of one player.
+    const polygons: Polygon[][] = createPolygons(obstructionLines, tokensWithVision, width, height, offset, scale);
+
     if (polygons.length == 0)
     {
         busy = false;
         return;
     }
 
-    // *2nd step* - compute shadow polygons for each player, merging all polygons
-    // created previously (this can probably be merged into the last step)
+    const playerRings: Shape[] = [];
+    stages[1].pause();
+    stages[2].start();
+
+    /*
+     * Stage 2: Compute shadow polygons for each player,
+     * merging all polygons created previously (this can probably be merged into the last step)
+     */
+
+    // This could be optimised by using separate fog areas on separate map tiles to avoid having to process so many obstruction lines..
+    // However it might not be what people want in some cases with stiched maps
+
     const itemsPerPlayer: Record<number, any> = {};
     for (let j = 0; j < polygons.length; j++)
     {
@@ -532,6 +638,7 @@ async function computeShadow(event: any)
             cacheHits++;
             continue;
         }
+
         cacheMisses++;
         const playerPolygons: Polygon[] = polygons[j];
         const pathBuilder = new PathKit.SkOpBuilder();
@@ -588,16 +695,100 @@ async function computeShadow(event: any)
         }
     }
 
-    // *3rd step* - compute vision ranges
-    // Create vision circles that cut each player's fog
+    // Track torches separately to player vision, so that we can calculate line of sight later
+    const torches = sceneCache.items.filter(isTorch);
+    const tokensCanSeeTorch = [];
+
+    for (let i = 0; i < tokensWithVision.length; i++) {
+
+        // skip ourselves
+        if (isTorch(tokensWithVision[i])) continue;
+
+        //const playerPath = itemsPerPlayer[i].toSVGString();
+        const token = tokensWithVision[i];
+
+        for (let j = 0; j < torches.length; j++) {
+            /*
+            const torch = torches[j];
+
+            // For a torch this is incorrect - we dont want it's token size, we want the light radius.
+            //const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
+
+            let intersects = true;
+            let calcPoints = 8;
+
+            // This has been turned off because we simply by setting intersects = false and letting the path intersection do all the work,
+            // If we use the light radius we need to make sure it doesnt project the LOS points through obstruction lines, and this gets complex.
+            // Turning it off is faster and seems to have a better overall result.
+            intersects = false;
+
+            // If we dont need to LOS here, we can remove the path intersection library:
+            for (let i = 0; i < calcPoints && intersects === true; i++) {
+                const angle = (i * (360 / calcPoints) * Math.PI) / 180;
+                const x = torch.position.x + radius * Math.cos(angle);
+                const y = torch.position.y + radius * Math.sin(angle);
+
+                // TODO: This can be redone to avoid having to translate into svg, but for now..
+                let line = 'M'+token.position.x+","+token.position.y+"L"+x+","+y;
+                intersects = findPathIntersections(line, playerPath, true) > 0 ? true : false;
+
+                if (enableDebug) {
+                    const lightLOS = buildShape()
+                        .strokeColor('#ff0000')
+                        .fillOpacity(1)
+                        .position({ x: x, y: y })
+                        .width(30)
+                        .height(30)
+                        .shapeType("CIRCLE")
+                        .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
+                        .build();
+
+                    playerRings.push(lightLOS);
+                }
+            }
+            */
+            tokensCanSeeTorch.push({token: token, torch: torches[j], visible: true}); // visible: !intersects
+        }
+    }
+
+    stages[2].pause();
+    stages[3].start();
+
+    const intersectTorches = [];
+    const intersectFullVision = PathKit.NewPath();
+
+    /*
+     * Stage 3: Calculate vision ranges
+     * Intersect each player and torch vision with a circle based on their vision range,
+     * Then if a player has line of sight to a torch, include it's vision path.
+     */
+
     for (let i = 0; i < tokensWithVision.length; i++)
     {
         const token = tokensWithVision[i];
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
+        const gmIds = sceneCache.players.filter(x => x.role == "GM");
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
-        if (visionRangeMeta)
-        {
+        const tokenIsTorch = isTorch(token);
+
+        const canSeeTorch = tokensCanSeeTorch.some(i => {
+            return i.torch.id == token.id && i.visible;
+        });
+
+        if (tokenIsTorch && !canSeeTorch) {
+            delete tokensWithVision[i];
+            delete itemsPerPlayer[i];
+            continue;
+        } else if (tokenIsTorch) {
+            intersectTorches[i] = true;
+        } else {
+            // calculate the vision areas of all non-torch tokens into one path, so we can intersect this with the torches to limit the visibility to only what the players can see:
+            intersectFullVision.op(itemsPerPlayer[i], PathKit.PathOp.UNION);
+        }
+
+        // if vision range isnt unlimited, intersect it with a circle:
+        if (visionRangeMeta) {
             if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
 
             const visionRange = sceneCache.gridDpi * (visionRangeMeta / sceneCache.gridScale + .5);
@@ -607,7 +798,7 @@ async function computeShadow(event: any)
 
             // Get Color for Players
             const owner = sceneCache.players.find(x => x.id === token.createdUserId);
-            if (owner && sceneCache.role === "GM")
+            if (owner && sceneCache.role === "GM" && !tokenIsTorch)
             {
                 // Add indicator rings intended for the GM
                 const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
@@ -618,34 +809,93 @@ async function computeShadow(event: any)
             }
         }
     }
-    
-    // *4th step* - persistent and trailing fog
 
+    // Intersect torches based on available view
+    intersectFullVision.simplify();
+    for (let i = 0; i < intersectTorches.length; i++) {
+        if (intersectTorches[i] === true) {
+            // intersect torch(i) against the full range of vision of the player token(j):
+            itemsPerPlayer[i].op(intersectFullVision, PathKit.PathOp.INTERSECT);
+            itemsPerPlayer[i].simplify();
+        }
+    }
+
+    intersectFullVision.delete();
+
+    stages[3].pause();
+    stages[4].start();
+
+    /*
+     * Stage 4: Persistent and trailing fog
+     */
+
+    // List of fog items to add
     const itemsToAdd = [];
+
+    // Batched OBR calls
+    const promisesToExecute = [];
+
+    // Settings
     const persistenceEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true;
     const fowEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] === true;
+
+    // Overlay to cut out trailing fog
     const trailingFogRect = PathKit.NewPath();
+
+    // Deduplicate calls when adding items to the scene
     const dedup_digest = {} as any;
+
     const localItemCache = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
     const oldRings = await OBR.scene.local.getItems(isIndicatorRing as ItemFilter<Image>);
-    const promisesToExecute = [];
 
     if (fowEnabled) {
       // Create a rect (around our fog area, needs autodetection or something), which we then carve out based on the path showing the currently visible area
       trailingFogRect.rect(offset[0], offset[1], size[0], size[1]);
     }
 
+    // This... should just work.. the logic seems sound.
+    // During testing I ran into issues joining the paths together where it seemed to create overlapping paths with the union that would end up cutting holes in the path instead of filling them.
+    // I can no longer replicate it, but I had turned this code path on, got 2 tokens, and just move them around next to eachother after a fog refresh, and it soon glitched.
+
+    let enableReuseFog = persistenceEnabled && true;
     let reuseFog:Image[] = [];
-    if (persistenceEnabled) {
+    let reuseNewFog: any;
+
+    // Reuse a single (but insanely complex) path to avoid overhead of lots of fog items
+    if (enableReuseFog) {
         // Reuse the same localItem and change the path.
-        // This doesnt work (yet)
-        // reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+        reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+        reuseNewFog = new PathKit.SkOpBuilder();
+        dedup_digest["reuse"] = true;
+
+        if (reuseFog.length === 0) {
+            // Create a new visionFog item with an empty path, so we can add to it.
+            // Note that the digest is forced, which avoids the object being reused by the deduplication code.
+            const path = buildPath().commands([]).fillRule("nonzero").locked(true).visible(false).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: "reuse"}).build();
+
+            // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
+            path.zIndex = 3;
+
+            await OBR.scene.local.addItems([path]);
+            reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+        } else {
+            // Initalize the new path builder with the existing item's path:
+            let oldPath = PathKit.FromCmds((reuseFog[0] as any).commands);
+            reuseNewFog.add(oldPath, PathKit.PathOp.UNION);
+            oldPath.delete();
+        }
     }
-  
+
+    const currentFog = new PathKit.SkOpBuilder();
+    let useTokenVisibility = false;
+
+    // Iterate over each of the fog paths (per token), and either:
+    //   Add them to the list of fog items to add to the scene, deduplicating based on a hash of the fog path,
+    //   or, if persistence/enableReuseFog is enabled, then add the paths to a single path to reuse the existing fog item in the scene.
+
     for (const key of Object.keys(itemsPerPlayer) as any) {
         const item = itemsPerPlayer[key];
 
-        // TODO: how slow is this? is there a more efficient way?
         const encoder = new TextEncoder();
         const data = encoder.encode(item.toCmds().toString());
 
@@ -656,58 +906,71 @@ async function computeShadow(event: any)
         const dedup:Image[] = localItemCache.filter(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
         if (dedup.length === 0) {
-            if (false && persistenceEnabled && reuseFog.length > 0) {
-                // TODO: New code, doesnt work in some cases, something is wrong with the path calculations.
-                // This updates the existing paths in the scene rather than adding multiple local items.
-                await OBR.scene.local.updateItems([reuseFog[0].id], (items) => {
-                    const pathBuilder = new PathKit.SkOpBuilder();
-                    let oldPath = PathKit.FromCmds(items[0].commands);
-                    pathBuilder.add(oldPath, PathKit.PathOp.UNION);
-                    pathBuilder.add(item, PathKit.PathOp.UNION);
-                    let newPath = pathBuilder.resolve();
-                    newPath.simplify();
-                    items[0].commands = newPath.toCmds();
-                    oldPath.delete();
-                    newPath.delete();
-                    pathBuilder.delete();
-                });
+            if (enableReuseFog) {
+                reuseNewFog.add(item, PathKit.PathOp.UNION);
             } else {
                 itemsToAdd.push({cmds: item.toCmds(), visible: false, zIndex: 3, playerId: tokensWithVision[key].id, digest: digest});
             }
-            //const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#FF0000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
-            //OBR.scene.local.addItems([debugp]);
         } else {
             // these duplicates are still visible, so dont delete them if we have persistence turned off.
             dedup_digest[digest] = true;
         }
 
         if (fowEnabled) {
-            //const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
-            //OBR.scene.local.addItems([debugp]);
+            if (enableDebug) {
+                const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true}).build();
+                OBR.scene.local.addItems([debugp]);
+            }
 
             trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
+
+            if (sceneCache.role === "GM") {
+                useTokenVisibility = true;
+                // this is the currently visible stuff only
+                currentFog.add(item, PathKit.PathOp.UNION);
+            }
         }
         item.delete();
     }
+
+    if (enableReuseFog) {
+        await OBR.scene.local.updateItems([reuseFog[0].id], (items) => {
+            let newPath = reuseNewFog.resolve();
+            newPath.setFillType(PathKit.FillType.EVENODD);
+            items[0].commands = newPath.toCmds();
+            newPath.delete();
+        });
+        reuseNewFog.delete();
+    }
+
+    let currentFogPath: any;
+    if (useTokenVisibility) {
+        currentFogPath = currentFog.resolve();
+    }
+    currentFog.delete();
 
     const oldTrailingFog = localItemCache.filter(isTrailingFog);
 
     // Performance optimisation: This detects fog items that were already created previously in the scene by earlier iterations of the fog path rendering, and effectively skips their creation/deletion.
     // Hard to measure the impact, however it appears to cut about 20ms per token that didnt move since we last updated the fog.
+    // This becomes unnecessary if we can get the other code path working to join all the fog items into a single path.
+    //
+    // This has become somewhat irrelevant for two reasons: we're using scene.local which doesnt have this performance hit, and enableReuseFog bypasses this completely
+
     const oldFog = localItemCache.filter((item) => {
         const dedup_index = item.metadata[`${Constants.EXTENSIONID}/digest`] as string;
-        return isVisionFog(item) && dedup_digest[dedup_index] === undefined; 
+        return isVisionFog(item) && dedup_digest[dedup_index] === undefined;
     });
+
+
 
     if (fowEnabled) {
         let fowColor = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
         let fowOpacity = 0.5;
         if (fowColor.length == 9) {
-            console.log(fowColor.substring(7));
             fowOpacity = Number.parseInt(fowColor.substring(7), 16) / 255;
             fowColor = fowColor.substring(0, 7);
         }
-
         const trailingFog = buildPath()
             .commands(trailingFogRect.toCmds())
             .locked(true)
@@ -725,8 +988,9 @@ async function computeShadow(event: any)
         trailingFog.disableHit = true;
 
         if (oldTrailingFog.length > 0) {
-            // If the old item exists in the scene, reuse it, otherwise you get flickering. 
-            // Warning: This can use fastUpdate since we only change the path, though it seemed to break without it too.
+            // If the old item exists in the scene, reuse it, otherwise you get flickering.
+            // Warning: In theory this can use fastUpdate since we only change the path, though it seemed to break with it turned on.
+            // Also worth noting that this seems to fail if we use trailingFogRect directly - does buildPath transform it somehow? possibly by the fill rule?
             OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items => {
                 for (const item of items) {
                     item.commands = trailingFog.commands;
@@ -739,56 +1003,180 @@ async function computeShadow(event: any)
         // FOW disabled, remove any existing trailing fog items:
         promisesToExecute.push(OBR.scene.local.deleteItems(localItemCache.filter(isTrailingFog).map(fogItem => fogItem.id)));
     }
+
     trailingFogRect.delete();
 
-    // *5th step* - add/remove items
+    stages[4].pause();
+    stages[5].start();
+
+    /*
+     * Stage 5: Add/remove items in the scene
+     */
 
     computeTimer.pause(); awaitTimer.resume();
 
-    promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
-    promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item => {
-            const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
-            path.zIndex = item.zIndex;
-            return path;
-        }))
-    );
+    // So this doesnt make a huge amount of sense to me, however i think batching promises in this way only executes them when you call Promise.all,
+    // and for some reason this causes issues with some of the procedural code below IF you remove the await on the Promise.all.
+    // However, per the above, if we simply just call them individually and dont await any of them, everything is fine.. and we get a bit more of reponsiveness in the UI
 
-    if (!persistenceEnabled) {
-        promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
+    if (true) {
+        OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id));
+        OBR.scene.local.addItems(itemsToAdd.map(item => {
+                const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
+                path.zIndex = item.zIndex;
+                return path;
+        }));
+
+        if (!persistenceEnabled) {
+            OBR.scene.local.deleteItems(oldFog.map((item) => item.id));
+        }
+
+        // Include the rings in the promise, if available
+        if (playerRings.length > 0) {
+            OBR.scene.local.addItems(playerRings);
+        }
+
+        if (!sceneCache.fog.filled) {
+            OBR.scene.fog.setFilled(true);
+        }
+    } else {
+        promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
+        promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item => {
+                const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
+                path.zIndex = item.zIndex;
+                return path;
+            }))
+        );
+
+        if (!persistenceEnabled) {
+            promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
+        }
+
+        // Include the rings in the promise, if available
+        if (playerRings.length > 0) {
+            promisesToExecute.push(OBR.scene.local.addItems(playerRings));
+        }
+
+        if (!sceneCache.fog.filled) {
+            promisesToExecute.push(OBR.scene.fog.setFilled(true));
+        }
+
+        // Update all items
+        await Promise.all(promisesToExecute);
     }
 
-    // Include the rings in the promise, if available
-    if (playerRings.length > 0)
-    {
-        promisesToExecute.push(OBR.scene.local.addItems(playerRings));
+
+    // this is mildly expensive, but useful for debugging:
+    //let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+    let itemCounter = 0;//items.length;
+
+    stages[5].pause();
+    stages[6].start();
+
+    /*
+     * Stage 6: Update token visibility for autohide
+     */
+
+    if (useTokenVisibility) {
+        updateTokenVisibility(currentFogPath);
+        currentFogPath.delete();
     }
-
-    if (!sceneCache.fog.filled)
-        promisesToExecute.push(OBR.scene.fog.setFilled(true));
-
-    // Update all items
-    await Promise.all(promisesToExecute);
-
-    // this is expensive, but useful:
-    let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-    let itemCounter = items.length;
+    stages[6].pause();
 
     const [awaitTimerResult, computeTimerResult] = [awaitTimer.stop(), computeTimer.stop()];
-    updatePerformanceInformation({
+    const timers: Record<string, string> = {
         "compute_time": `${computeTimerResult} ms`,
         "communication_time": `${awaitTimerResult} ms`,
-        "cache_hits": cacheHits,
-        "cache_misses": cacheMisses,
-        "line_counter": lineCounter,
-        "skip_counter": skipCounter,
-        "item_counter": itemCounter
-    });
+        "cache_hits": cacheHits.toString(),
+        "cache_misses": cacheMisses.toString(),
+        "item_counter": itemCounter.toString()
+    };
+
+    for (let i = 1; i <= 6; i++) {
+        const result = stages[i].stop();
+        timers['stage'+i] = `${result} ms`;
+    }
+
+    updatePerformanceInformation(timers);
 
     busy = false;
+
 }
 document.addEventListener("updateVision", computeShadow)
 
+
+function updateDoors() {
+
+}
+
+async function updateTokenVisibility(currentFogPath: any) {
+    const toggleTokens: Image[] = [];
+    const tokens = sceneCache.items.filter(isAutohide);
+
+    // this might not be the right thing to do with complex paths.. union should be sufficient when we intersect later..
+    currentFogPath.simplify();
+
+    /*
+     * Token LOS calculations:
+     *   Create a hexagon around each autohide token
+     *   Intersect the hexagon against the current visible fog path (for all players)
+     *   If the intersected path isnt empty, then at least a part of the hexagon is visible.
+     */
+    for (const token of tokens) {
+        const pathBuilder = new PathKit.SkOpBuilder();
+        const tempPath = PathKit.NewPath();
+
+        // this needs to be calulated dynamically, but looks like this should be based on the token.grid.dpi versus the image size? or scale? or both?
+        const radius = (sceneCache.gridDpi / token.grid.dpi) * (token.image.width / 2) * token.scale.x;
+
+        for (let i = 0; i < 6; i++) {
+            const angle = (i * 60 * Math.PI) / 180;
+            const x = token.position.x + radius * Math.cos(angle);
+            const y = token.position.y + radius * Math.sin(angle);
+            if (i == 0) {
+                tempPath.moveTo(x, y);
+            } else {
+                tempPath.lineTo(x, y);
+            }
+        }
+        tempPath.closePath();
+
+        // debug - blue token bounding path
+        if (enableDebug) {
+            const ring = buildPath().strokeColor('#0000ff').fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
+            await OBR.scene.local.addItems([ring]);
+        }
+
+        pathBuilder.add(tempPath, PathKit.PathOp.UNION);
+        pathBuilder.add(currentFogPath, PathKit.PathOp.INTERSECT);
+        const intersectPath = pathBuilder.resolve();
+
+        // If the shape around the token overlaps with the currently visible area the intersecting path will have a length:
+        const visible = !intersectPath.toCmds().length;
+
+        if (token.visible == visible) {
+            toggleTokens.push(token);
+        }
+
+        // debug - red intersection path
+        if (enableDebug) {
+            const ring = buildPath().fillRule("evenodd").strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
+            await OBR.scene.local.addItems([ring]);
+        }
+        tempPath.delete();
+        pathBuilder.delete();
+        intersectPath.delete();
+    }
+
+    await OBR.scene.items.updateItems(toggleTokens.map(token => token.id), (items) => {
+        for (let i = 0; i < items.length; i++) {
+            items[i].visible = !items[i].visible;
+        }
+    });
+}
+
 let previousVisionShapes: string;
+let previousAutohideItems: string;
 let previousPlayersWithVision: string;
 let previousSize: number[] = [];
 let previousVisionEnabled: boolean;
@@ -797,6 +1185,7 @@ let previousAutodetectEnabled: boolean;
 let previousFowEnabled: boolean;
 let previousPersistenceEnabled: boolean;
 let previousFowColor: string;
+let enableDebug = false;
 
 export async function onSceneDataChange(forceUpdate?: boolean)
 {
@@ -806,18 +1195,27 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     if (!(await OBR.scene.isReady()))
         return;
 
+    const debugDiv = document.querySelector("#debug_div") as HTMLDivElement;
+    //enableDebug = !(debugDiv.style.display === 'none');
+    //enableDebug = true;
+
     const [awaitTimer, computeTimer] = [new Timer(), new Timer()];
 
     awaitTimer.start(); awaitTimer.pause();
     computeTimer.start();
+
+    // How much overhead is all this?
 
     const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
     const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id)
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`]);
 
-    const tokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
+    const allTokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
+    const tokensWithVision = allTokensWithVision.filter((item) => { return !isTorch(item) || item.visible === true; });
+
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
+    const autoHideItems = sceneCache.items.filter(isAutohide);
     const backgroundImage = sceneCache.items.filter(isBackgroundBorder)?.[0] as any as Shape;
     const visionEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
     const persistenceEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true;
@@ -830,11 +1228,11 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     const offset:number[] = [];
 
     if (backgroundImage === undefined) {
-        size[0] = 0; 
+        size[0] = 0;
         size[1] = 0;
-        scale[0] = 1; 
+        scale[0] = 1;
         scale[1] = 1;
-        offset[0] = 0; 
+        offset[0] = 0;
         offset[1] = 0;
     } else {
         size[0] = backgroundImage.width * backgroundImage.scale.x;
@@ -859,17 +1257,20 @@ export async function onSceneDataChange(forceUpdate?: boolean)
 
     // Check if any values have changed and a re-draw is necessary
     const sVisionShapes = JSON.stringify(visionShapes);
+    const sAutohideItems = JSON.stringify(autoHideItems);
     const sPlayersWithVision = JSON.stringify(tokensWithVision);
     const sBackgroundImage = JSON.stringify(backgroundImage);
-    if (sBackgroundImage == previousMap 
-        && visionEnabled == previousVisionEnabled 
+
+    if (sBackgroundImage == previousMap
+        && visionEnabled == previousVisionEnabled
         && previousFowColor == fowColor
         && previousAutodetectEnabled == autodetectEnabled
         && previousFowEnabled == fowEnabled
         && previousPersistenceEnabled == persistenceEnabled
-        && previousVisionShapes == sVisionShapes 
-        && previousPlayersWithVision == sPlayersWithVision 
-        && size[0] == previousSize[0] 
+        && previousVisionShapes == sVisionShapes
+        && previousAutohideItems == sAutohideItems
+        && previousPlayersWithVision == sPlayersWithVision
+        && size[0] == previousSize[0]
         && size[1] == previousSize[1]
         && forceUpdate !== true)
         return;
@@ -887,7 +1288,7 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     previousAutodetectEnabled = autodetectEnabled;
     previousFowEnabled = fowEnabled;
     previousFowColor = fowColor;
-    previousPersistenceEnabled = persistenceEnabled;    
+    previousPersistenceEnabled = persistenceEnabled;
     computeTimer.pause();
 
     // Fire an `updateVisionEvent` to launch the `computeShadow` function.

@@ -39,11 +39,21 @@
         --invert-click: none;
         --slider-color: #4b4b4b;
     }
+
+    .tooltip img {
+        filter: contrast(60%);
+    }
 }
 
 .tooltip {
     cursor: pointer;
     display: inline;
+}
+.tooltip svg {
+    height: 0.9em;
+    position: relative;
+    top: 3px;
+    fill: var(--OBR-offset-fore) !important;
 }
 
 #vision_checkbox {
@@ -52,7 +62,6 @@
 }
 
 .title {
-    display: inline-block;
     font-size: 1.5em;
     font-weight: bolder;
 }
@@ -74,7 +83,9 @@ input
 }
 
 input[type=button] {
+    background-color: var(--OBR-light-blue);
     padding: 2px;
+    border: 2px solid black;
 }
 
 #import_dpi:disabled {
@@ -218,11 +229,14 @@ input.token-vision-range[type=number] {
 /* style for input element */
 input.token-vision-range {
     text-align: right;
+    padding-top: 5px;
     padding-right: 1.3em;
     /* adjust this value based on the width of the unit */
     box-sizing: border-box;
     /* include padding and border in the width */
     width: 3.5em;
+    background-color: var(--OBR-light-blue);
+    border: 2px solid black;
 }
 
 .token-list>* {
@@ -230,18 +244,62 @@ input.token-vision-range {
 }
 
 .token-name {
-    padding-right: 1.5em;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    max-width: 9em;
+    max-width: 10em;
     vertical-align: middle;
+    text-align: left;
 }
+
+.token-table-selected .token-name {
+    font-weight: bold;
+}
+
+.cbutton {
+    margin-left: 4px;
+    background-color: var(--OBR-light-blue);
+    border-radius: 4px;
+    border: 2px solid black;
+    overflow: hidden;
+    float: left;
+    line-height: 1em;
+}
+
+.cbutton label {
+    float: left;
+    cursor: pointer;
+}
+
+.cbutton label span {
+    text-align: center;
+    padding: 3px;
+    display: block;
+}
+
+.cbutton label input {
+    position: absolute;
+    display: none;
+}
+
+.cbutton input:checked + span {
+    background-color: var(--OBR-Purple-Select);
+}
+
+.cbutton:hover {
+    background-color: var(--OBR-Purple-Select);
+}
+
+/*
+.cbutton input:checked + span {
+    color: #ffffff;
+    text-shadow: 0 0  6px rgba(0, 0, 0, 0.8);
+}*/
 
 /* style for unit element */
 .unit {
     margin-left: -1em;
-    padding-right: 1em;
+    padding-right: 0.5em;
 }
 
 .vl {
@@ -257,13 +315,13 @@ li>p {
 }
 
 .grid-main {
-    width: 355px;
+    width: 350px;
     display: grid;
     grid-template-columns: 10% 50% auto;
 }
 
 .grid-settings {
-    width: 355px;
+    width: 350px;
     text-align:left;
 
     display: grid;
@@ -271,7 +329,7 @@ li>p {
 }
 
 .grid-debug {
-    width: 355px;
+    width: 350px;
     text-align:left;
 
     display: grid;

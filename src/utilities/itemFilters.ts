@@ -69,4 +69,12 @@ function isAnyFog(item: Image) {
         || item.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`];
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog };
+function isTorch(item: Image) { 
+    return item.metadata[`${Constants.EXTENSIONID}/visionTorch`];
+}
+
+function isAutohide(item: Image) {
+    return item.layer == "CHARACTER" && !isTokenWithVisionForUI(item) && item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
+}
+
+export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog, isTorch, isAutohide };
