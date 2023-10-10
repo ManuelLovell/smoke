@@ -1,5 +1,17 @@
-import{O as e,C as t}from"./constants-4214fcbb.js";const i=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");i.innerHTML=`
+import{O as e,C as t}from"./constants-8a17c75a.js";const i=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");i.innerHTML=`
   <div>
+    <h1>Smoke & Spectre! 10/10/2023</h1>
+    <b>New feature release, including:</b>
+    <ul>
+    <li><b>Torches!</b> Setting a token to a torch makes it visible when other player tokens have line of sight to it.</li>
+    <li><b>Autohide!</b> New button added on tokens so they can now be set to hide automatically when trailing fog is turned on and they're outside the current view</li>
+    <li>Performance improvements for persistent fog</li>
+    <li>Obstruction lines can now be rotated, including when attached to other tokens</li>
+    <li>UI / Usability improvements - new main menu style, additional tooltips on many options.</li>
+    </ul>
+    </br>
+    Let us know how you go, on discord - <i>Doggosaurus</i>.
+    </br>
     <h1>Smoke & Spectre! 9/28</h1>
     <b>New feature release, including:</b>
     <ul>
