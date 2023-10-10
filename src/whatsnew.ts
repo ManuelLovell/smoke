@@ -8,7 +8,7 @@ const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 whatsnew.innerHTML = `
   <div>
-    <h1>Smoke & Spectre! Testing Version</h1>
+    <h1>Smoke & Spectre! 10/10/2023</h1>
     <b>New feature release, including:</b>
     <ul>
     <li><b>Torches!</b> Setting a token to a torch makes it visible when other player tokens have line of sight to it.</li>
