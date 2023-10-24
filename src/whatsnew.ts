@@ -8,6 +8,18 @@ const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 whatsnew.innerHTML = `
   <div>
+    <h1>Smoke & Spectre! 24/10/2023</h1>
+    <b>New feature release, including:</b>
+    <ul>
+    <li><b>Doors!</b> Enable the new door option on obstruction lines, then double click the door icon to quickly toggle the line visibility.</li>
+    <li><b>Fog backgrounds!</b> Maps can now be converted into a fog background image and fixed in place, or unlocked again to be put back on the map layer.</li>
+    <li><b>Performance improvements!</b> Several significant performance improvements, as well as a toggle for speed/accuracy. Complex paths are also simplified automatically on import.</li>
+    <li><b>Bug fixes!</b> Numerous bug fixes, particularly when importing from UVTT.</li>
+    </ul>
+    </br>
+    See you on discord! - <i>Doggsaurus</i>
+    </br>
+    </br>
     <h1>Smoke & Spectre! 10/10/2023</h1>
     <b>New feature release, including:</b>
     <ul>

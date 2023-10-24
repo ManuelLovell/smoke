@@ -1,8 +1,9 @@
 import "./css/style.css";
-import OBR, { ItemFilter, Image, Shape, buildShape, Player } from "@owlbear-rodeo/sdk";
+import OBR, { ItemFilter, Image, Item, Shape, buildShape, buildPath, Player } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVisionFog, isTrailingFog, isAnyFog } from './utilities/itemFilters';
-import { setupContextMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
+import { setupContextMenus, setupAutohideMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
+import { toggleDoor, initDoors, setupDoorMenus } from './tools/doorTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
 import { updateMaps, importFog } from "./tools/import";
@@ -51,9 +52,17 @@ app.innerHTML = `
             <div><input type="checkbox" id="fow_checkbox"></div>
             <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
 
+            <div>Render Quality</div>
+            <div></div>
+            <div><select id="quality"><option value="fast">Fast</option><option value="accurate">Accurate</option></select></div>
+
             <div>Convert from <i>Dynamic Fog</i></div>
             <div></div>
             <div><input type="button" id="convert_button" value="Convert"></div>
+
+            <div>Unlock Fog Backgrounds</div>
+            <div></div>
+            <div><input type="button" id="background_button" value="Unlock"></div>
 
             <div></div>
             <div></div>
@@ -92,7 +101,7 @@ app.innerHTML = `
                 </table>
             </div>
             <div class="visionTitle grid-3">Spectres!</div>
-            <div id="ghostContainer" class="grid-3">
+            <div id="ghostContainer" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
                 <div id="spectreWarning">
                     Spectre tokens are only visible to specific players.
                     <br>
@@ -110,6 +119,10 @@ app.innerHTML = `
                 <tbody id="ghostList">
                 </tbody></table>
             </div> 
+            <div id="fog_backgrounds" class="grid-3">
+                <div class="visionTitle" style="display: block; padding-top:8px;">Fog Backgrounds</div>
+                <div id="fog_background_list" class="grid-main" style="border-bottom: 1px solid white; padding-bottom: 8px;">
+            </div>
         </div>
 
         <div id="debug_div" style="display: none;" class="grid-debug">
@@ -144,12 +157,14 @@ const persistenceCheckbox = document.getElementById("persistence_checkbox")! as 
 const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HTMLInputElement;
 const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
 const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
+const qualityOption = document.getElementById("quality")! as HTMLSelectElement;
 const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
 const convertButton = document.getElementById("convert_button")! as HTMLInputElement;
 const settingsButton = document.getElementById("settings_button")! as HTMLInputElement;
 const boundryOptions = document.getElementById("boundry_options")! as HTMLDivElement;
 const debugDiv = document.getElementById("debug_div")! as HTMLDivElement;
 const debugButton = document.getElementById("debug_button")! as HTMLDivElement;
+const backgroundButton = document.getElementById("background_button")! as HTMLDivElement;
 
 // Import
 const importButton = document.getElementById("import_button")! as HTMLInputElement;
@@ -244,6 +259,13 @@ async function setButtonHandler()
 
         await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowEnabled`]: target.checked});
     }, false);
+
+    qualityOption.addEventListener("change", async (event) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/quality`]: target.value});
+    }, false);
     
     resetButton.addEventListener("click", async (event: MouseEvent) => {
         if (!event || !event.target) return;
@@ -260,6 +282,21 @@ async function setButtonHandler()
 
         debugDiv.style.display = debugDiv.style.display == 'none' ? 'grid' : 'none';
         await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/debug`]: debugDiv.style.display === 'grid' ? true : false});
+    }, false);
+    
+    backgroundButton.addEventListener("click", async (event: MouseEvent) => {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.items.updateItems((item: Item) => {return item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true)}, (items: Item[]) => {
+            for (let i = 0; i < items.length; i++) {
+                items[i].layer = "MAP";
+                items[i].disableHit = false;
+                items[i].locked = false;
+                items[i].visible = true;
+                delete items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`];
+            }
+        });
     }, false);
   
     fowColor.addEventListener("input", async (event: Event) => {
@@ -380,12 +417,66 @@ function updateUI(items: Image[])
         fowCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
         fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
         debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
+        qualityOption.value = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] as string;
     }
 
     debugDiv.style.display = debug ? 'grid' : 'none';
 
     boundryOptions.style.display = autodetectCheckbox.checked ? "none" : "";
     message.style.display = playersWithVision.length > 0 ? "none" : "block";
+
+    setupAutohideMenus(fowCheckbox.checked);
+    setupDoorMenus();
+
+    const fogBackgrounds = sceneCache.items.filter((item) => item.layer === "FOG" && item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true);
+    const fogBackgroundEntries = document.querySelectorAll(".fog-background-entry");
+    const removeBackgrounds = [];
+    for (const background of fogBackgroundEntries) {
+        const backgroundId = background.id.slice(3);
+        if (fogBackgrounds.find(item => item.id === backgroundId) === undefined) {
+            background.remove();
+        }
+    }
+
+    for (const background of fogBackgrounds) {
+        const backgroundElem = document.querySelector(`#bg-${background.id}`);
+
+        if (!backgroundElem) {
+            const newBackground = document.createElement("div");
+            newBackground.id = `bg-${background.id}`;
+            newBackground.className = "fog-background-entry grid-3 grid-main";
+            newBackground.style.width = "300";
+            newBackground.innerHTML = `<div class="token-name grid-2">${background.name}</div>
+                <div><label title="Unlock this fog background and turn it back into a map"><input type="button" value="Unlock"></label></div>`;
+
+            document.querySelector("#fog_background_list")!.appendChild(newBackground);
+            
+            const unlockInput = newBackground.querySelector("input")! as HTMLInputElement;
+            unlockInput.addEventListener('click', async event => {
+                if (!event || !event.target) return;
+                const target = event.target as HTMLInputElement;
+
+                const backgroundId = target.parentElement!.parentElement!.parentElement!.id.slice(3);
+
+                await OBR.scene.items.updateItems((item: Item) => {return item.id === backgroundId && item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true)}, (items: Item[]) => {
+                    for (let i = 0; i < items.length; i++) {
+                        items[i].layer = "MAP";
+                        items[i].disableHit = false;
+                        items[i].locked = false;
+                        items[i].visible = true;
+                        delete items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`];
+                    }
+                });
+            });
+        }
+    }
+
+    const backgroundDiv = document.querySelector("#fog_backgrounds") as HTMLDivElement;
+    if (fogBackgrounds.length == 0) {
+        backgroundDiv.style.display = 'none';
+    } else {
+        backgroundDiv.style.display = 'block';
+    }
 
     const tokenTableEntries = document.getElementsByClassName("token-table-entry");
     const toRemove = [];
@@ -606,6 +697,37 @@ async function initScene(playerRole: string): Promise<void>
         drawing = createBackgroundBorder();
     }
 
+    if (sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`] === undefined) {
+        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID()});
+    } else {
+        const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
+        const sceneFogCache = localStorage.getItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
+        if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true) {
+            const savedPaths = JSON.parse(sceneFogCache);
+            console.log('unfreezing '+ savedPaths.length + ' fog paths from localStorage');
+            const loadPaths: Promise<void>[] = [];
+            for (let i = 0; i < savedPaths.length; i++) {
+                const path = buildPath()
+                                .commands(savedPaths[i].commands)
+                                .fillRule("evenodd")
+                                .locked(true)
+                                .visible(false)
+                                .fillColor('#000000')
+                                .strokeColor("#000000")
+                                .layer("FOG")
+                                .name("Fog of War")
+                                .metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: savedPaths[i].digest})
+                                .build();
+
+                // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
+                path.zIndex = 3;
+    
+                loadPaths.push(OBR.scene.local.addItems([path]));
+            }
+            await Promise.all(loadPaths);
+        }
+    }
+
     if (playerRole == "GM")
     {
         if (drawing)
@@ -625,6 +747,8 @@ async function initScene(playerRole: string): Promise<void>
                 }
             });
         };
+
+        initDoors();
 
         //Create Whatsnew Button
         const whatsNewButton = document.getElementById("whatsnewbutton")!;
@@ -698,6 +822,11 @@ OBR.onReady(async () =>
                     token.classList.remove("token-table-selected");
                 }
             }
+
+
+            if (player.selection !== undefined && player.selection.length === 1) {
+                toggleDoor(player.selection[0]);
+            }
         });
 
         OBR.scene.items.onChange(async (items) =>
@@ -743,6 +872,9 @@ OBR.onReady(async () =>
             if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
                 const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
                 OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
+                
+                const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];                
+                localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
 
                 // Force an update:
                 onSceneDataChange(true);

@@ -21,6 +21,7 @@
     "@types/selectize": "^0.12.35",
     "object-hash": "^3.0.0",
     "pathkit-wasm": "^1.0.0",
+    "simplify-js": "^1.2.4",
     "tom-select": "^2.2.2"
   }
 }
