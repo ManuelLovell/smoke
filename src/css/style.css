@@ -27,6 +27,7 @@
 
 @media (prefers-color-scheme: light) {
     :root {
+        color: #213547;
         --OBR-offset-fore: rgb(44, 44, 46);
         --OBR-offset-back: rgb(210, 210, 223);
         --OBR-dark-blue: rgb(183, 184, 189);
@@ -43,6 +44,20 @@
     .tooltip img {
         filter: contrast(60%);
     }
+    
+    a:hover {
+        color: #747bff;
+    }
+
+    button {
+        background-color: #f9f9f9;
+    }
+}
+
+#localStorageWarning
+{
+    font-size: 12px;
+    font-style: italic;
 }
 
 .tooltip {
@@ -184,21 +199,6 @@ button:hover {
 button:focus,
 button:focus-visible {
     outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-    :root {
-        color: #213547;
-        background-color: #ffffff;
-    }
-
-    a:hover {
-        color: #747bff;
-    }
-
-    button {
-        background-color: #f9f9f9;
-    }
 }
 
 hr {

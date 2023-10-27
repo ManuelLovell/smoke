@@ -7,6 +7,7 @@ import { toggleDoor, initDoors, setupDoorMenus } from './tools/doorTool';
 import { Constants } from "./utilities/constants";
 import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
 import { updateMaps, importFog } from "./tools/import";
+import * as Utilities from "./utilities/utilities";
 
 import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
@@ -19,6 +20,7 @@ const app = document.getElementById('app')! as HTMLDivElement;
 app.innerHTML = `
 <div>
     <div>
+        <div id="localStorageWarning"></div>
         <div class="title">
             Smoke! ˣ Dynamic Fog
             <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
@@ -177,12 +179,6 @@ const importFormat = document.getElementById("import_format")! as HTMLSelectElem
 
 Coloris.init();
 
-// const snapSense = document.getElementById("snapSense")! as HTMLInputElement;
-// const snapSubmit = document.getElementById("snapSubmit")! as HTMLInputElement;
-//   <span id="snap_degree">Snap Sensitity (1-10):
-//   <input type="number" id="snapSense" name="Snap" value="10" min="1" max="10"/>
-//   <input type="button" id="snapSubmit" value="Update"/></span></p>
-
 async function setButtonHandler()
 {
     //
@@ -219,77 +215,91 @@ async function setButtonHandler()
     // Settings Handlers
     //
 
-    settingsButton.addEventListener("click", async (event: MouseEvent) => {
+    settingsButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
 
-        if (settingsUIDiv.style.display === "grid") {
+        if (settingsUIDiv.style.display === "grid")
+        {
             settingsUIDiv.style.display = "none";
             mainUIDiv.style.display = "grid";
-        } else {
+        } else
+        {
             settingsUIDiv.style.display = "grid";
             mainUIDiv.style.display = "none";
         }
     }, false);
-      
-    persistenceCheckbox.addEventListener("click", async (event: MouseEvent) => {
+
+    persistenceCheckbox.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/persistenceEnabled`]: target.checked});
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/persistenceEnabled`]: target.checked });
     }, false);
-  
-    autodetectCheckbox.addEventListener("click", async (event: MouseEvent) => {
+
+    autodetectCheckbox.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/autodetectEnabled`]: target.checked});
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autodetectEnabled`]: target.checked });
         boundryOptions.style.display = target.checked ? 'none' : '';
 
-        if (!target.checked) {
+        if (!target.checked)
+        {
             let drawing = createBackgroundBorder();
-            if (drawing) {
+            if (drawing)
+            {
                 await OBR.scene.items.addItems([drawing]);
             }
         }
     }, false);
-    
-    fowCheckbox.addEventListener("click", async (event: MouseEvent) => {
+
+    fowCheckbox.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowEnabled`]: target.checked});
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowEnabled`]: target.checked });
     }, false);
 
-    qualityOption.addEventListener("change", async (event) => {
+    qualityOption.addEventListener("change", async (event) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/quality`]: target.value});
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/quality`]: target.value });
     }, false);
-    
-    resetButton.addEventListener("click", async (event: MouseEvent) => {
+
+    resetButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
 
         // TODO: isnt there a better way to do this?
         // Update the metadata to tell all the other players that they need to reset:
-        OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: true });
-        OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/forceReset`]: undefined });
+        OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/forceReset`]: true });
+        OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/forceReset`]: undefined });
     }, false);
 
-    debugButton.addEventListener("click", async (event: MouseEvent) => {
+    debugButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
         debugDiv.style.display = debugDiv.style.display == 'none' ? 'grid' : 'none';
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/debug`]: debugDiv.style.display === 'grid' ? true : false});
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/debug`]: debugDiv.style.display === 'grid' ? true : false });
     }, false);
-    
-    backgroundButton.addEventListener("click", async (event: MouseEvent) => {
+
+    backgroundButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await OBR.scene.items.updateItems((item: Item) => {return item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true)}, (items: Item[]) => {
-            for (let i = 0; i < items.length; i++) {
+        await OBR.scene.items.updateItems((item: Item) => { return item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true) }, (items: Item[]) =>
+        {
+            for (let i = 0; i < items.length; i++)
+            {
                 items[i].layer = "MAP";
                 items[i].disableHit = false;
                 items[i].locked = false;
@@ -298,31 +308,37 @@ async function setButtonHandler()
             }
         });
     }, false);
-  
-    fowColor.addEventListener("input", async (event: Event) => {
+
+    fowColor.addEventListener("input", async (event: Event) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
         //let fowColor = "#000000";
         const fogRegex = /#[a-f0-9]{8}/
-        if (fogRegex.test(target.value)) {
+        if (fogRegex.test(target.value))
+        {
             // Remove existing fog, will be regenerated on update:
-            await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/fowColor`]: target.value});
-        
+            await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowColor`]: target.value });
+
             const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
             await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
         }
     }, false);
 
-    convertButton.addEventListener("click", async (event: MouseEvent) => {
+    convertButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
 
-        if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?")) {
+        if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?"))
+        {
             const metadata = await OBR.scene.getMetadata();
-            for (const meta in metadata) {
+            for (const meta in metadata)
+            {
                 // Remove the old scene metadata, we dont need any of it
-                if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID) {
-                    OBR.scene.setMetadata({[`${meta}`]: undefined });
+                if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID)
+                {
+                    OBR.scene.setMetadata({ [`${meta}`]: undefined });
                 }
             }
 
@@ -332,11 +348,13 @@ async function setButtonHandler()
             {
                 for (const item of items)
                 {
-                    if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined) {
+                    if (item.metadata[`${Constants.ARMINDOID}/isVisionLine`] !== undefined)
+                    {
                         item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                         delete item.metadata[`${Constants.ARMINDOID}/isVisionLine`];
                     }
-                    if (item.metadata[`${Constants.ARMINDOID}/disabled`] !== undefined) {
+                    if (item.metadata[`${Constants.ARMINDOID}/disabled`] !== undefined)
+                    {
                         item.metadata[`${Constants.EXTENSIONID}/disabled`] = item.metadata[`${Constants.ARMINDOID}/disabled`];
                         delete item.metadata[`${Constants.ARMINDOID}/disabled`];
                     }
@@ -348,32 +366,38 @@ async function setButtonHandler()
     // TODO: this is a hack, need to pass json between different event handlers
     var importObject: any;
 
-    importFile.addEventListener("change", async (event: Event) => {
+    importFile.addEventListener("change", async (event: Event) =>
+    {
         type FileEventTarget = EventTarget & { files: FileList };
         importButton.disabled = true;
 
         if (!event || !event.target) return;
         const target = event.target as FileEventTarget;
-        
+
         if (!target.files) return;
         const file = target.files[0];
-        
-        if(file.type !== "text/javascript" && file.type !== "application/x-javascript") { 
+
+        if (file.type !== "text/javascript" && file.type !== "application/x-javascript")
+        {
             // do we care about the mime type? this is likely browser specific, or file specific, so just ignore it for now.
             // importErrors.innerText = "Wrong file type " + file.type;
             // return;
         }
-        
-        if (file) {
+
+        if (file)
+        {
             type ReadFileTarget = EventTarget & { result: string };
             var readFile = new FileReader();
-            readFile.onload = function(event: Event) { 
-                if (!event || !event.target) {
+            readFile.onload = function (event: Event)
+            {
+                if (!event || !event.target)
+                {
                     importErrors.innerText = "Invalid import event";
                     return;
                 }
                 const target = event.target as ReadFileTarget;
-                if (!target.result) {
+                if (!target.result)
+                {
                     importErrors.innerText = "Unable to read imported file";
                     return;
                 }
@@ -381,21 +405,25 @@ async function setButtonHandler()
                 importObject = JSON.parse(fileContent);
 
                 // do we really need to validate this here? can do it inside the import functions for each vtt
-                if (importObject && ((importObject.walls && importObject.walls.length) || (importObject.line_of_sight && importObject.line_of_sight.length))) {
+                if (importObject && ((importObject.walls && importObject.walls.length) || (importObject.line_of_sight && importObject.line_of_sight.length)))
+                {
                     // Good to go:
                     importButton.disabled = false;
-                } else {
+                } else
+                {
                     importErrors.innerText = "Imported file has no walls";
                 }
             };
             readFile.readAsText(file);
-        } else { 
+        } else
+        {
             importErrors.innerText = "Failed to load file";
         }
     });
 
-        
-    importButton.addEventListener("click", async (event: MouseEvent) => {
+
+    importButton.addEventListener("click", async (event: MouseEvent) =>
+    {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
@@ -409,7 +437,8 @@ function updateUI(items: Image[])
     const playersWithVision = items.filter(isTokenWithVisionForUI);
     let debug = false;
 
-    if (sceneCache.metadata) {
+    if (sceneCache.metadata)
+    {
         visionCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
         autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
         persistenceCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
@@ -431,17 +460,21 @@ function updateUI(items: Image[])
     const fogBackgrounds = sceneCache.items.filter((item) => item.layer === "FOG" && item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true);
     const fogBackgroundEntries = document.querySelectorAll(".fog-background-entry");
     const removeBackgrounds = [];
-    for (const background of fogBackgroundEntries) {
+    for (const background of fogBackgroundEntries)
+    {
         const backgroundId = background.id.slice(3);
-        if (fogBackgrounds.find(item => item.id === backgroundId) === undefined) {
+        if (fogBackgrounds.find(item => item.id === backgroundId) === undefined)
+        {
             background.remove();
         }
     }
 
-    for (const background of fogBackgrounds) {
+    for (const background of fogBackgrounds)
+    {
         const backgroundElem = document.querySelector(`#bg-${background.id}`);
 
-        if (!backgroundElem) {
+        if (!backgroundElem)
+        {
             const newBackground = document.createElement("div");
             newBackground.id = `bg-${background.id}`;
             newBackground.className = "fog-background-entry grid-3 grid-main";
@@ -450,16 +483,19 @@ function updateUI(items: Image[])
                 <div><label title="Unlock this fog background and turn it back into a map"><input type="button" value="Unlock"></label></div>`;
 
             document.querySelector("#fog_background_list")!.appendChild(newBackground);
-            
+
             const unlockInput = newBackground.querySelector("input")! as HTMLInputElement;
-            unlockInput.addEventListener('click', async event => {
+            unlockInput.addEventListener('click', async event =>
+            {
                 if (!event || !event.target) return;
                 const target = event.target as HTMLInputElement;
 
                 const backgroundId = target.parentElement!.parentElement!.parentElement!.id.slice(3);
 
-                await OBR.scene.items.updateItems((item: Item) => {return item.id === backgroundId && item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true)}, (items: Item[]) => {
-                    for (let i = 0; i < items.length; i++) {
+                await OBR.scene.items.updateItems((item: Item) => { return item.id === backgroundId && item.layer == "FOG" && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true) }, (items: Item[]) =>
+                {
+                    for (let i = 0; i < items.length; i++)
+                    {
                         items[i].layer = "MAP";
                         items[i].disableHit = false;
                         items[i].locked = false;
@@ -472,9 +508,11 @@ function updateUI(items: Image[])
     }
 
     const backgroundDiv = document.querySelector("#fog_backgrounds") as HTMLDivElement;
-    if (fogBackgrounds.length == 0) {
+    if (fogBackgrounds.length == 0)
+    {
         backgroundDiv.style.display = 'none';
-    } else {
+    } else
+    {
         backgroundDiv.style.display = 'block';
     }
 
@@ -638,16 +676,18 @@ function updateUI(items: Image[])
                 {
                     items[0].metadata[`${Constants.EXTENSIONID}/visionTorch`] = target.checked;
                 });
-            }, false);            
+            }, false);
 
-            rangeInput.addEventListener("mousewheel", async () => {
+            rangeInput.addEventListener("mousewheel", async () =>
+            {
                 // default behavior is fine here - this allows mousewheel to adjust the number up and down when the input is selected
             });
         }
     }
 }
 
-function createBackgroundBorder() {
+function createBackgroundBorder()
+{
     // this should change, we should initialize this based on autodetect during scene meta updates
     let drawing = undefined;
     if (sceneCache.items.filter(isBackgroundBorder).length == 0)
@@ -690,38 +730,44 @@ async function initScene(playerRole: string): Promise<void>
     let drawing;
 
     // turn map autodetect on by default:
-    if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === undefined) {
+    if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === undefined)
+    {
         autodetectCheckbox.checked = true;
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/autodetectEnabled`]: true});
-    } else if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === false) {
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autodetectEnabled`]: true });
+    } else if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === false)
+    {
         drawing = createBackgroundBorder();
     }
 
-    if (sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`] === undefined) {
-        await OBR.scene.setMetadata({[`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID()});
-    } else {
+    if (sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`] === undefined)
+    {
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID() });
+    } else
+    {
         const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
         const sceneFogCache = localStorage.getItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
-        if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true) {
+        if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true)
+        {
             const savedPaths = JSON.parse(sceneFogCache);
-            console.log('unfreezing '+ savedPaths.length + ' fog paths from localStorage');
+            console.log('unfreezing ' + savedPaths.length + ' fog paths from localStorage');
             const loadPaths: Promise<void>[] = [];
-            for (let i = 0; i < savedPaths.length; i++) {
+            for (let i = 0; i < savedPaths.length; i++)
+            {
                 const path = buildPath()
-                                .commands(savedPaths[i].commands)
-                                .fillRule("evenodd")
-                                .locked(true)
-                                .visible(false)
-                                .fillColor('#000000')
-                                .strokeColor("#000000")
-                                .layer("FOG")
-                                .name("Fog of War")
-                                .metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: savedPaths[i].digest})
-                                .build();
+                    .commands(savedPaths[i].commands)
+                    .fillRule("evenodd")
+                    .locked(true)
+                    .visible(false)
+                    .fillColor('#000000')
+                    .strokeColor("#000000")
+                    .layer("FOG")
+                    .name("Fog of War")
+                    .metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: savedPaths[i].digest })
+                    .build();
 
                 // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
                 path.zIndex = 3;
-    
+
                 loadPaths.push(OBR.scene.local.addItems([path]));
             }
             await Promise.all(loadPaths);
@@ -782,9 +828,27 @@ async function initScene(playerRole: string): Promise<void>
     }
 }
 
+/** Check if Local Storage is disabled, or any other things that would merit a warning to the user */
+async function testEnvironment()
+{
+    try
+    {
+        localStorage.setItem("STORAGECHECK", "test");
+    }
+    catch (error)
+    {
+        const storageWarningElement = document.getElementById("localStorageWarning")!;
+        storageWarningElement.innerText = "Local Storage disabled. Some features will not function.";
+    }
+}
+
 // Setup extension add-ons
 OBR.onReady(async () =>
 {
+    // Set theme accordingly - relies on OBR theme settings and not OS theme settings
+    const theme = await OBR.theme.getTheme();
+    Utilities.SetThemeMode(theme, document);
+
     await OBR.player.getRole().then(async role =>
     {
         // Allow the extension to load for any player
@@ -793,6 +857,7 @@ OBR.onReady(async () =>
         if (role == "GM")
         {
             sceneCache.role = "GM";
+            await testEnvironment();
             await setButtonHandler();
             await setupContextMenus();
             await createTool();
@@ -801,7 +866,8 @@ OBR.onReady(async () =>
         }
         else
         {
-            app.innerHTML = `Configuration is GM-Access only.`;
+            app.innerHTML = `Configuration is GM-Access only. <div id="localStorageWarning"></div>`;
+            await testEnvironment();
             await OBR.action.setHeight(90);
             await OBR.action.setWidth(320);
         }
@@ -812,19 +878,24 @@ OBR.onReady(async () =>
         });
 
         // Identify selected tokens in the token ui
-        OBR.player.onChange(async (player: Player) => {
+        OBR.player.onChange(async (player: Player) =>
+        {
             const tokens = document.querySelectorAll(".token-table-entry");
-            for (let token of tokens) {
+            for (let token of tokens)
+            {
                 let tokenId = token.id.substring(3);
-                if (player.selection !== undefined && player.selection.includes(tokenId)) {
+                if (player.selection !== undefined && player.selection.includes(tokenId))
+                {
                     token.classList.add("token-table-selected");
-                } else {
+                } else
+                {
                     token.classList.remove("token-table-selected");
                 }
             }
 
 
-            if (player.selection !== undefined && player.selection.length === 1) {
+            if (player.selection !== undefined && player.selection.length === 1)
+            {
                 toggleDoor(player.selection[0]);
             }
         });
@@ -835,7 +906,8 @@ OBR.onReady(async () =>
             sceneCache.items = iItems;
             if (sceneCache.ready)
             {
-                if (role == "GM") {
+                if (role == "GM")
+                {
                     updateUI(iItems);
                     await updateMaps(mapAlign);
                 }
@@ -869,16 +941,18 @@ OBR.onReady(async () =>
         OBR.scene.onMetadataChange(async (metadata) =>
         {
             // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
-            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true) {
+            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true)
+            {
                 const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
                 OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
-                
-                const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];                
+
+                const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
                 localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
 
                 // Force an update:
                 onSceneDataChange(true);
-            } else {
+            } else
+            {
                 sceneCache.metadata = metadata;
                 if (sceneCache.ready)
                     await onSceneDataChange();
@@ -906,6 +980,10 @@ OBR.onReady(async () =>
         }
         else if (role == "GM")
             updateUI([]);
-    }
-    )
+
+        OBR.theme.onChange((theme) =>
+        {
+            Utilities.SetThemeMode(theme, document);
+        });
+    })
 });
