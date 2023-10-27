@@ -34,20 +34,20 @@ function isActiveVisionLine(item: Image)
 
 function isTokenWithVisionForUI(item: Image)
 {
-    return item.layer == "CHARACTER"
+    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
 }
 
 function isTokenWithVision(item: Image)
 {
-    return item.layer == "CHARACTER"
+    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }
 
 function isTokenWithVisionIOwn(item: Image)
 {
-    return item.layer == "CHARACTER" && item.createdUserId == sceneCache.userId
+    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT") && item.createdUserId == sceneCache.userId
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }

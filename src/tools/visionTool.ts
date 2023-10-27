@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, Item, Shape, Line, Curve, ItemFilter, Vector2, Math2, MathM } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, Vector2, Math2, MathM } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -10,8 +10,54 @@ import { squareDistance, comparePosition, isClose, mod } from "./../utilities/ma
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
 
-// We no longer need this for torch LOS calculations
-// import findPathIntersections from 'path-intersection';
+export async function setupAutohideMenus(show: boolean): Promise<void>
+{
+    if (show) {
+        await OBR.contextMenu.create({
+            id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
+            icons: [
+                {
+                    icon: "/autohide-off.svg",
+                    label: "Enable Autohide",
+                    filter: {
+                        every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined }],
+                        roles: ["GM"]
+                    },
+                },
+                {
+                    icon: "/autohide-on.svg",
+                    label: "Disable Autohide",
+                    filter: {
+                        every: [{ key: "layer", value: "CHARACTER" }],
+                        roles: ["GM"]
+                    },
+                },
+            ],
+            async onClick(ctx)
+            {
+                const enableFog = ctx.items.every(
+                    (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
+
+                await OBR.scene.items.updateItems(ctx.items, items =>
+                {
+                    for (const item of items)
+                    {
+                        if (!enableFog)
+                        {
+                            delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
+                        }
+                        else
+                        {
+                            item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
+                        }
+                    }
+                });
+            },
+        });
+    } else {
+        await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/toggle-autohide-menu`);
+    }
+}
 
 export async function setupContextMenus(): Promise<void>
 {
@@ -24,14 +70,14 @@ export async function setupContextMenus(): Promise<void>
                 icon: "/no-vision.svg",
                 label: "Enable Vision",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
+                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "&&" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
                 },
             },
             {
                 icon: "/icon.svg",
                 label: "Disable Vision",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" }],
+                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "||"}],
                 },
             },
         ],
@@ -84,11 +130,11 @@ export async function setupContextMenus(): Promise<void>
                     {
                         if (parentIds.includes(item.attachedTo))
                         {
-                            if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && item.layer == "CHARACTER")
+                            if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && (item.layer == "CHARACTER" || item.layer == "ATTACHMENT"))
                             {
                                 delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
                             }
-                            else if (item.layer == "CHARACTER")
+                            else if (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
                             {
                                 item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
                                 if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
@@ -208,46 +254,37 @@ export async function setupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
+        id: `${Constants.EXTENSIONID}/toggle-fog-background`,
         icons: [
             {
-                icon: "/autohide-off.svg",
-                label: "Enable Autohide",
+                icon: "/fog-background.svg",
+                label: "Convert To Fog Background",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined }],
-                },
-            },
-            {
-                icon: "/autohide-on.svg",
-                label: "Disable Autohide",
-                filter: {
-                    every: [{ key: "layer", value: "CHARACTER" }],
+                    every: [{ key: "layer", value: "MAP" }],
                 },
             },
         ],
         async onClick(ctx)
         {
-            const enableFog = ctx.items.every(
-                (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
-
-            await OBR.scene.items.updateItems(ctx.items, items =>
+            if (ctx.items.length > 0)
             {
-                for (const item of items)
-                {
-                    if (!enableFog)
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
+
+                await OBR.scene.items.updateItems(ctx.items, (items: Item[]) => {
+                    for (let i = 0; i < items.length; i++) {
+                        items[i].zIndex = 1;
+                        items[i].layer = "FOG";
+                        items[i].disableHit = true;
+                        items[i].locked = false;
+                        items[i].visible = false;
+                        items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] = true;
                     }
-                    else
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
-                    }
-                }
-            });
+                });
+            }
         },
-    });
+    });    
 
 }
+
 
 export async function createTool(): Promise<void>
 {
@@ -364,6 +401,11 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
     const gmIds = sceneCache.players.filter(x => x.role == "GM");
+    const useOptimisations = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] != 'accurate';
+
+    // If we have no torches in the scene at all, we can calculate the player vision without worrying about all the obstruction lines outside of the player view range.
+    // Unfortunately because of the way torches are rendered, (in particular that we calculate partial visibilty for them), we need full visibility calculated and cant use this optimisation if there are any torches at all.
+    const sceneHasTorches = tokensWithVision.some(isTorch);
 
     for (const token of tokensWithVision)
     {
@@ -371,11 +413,19 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
         const gmToken = gmIds.some(x => x.id == token.createdUserId);
         if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
 
+        const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
+
         const cacheResult = playerShadowCache.getValue(token.id);
         polygons.push([]);
-        if (cacheResult !== undefined && comparePosition(cacheResult.player.position, token.position))
+        if (cacheResult !== undefined && comparePosition(cacheResult.player.position, token.position) && cacheResult.player.metadata[`${Constants.EXTENSIONID}/visionRange`] === visionRangeMeta)
         {
             continue; // The result is cached and will be used later, no need to do work
+        }
+
+        // use the token vision range to potentially skip any obstruction lines out of range:
+        let visionRange = 1000 * sceneCache.gridDpi;
+        if (visionRangeMeta) {
+            visionRange = sceneCache.gridDpi * ((visionRangeMeta) / sceneCache.gridScale + .5);
         }
 
         for (const line of visionLines)
@@ -393,6 +443,30 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
             if ((lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]) || (lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1])) {
                 skipCounter++;
                 continue;
+            }
+
+            // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines
+            if (useOptimisations && (!sceneHasTorches || isTorch(token))) {
+                const segments: Vector2[] = [line.startPosition, line.endPosition];
+                const length = Math2.distance(line.startPosition, line.endPosition);
+                const segmentFactor = 3; // this causes load but increases accuracy, because we calculate maxSegments as a proportion of the visionRange divided by the segment factor to increase resolution
+                const maxSegments = Math.floor(length / (visionRange / segmentFactor));
+
+                for (let i = 1; i < maxSegments; i++) {
+                    segments.push(Math2.lerp(line.startPosition, line.endPosition, (i / maxSegments)));
+                }
+
+                let skip = true;
+                for (const segment of segments) {
+                    if (Math2.compare(token.position, segment, visionRange)) {
+                        skip = false;
+                    }
+                };
+
+                if (skip) {
+                    skipCounter++;
+                    continue;
+                }
             }
 
             lineCounter++;
@@ -496,13 +570,6 @@ function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, w
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
     }
-    /*
-    // Dont bother - this only takes 5ms on complex scenes, probably takes longer to update the dom and repaint:
-    updatePerformanceInformation({
-        "line_counter": lineCounter,
-        "skip_counter": skipCounter
-    });
-    */
 
     return polygons;
 }
@@ -554,7 +621,7 @@ async function computeShadow(event: any)
     const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
     if (autodetectEnabled) {
         // draw a big box around all the maps
-        const maps:Image[] = await OBR.scene.items.getItems((item) => item.layer === "MAP");
+        const maps:Image[] = await OBR.scene.items.getItems((item) => item.layer === "MAP" && isImage(item));
 
         let mapbox = [];
         for (let map of maps) {
@@ -631,7 +698,7 @@ async function computeShadow(event: any)
     {
         const player = tokensWithVision[j];
         let cacheResult = playerShadowCache.getValue(player.id);
-        if (cacheResult !== undefined && comparePosition(cacheResult.player.position, player.position))
+        if (cacheResult !== undefined && comparePosition(cacheResult.player.position, player.position) && cacheResult.player.metadata[`${Constants.EXTENSIONID}/visionRange`] === player.metadata[`${Constants.EXTENSIONID}/visionRange`])
         {
             // The value is cached, use it
             itemsPerPlayer[j] = cacheResult.shadowPath.copy();
@@ -695,62 +762,6 @@ async function computeShadow(event: any)
         }
     }
 
-    // Track torches separately to player vision, so that we can calculate line of sight later
-    const torches = sceneCache.items.filter(isTorch);
-    const tokensCanSeeTorch = [];
-
-    for (let i = 0; i < tokensWithVision.length; i++) {
-
-        // skip ourselves
-        if (isTorch(tokensWithVision[i])) continue;
-
-        //const playerPath = itemsPerPlayer[i].toSVGString();
-        const token = tokensWithVision[i];
-
-        for (let j = 0; j < torches.length; j++) {
-            /*
-            const torch = torches[j];
-
-            // For a torch this is incorrect - we dont want it's token size, we want the light radius.
-            //const radius = (sceneCache.gridDpi / torch.grid.dpi) * (torch.image.width / 2);
-
-            let intersects = true;
-            let calcPoints = 8;
-
-            // This has been turned off because we simply by setting intersects = false and letting the path intersection do all the work,
-            // If we use the light radius we need to make sure it doesnt project the LOS points through obstruction lines, and this gets complex.
-            // Turning it off is faster and seems to have a better overall result.
-            intersects = false;
-
-            // If we dont need to LOS here, we can remove the path intersection library:
-            for (let i = 0; i < calcPoints && intersects === true; i++) {
-                const angle = (i * (360 / calcPoints) * Math.PI) / 180;
-                const x = torch.position.x + radius * Math.cos(angle);
-                const y = torch.position.y + radius * Math.sin(angle);
-
-                // TODO: This can be redone to avoid having to translate into svg, but for now..
-                let line = 'M'+token.position.x+","+token.position.y+"L"+x+","+y;
-                intersects = findPathIntersections(line, playerPath, true) > 0 ? true : false;
-
-                if (enableDebug) {
-                    const lightLOS = buildShape()
-                        .strokeColor('#ff0000')
-                        .fillOpacity(1)
-                        .position({ x: x, y: y })
-                        .width(30)
-                        .height(30)
-                        .shapeType("CIRCLE")
-                        .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
-                        .build();
-
-                    playerRings.push(lightLOS);
-                }
-            }
-            */
-            tokensCanSeeTorch.push({token: token, torch: torches[j], visible: true}); // visible: !intersects
-        }
-    }
-
     stages[2].pause();
     stages[3].start();
 
@@ -770,17 +781,8 @@ async function computeShadow(event: any)
         const gmIds = sceneCache.players.filter(x => x.role == "GM");
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
         const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
-        const tokenIsTorch = isTorch(token);
 
-        const canSeeTorch = tokensCanSeeTorch.some(i => {
-            return i.torch.id == token.id && i.visible;
-        });
-
-        if (tokenIsTorch && !canSeeTorch) {
-            delete tokensWithVision[i];
-            delete itemsPerPlayer[i];
-            continue;
-        } else if (tokenIsTorch) {
+        if (isTorch(token)) {
             intersectTorches[i] = true;
         } else {
             // calculate the vision areas of all non-torch tokens into one path, so we can intersect this with the torches to limit the visibility to only what the players can see:
@@ -798,7 +800,7 @@ async function computeShadow(event: any)
 
             // Get Color for Players
             const owner = sceneCache.players.find(x => x.id === token.createdUserId);
-            if (owner && sceneCache.role === "GM" && !tokenIsTorch)
+            if (owner && sceneCache.role === "GM" && !isTorch(token))
             {
                 // Add indicator rings intended for the GM
                 const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
@@ -856,8 +858,7 @@ async function computeShadow(event: any)
     // This... should just work.. the logic seems sound.
     // During testing I ran into issues joining the paths together where it seemed to create overlapping paths with the union that would end up cutting holes in the path instead of filling them.
     // I can no longer replicate it, but I had turned this code path on, got 2 tokens, and just move them around next to eachother after a fog refresh, and it soon glitched.
-
-    let enableReuseFog = persistenceEnabled && true;
+    let enableReuseFog = persistenceEnabled && sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] != 'accurate';
     let reuseFog:Image[] = [];
     let reuseNewFog: any;
 
@@ -871,7 +872,7 @@ async function computeShadow(event: any)
         if (reuseFog.length === 0) {
             // Create a new visionFog item with an empty path, so we can add to it.
             // Note that the digest is forced, which avoids the object being reused by the deduplication code.
-            const path = buildPath().commands([]).fillRule("nonzero").locked(true).visible(false).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: "reuse"}).build();
+            const path = buildPath().commands([]).fillRule("evenodd").locked(true).visible(false).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: "reuse"}).build();
 
             // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
             path.zIndex = 3;
@@ -933,14 +934,23 @@ async function computeShadow(event: any)
         item.delete();
     }
 
+    const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
     if (enableReuseFog) {
+        const newPath = reuseNewFog.resolve();
+        newPath.setFillType(PathKit.FillType.EVENODD);
+
+        const commands = newPath.toCmds();
+
         await OBR.scene.local.updateItems([reuseFog[0].id], (items) => {
-            let newPath = reuseNewFog.resolve();
-            newPath.setFillType(PathKit.FillType.EVENODD);
-            items[0].commands = newPath.toCmds();
-            newPath.delete();
+            items[0].commands = commands;
         });
+
+        localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify([{digest: 'reuse', commands: commands}]));
+        newPath.delete();
         reuseNewFog.delete();
+    } else if (persistenceEnabled) {
+        const saveFog = localItemCache.filter(isVisionFog);
+        localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify(saveFog.map((item: any) => { return {digest: item.metadata[`${Constants.EXTENSIONID}/digest`], commands: item.commands}; })));
     }
 
     let currentFogPath: any;
@@ -971,6 +981,7 @@ async function computeShadow(event: any)
             fowOpacity = Number.parseInt(fowColor.substring(7), 16) / 255;
             fowColor = fowColor.substring(0, 7);
         }
+
         const trailingFog = buildPath()
             .commands(trailingFogRect.toCmds())
             .locked(true)
@@ -1019,9 +1030,11 @@ async function computeShadow(event: any)
     // and for some reason this causes issues with some of the procedural code below IF you remove the await on the Promise.all.
     // However, per the above, if we simply just call them individually and dont await any of them, everything is fine.. and we get a bit more of reponsiveness in the UI
 
-    if (true) {
-        OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id));
-        OBR.scene.local.addItems(itemsToAdd.map(item => {
+    if (false) {
+        await Promise.all(promisesToExecute);
+
+        await OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id));
+        await OBR.scene.local.addItems(itemsToAdd.map(item => {
                 const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({[`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest}).build();
                 path.zIndex = item.zIndex;
                 return path;
@@ -1102,16 +1115,11 @@ async function computeShadow(event: any)
     busy = false;
 
 }
-document.addEventListener("updateVision", computeShadow)
-
-
-function updateDoors() {
-
-}
+document.addEventListener("updateVision", computeShadow);
 
 async function updateTokenVisibility(currentFogPath: any) {
     const toggleTokens: Image[] = [];
-    const tokens = sceneCache.items.filter(isAutohide);
+    const tokens = sceneCache.items.filter((item) => isAutohide(item) && isImage(item));
 
     // this might not be the right thing to do with complex paths.. union should be sufficient when we intersect later..
     currentFogPath.simplify();
@@ -1207,11 +1215,13 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     // How much overhead is all this?
 
     const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
-    const gmTokens = sceneCache.items.filter(item => item.layer == "CHARACTER" && gmPlayers.some(gm => item.createdUserId === gm.id)
+    const gmTokens = sceneCache.items.filter(item => (item.layer == "CHARACTER" || item.layer == "ATTACHMENT") && gmPlayers.some(gm => item.createdUserId === gm.id)
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`]);
 
     const allTokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
+
+    // if we're on the character layer, and we're not a torch, then we can see - otherwise we're a torch or attachment so we use the item's visibility:
     const tokensWithVision = allTokensWithVision.filter((item) => { return !isTorch(item) || item.visible === true; });
 
     const visionShapes = sceneCache.items.filter(isActiveVisionLine);
