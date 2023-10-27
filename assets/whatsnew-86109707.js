@@ -1,6 +1,6 @@
 import{O as e,C as i}from"./constants-cefe2a81.js";const t=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");t.innerHTML=`
   <div>
-    <h1>Smoke & Spectre! 24/10/2023</h1>
+    <h1>Smoke & Spectre! 27/10/2023</h1>
     <b>New feature release, including:</b>
     <ul>
     <li><b>Doors!</b> Enable the new door option on obstruction lines, then double click the door icon to quickly toggle the line visibility.</li>
@@ -10,6 +10,9 @@ import{O as e,C as i}from"./constants-cefe2a81.js";const t=document.querySelecto
     </ul>
     </br>
     See you on discord! - <i>Doggsaurus</i>
+    </br>
+    </br>
+    (Threw in some updates to have themes handled explicitly by OBR, and adding a warning if LocalStorage is disabled. Some features require it. ~Que)
     </br>
     </br>
     <h1>Smoke & Spectre! 10/10/2023</h1>
