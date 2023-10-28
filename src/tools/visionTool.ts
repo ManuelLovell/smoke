@@ -945,12 +945,24 @@ async function computeShadow(event: any)
             items[0].commands = commands;
         });
 
-        localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify([{digest: 'reuse', commands: commands}]));
+        try {
+            localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify([{digest: 'reuse', commands: commands}]));
+        }
+        catch (error)
+        {
+        }
+
         newPath.delete();
         reuseNewFog.delete();
     } else if (persistenceEnabled) {
         const saveFog = localItemCache.filter(isVisionFog);
-        localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify(saveFog.map((item: any) => { return {digest: item.metadata[`${Constants.EXTENSIONID}/digest`], commands: item.commands}; })));
+        try
+        {
+            localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify(saveFog.map((item: any) => { return {digest: item.metadata[`${Constants.EXTENSIONID}/digest`], commands: item.commands}; })));
+        }
+        catch (error)
+        {
+        }
     }
 
     let currentFogPath: any;

@@ -744,33 +744,40 @@ async function initScene(playerRole: string): Promise<void>
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID() });
     } else
     {
-        const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
-        const sceneFogCache = localStorage.getItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
-        if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true)
+        try
         {
-            const savedPaths = JSON.parse(sceneFogCache);
-            console.log('unfreezing ' + savedPaths.length + ' fog paths from localStorage');
-            const loadPaths: Promise<void>[] = [];
-            for (let i = 0; i < savedPaths.length; i++)
+            const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
+            const sceneFogCache = localStorage.getItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
+            if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true)
             {
-                const path = buildPath()
-                    .commands(savedPaths[i].commands)
-                    .fillRule("evenodd")
-                    .locked(true)
-                    .visible(false)
-                    .fillColor('#000000')
-                    .strokeColor("#000000")
-                    .layer("FOG")
-                    .name("Fog of War")
-                    .metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: savedPaths[i].digest })
-                    .build();
+                const savedPaths = JSON.parse(sceneFogCache);
+                console.log('unfreezing ' + savedPaths.length + ' fog paths from localStorage');
+                const loadPaths: Promise<void>[] = [];
+                for (let i = 0; i < savedPaths.length; i++)
+                {
+                    const path = buildPath()
+                        .commands(savedPaths[i].commands)
+                        .fillRule("evenodd")
+                        .locked(true)
+                        .visible(false)
+                        .fillColor('#000000')
+                        .strokeColor("#000000")
+                        .layer("FOG")
+                        .name("Fog of War")
+                        .metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: savedPaths[i].digest })
+                        .build();
 
-                // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
-                path.zIndex = 3;
+                    // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
+                    path.zIndex = 3;
 
-                loadPaths.push(OBR.scene.local.addItems([path]));
+                    loadPaths.push(OBR.scene.local.addItems([path]));
+                }
+                await Promise.all(loadPaths);
             }
-            await Promise.all(loadPaths);
+        }
+        catch (error)
+        {
+            // do nothing - localStorage isnt available, and it probably doesnt matter if we cant reload persistent fog
         }
     }
 
