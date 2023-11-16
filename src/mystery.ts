@@ -8,7 +8,7 @@ export async function RunSpectre(players: Player[]): Promise<void>
 {
     const sceneReady = await OBR.scene.isReady();
     if (!sceneReady) return;
-    
+
     const localGhosts = await OBR.scene.local.getItems(
         (item): item is Image => item.layer === "CHARACTER");
     const localIds = localGhosts?.map(x => x.id);
@@ -87,6 +87,20 @@ export function UpdateSpectreTargets(): void
 
 }
 
+export async function RestoreGhostsGM(): Promise<void>
+{
+    let ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+
+    if (ghostData)
+    {
+        await OBR.scene.local.addItems(ghostData);
+        ghostData.forEach(ghost =>
+        {
+            SetupTomSelect(ghost);
+        });
+    }
+}
+
 // For the GM
 export async function SetupSpectreGM(): Promise<void>
 {
@@ -108,106 +122,174 @@ export async function SetupSpectreGM(): Promise<void>
                 icon: "/ghost.svg",
                 label: "Spectre",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" }],
+                    every: [{ key: "layer", value: "CHARACTER" },
+                    { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "==", coordinator: "&&" }],
                 },
-            },
+            }, {
+                icon: "/ghost.svg",
+                label: "Un-Spectre",
+                filter: {
+                    every: [{ key: "layer", value: "CHARACTER" },
+                    { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "!=", coordinator: "&&" }],
+                },
+            }
         ],
         async onClick(context)
         {
-            //Hide the warning
-            document.getElementById("spectreWarning")!.style.display = "none";
-            for (const item of context.items)
+            const spectre = context.items.every(
+                (item) => item.metadata[`${Constants.SPECTREID}/spectred`] === undefined
+            );
+
+            if (spectre)
             {
-                // Do something to this icon to designate it as a 'Ghost'
-                const ghost = item as Image;
-                const name = ghost.text?.plainText || ghost.name;
-
-                // Recreate as a local item
-                await OBR.scene.items.deleteItems([ghost.id]);
-                await OBR.scene.local.addItems([ghost]);
-                sceneCache.ghosts.push(ghost);
-
-                const table = document.getElementById("ghostList")! as HTMLDivElement;
-                const newTr = document.createElement("tr");
-                newTr.id = `tr-${ghost.id}`;
-                newTr.className = "ghost-table-entry";
-                newTr.innerHTML = `<td class="token-name">${name}</td>
-<td><select id="select-${ghost.id}" class="tSelects" multiple autocomplete="off" /></td>
-<td><input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
-
-                table.appendChild(newTr);
-
-                const selectButton = document.getElementById(`select-${ghost.id}`) as HTMLSelectElement;
-
-                for (const player of sceneCache.players)
+                //Hide the warning
+                document.getElementById("spectreWarning")!.style.display = "none";
+                for (const item of context.items)
                 {
-                    const option = document.createElement('option');
-                    option.value = player.id;
-                    option.text = player.name;
-                    selectButton.appendChild(option);
+                    // Do something to this icon to designate it as a 'Ghost'
+                    const ghost = item as Image;
+                    SetupTomSelect(ghost);
                 }
-
-                const settings = {
-                    plugins: {
-                        remove_button: {
-                            title: 'Remove this item',
-                        }
-                    },
-                    allowEmptyOption: true,
-                    placeholder: sceneCache.players.length == 0 ? "No Players" : "Choose..",
-                    maxItems: null,
-                    create: false,
-                    onDelete: async function (id: string, element: any) 
-                    {
-                        // So fucking hacky
-                        const ghostId = element.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.id.slice(3);
-
-                        // Dereference from values or it'll mess up the control
-                        await OBR.scene.local.updateItems([ghostId], ghosties =>
-                        {
-                            const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
-                            const index = metadata.findIndex(x => x == id);
-                            metadata.splice(index, 1);
-                            ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
-                        });
-                    },
-                    onItemAdd: async function (playerId: string, element: any) 
-                    {
-                        // So fucking hacky
-                        const ghostId = element.parentElement.parentElement.parentElement.parentElement.id.slice(3);
-
-                        await OBR.scene.local.updateItems([ghostId], ghosties =>
-                        {
-                            const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
-                            if (metadata)
-                            {
-                                metadata.push(playerId);
-                                ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
-                            }
-                            else
-                            {
-                                ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [playerId];
-                            }
-                        });
-                    }
-                };
-
-                // Needed
-                const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
-
-                const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
-                deleteButton.onclick = async () =>
+            }
+            else
+            {
+                for (const item of context.items)
                 {
+                    // Do something to this icon to designate it as a 'Ghost'
+                    const ghost = item as Image;
+                    ghost.metadata[`${Constants.SPECTREID}/spectred`] = undefined;
+
+                    const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
+
                     const ghostIndex = sceneCache.ghosts.findIndex(x => x.id === ghost.id);
                     sceneCache.ghosts.splice(ghostIndex, 1);
-                    newTr.remove();
+                    const rowElement = document.getElementById(`tr-${ghost.id}`)!;
+                    rowElement?.remove();
                     await OBR.scene.local.updateItems([ghost.id], ghosties =>
                     {
                         ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [];
                     });
-                    await OBR.scene.local.deleteItems([ghost.id]);
-                };
+                    await RemoveGhost(ghost);
+                    await OBR.scene.items.addItems([ghost]);
+                }
             }
         }
     });
+}
+async function RemoveGhost(ghost: Image)
+{
+    const ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+    const newData = ghostData.filter(bad => bad.id !== ghost.id);
+
+    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/stored`]: newData });
+    await OBR.scene.local.deleteItems([ghost.id]);
+}
+
+async function StoreGhost(ghost: Image)
+{
+    let ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+    if (!ghostData)
+    {
+        ghostData = [ghost];
+    }
+    else
+    {
+        const exists = ghostData.find(old => old.id === ghost.id);
+        if (exists) return;
+        ghostData.push(ghost);
+    }
+    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/stored`]: ghostData });
+}
+
+async function SetupTomSelect(ghost: Image)
+{
+    const name = ghost.text?.plainText || ghost.name;
+    ghost.metadata[`${Constants.SPECTREID}/spectred`] = true;
+
+    // Recreate as a local item
+    await OBR.scene.items.deleteItems([ghost.id]);
+    await OBR.scene.local.addItems([ghost]);
+    await StoreGhost(ghost);
+    sceneCache.ghosts.push(ghost);
+
+    const table = document.getElementById("ghostList")! as HTMLDivElement;
+    const newTr = document.createElement("tr");
+    newTr.id = `tr-${ghost.id}`;
+    newTr.className = "ghost-table-entry";
+    newTr.innerHTML = `<td class="token-name">${name}</td>
+<td><select id="select-${ghost.id}" class="tSelects" multiple autocomplete="off" /></td>
+<td><input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
+
+    table.appendChild(newTr);
+
+    const selectButton = document.getElementById(`select-${ghost.id}`) as HTMLSelectElement;
+
+    for (const player of sceneCache.players)
+    {
+        const option = document.createElement('option');
+        option.value = player.id;
+        option.text = player.name;
+        selectButton.appendChild(option);
+    }
+
+    const settings = {
+        plugins: {
+            remove_button: {
+                title: 'Remove this item',
+            }
+        },
+        allowEmptyOption: true,
+        placeholder: sceneCache.players.length == 0 ? "No Players" : "Choose..",
+        maxItems: null,
+        create: false,
+        onDelete: async function (id: string, element: any) 
+        {
+            // Sooo fucking hacky
+            const ghostId = element.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.id.slice(3);
+
+            // Dereference from values or it'll mess up the control
+            await OBR.scene.local.updateItems([ghostId], ghosties =>
+            {
+                const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
+                const index = metadata.findIndex(x => x == id);
+                metadata.splice(index, 1);
+                ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
+            });
+        },
+        onItemAdd: async function (playerId: string, element: any) 
+        {
+            // So fucking hacky
+            const ghostId = element.parentElement.parentElement.parentElement.parentElement.id.slice(3);
+
+            await OBR.scene.local.updateItems([ghostId], ghosties =>
+            {
+                const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
+                if (metadata)
+                {
+                    metadata.push(playerId);
+                    ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
+                }
+                else
+                {
+                    ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [playerId];
+                }
+            });
+        }
+    };
+
+    // Needed
+    const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
+
+    const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
+    deleteButton.onclick = async () =>
+    {
+        const ghostIndex = sceneCache.ghosts.findIndex(x => x.id === ghost.id);
+        sceneCache.ghosts.splice(ghostIndex, 1);
+        newTr.remove();
+        await OBR.scene.local.updateItems([ghost.id], ghosties =>
+        {
+            ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [];
+        });
+        await RemoveGhost(ghost);
+    };
 }

@@ -5,7 +5,7 @@ import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVision
 import { setupContextMenus, setupAutohideMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
 import { toggleDoor, initDoors, setupDoorMenus } from './tools/doorTool';
 import { Constants } from "./utilities/constants";
-import { RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
+import { RestoreGhostsGM, RunSpectre, SetupSpectreGM, UpdateSpectreTargets } from "./mystery";
 import { updateMaps, importFog } from "./tools/import";
 import * as Utilities from "./utilities/utilities";
 
@@ -309,21 +309,29 @@ async function setButtonHandler()
         });
     }, false);
 
+    let debouncer: ReturnType<typeof setTimeout>;
     fowColor.addEventListener("input", async (event: Event) =>
     {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        //let fowColor = "#000000";
-        const fogRegex = /#[a-f0-9]{8}/
-        if (fogRegex.test(target.value))
-        {
-            // Remove existing fog, will be regenerated on update:
-            await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowColor`]: target.value });
+        clearTimeout(debouncer);
 
-            const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
-            await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
-        }
+        // Debounce this input to avoid hitting OBR rate limit
+        debouncer = setTimeout(async () =>
+        {
+            //let fowColor = "#000000";
+            const fogRegex = /#[a-f0-9]{8}/
+            if (fogRegex.test(target.value))
+            {
+                // Remove existing fog, will be regenerated on update:
+                await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowColor`]: target.value });
+
+                const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
+                await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
+            }
+        }, 500);
+
     }, false);
 
     convertButton.addEventListener("click", async (event: MouseEvent) =>
@@ -776,6 +784,7 @@ async function initScene(playerRole: string): Promise<void>
 
     if (playerRole == "GM")
     {
+        await RestoreGhostsGM();
         if (drawing)
         {
             await OBR.scene.items.addItems([drawing]);
@@ -964,7 +973,7 @@ OBR.onReady(async () =>
             sceneCache.ready = ready;
             if (ready)
             {
-                initScene(role);
+                await initScene(role);
                 await onSceneDataChange();
             }
             else if (role == "GM")
@@ -974,7 +983,7 @@ OBR.onReady(async () =>
         sceneCache.ready = await OBR.scene.isReady();
         if (sceneCache.ready)
         {
-            initScene(role);
+            await initScene(role);
             await onSceneDataChange();
             if (role == "GM") await updateMaps(mapAlign);
         }

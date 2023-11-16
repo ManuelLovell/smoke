@@ -8,6 +8,15 @@ const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 whatsnew.innerHTML = `
   <div>
+    <h1>Smoke & Spectre! 15/11/2023</h1>
+    </br>
+    <li>Fixed a bug with the fog color selector hitting the rate limit.
+    <li>Added some resilience to Spectre - it'll now backup your Spectre'd objects to the scene. So you can refresh and keep your spectres.
+    <li>They will lose their targets though (and on the player end, if you refresh, they disappear for that duration anyway). But you can set them again.
+    <li>Also you should be able to 'Un-Spectre' now.
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 27/10/2023</h1>
     <b>New feature release, including:</b>
     <ul>
