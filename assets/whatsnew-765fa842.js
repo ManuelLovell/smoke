@@ -1,5 +1,14 @@
-import{O as e,C as i}from"./constants-cefe2a81.js";const t=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");t.innerHTML=`
+import{O as e,C as t}from"./constants-68d4f0c0.js";const i=document.querySelector("#smoke-whatsnew"),n=document.querySelector("#smoke-whatsnew-notes");i.innerHTML=`
   <div>
+    <h1>Smoke & Spectre! 15/11/2023</h1>
+    </br>
+    <li>Fixed a bug with the fog color selector hitting the rate limit.
+    <li>Added some resilience to Spectre - it'll now backup your Spectre'd objects to the scene. So you can refresh and keep your spectres.
+    <li>They will lose their targets though (and on the player end, if you refresh, they disappear for that duration anyway). But you can set them again.
+    <li>Also you should be able to 'Un-Spectre' now.
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 27/10/2023</h1>
     <b>New feature release, including:</b>
     <ul>
@@ -70,4 +79,4 @@ import{O as e,C as i}from"./constants-cefe2a81.js";const t=document.querySelecto
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
-    <div class="close">⤬</div>`;const o=document.querySelector(".close");o.onclick=async()=>{await e.modal.close(i.EXTENSIONWHATSNEW)}});
+    <div class="close">⤬</div>`;const o=document.querySelector(".close");o.onclick=async()=>{await e.modal.close(t.EXTENSIONWHATSNEW)}});
