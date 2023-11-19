@@ -196,6 +196,10 @@ async function setButtonHandler()
 
         const target = event.target as HTMLInputElement;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionEnabled`]: target.checked });
+        if (!target.checked)
+        {
+            await OBR.scene.fog.setFilled(false);
+        }
     }, false);
 
     snapCheckbox.checked = true;

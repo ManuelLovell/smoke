@@ -31,6 +31,7 @@ const whatsNewMessage = `
   <div>
     <h1>Smoke & Spectre! 19/11/2023</h1>
     </br>
+    <li>Clicking the "Enable Dynamic Fog" button OFF now REMOVES THE FOG FILL. BE AWARE.
     <li>Added more clarity on the player-end. Their window now shows a list of all tokens they own in the scene and if it has vision enabled.
     <li>Also added a help button on Player end, to explain how vision works and what THEY can do to fix that. (Generally it means they don't own a token)
     </br>
