@@ -158,6 +158,11 @@ a:active {
     margin-top:-1.5px;
 }
 
+.title {
+    font-size: 1.5em;
+    font-weight: bolder;
+}
+
 .mask {
     border-radius: 100% 0 0 100% / 50% 0 0 50%;
     height: 100%;

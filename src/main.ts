@@ -1,5 +1,5 @@
 import "./css/style.css";
-import OBR, { ItemFilter, Image, Item, Shape, buildShape, buildPath, Player } from "@owlbear-rodeo/sdk";
+import OBR, { ItemFilter, Image, Item, Shape, buildShape, buildPath, Player, isImage } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
 import { isBackgroundBorder, isBackgroundImage, isTokenWithVisionForUI, isVisionFog, isTrailingFog, isAnyFog } from './utilities/itemFilters';
 import { setupContextMenus, setupAutohideMenus, createMode, createTool, onSceneDataChange } from './tools/visionTool';
@@ -858,6 +858,23 @@ async function testEnvironment()
     }
 }
 
+async function UpdatePlayerVisionList(items: Item[])
+{
+    const playerListContainer = document.getElementById("playerOwnedTokens")!;
+    const itemListHTML: string[] = [];
+
+    for (const item of items) 
+    {
+        if (isImage(item) && item.createdUserId === sceneCache.userId)
+        {
+            const visionEnabled = item.metadata[`${Constants.EXTENSIONID}/hasVision`] !== undefined;
+            itemListHTML.push(`<li>${item.name}${!visionEnabled ? ': <b>Vision Disabled</b>' : ''}</li>`);
+        }
+    }
+    if (itemListHTML.length === 0) itemListHTML.push("<li>None found.</li>");
+    playerListContainer.innerHTML = `<ul>${itemListHTML.join('')}</ul>`;
+}
+
 // Setup extension add-ons
 OBR.onReady(async () =>
 {
@@ -882,10 +899,32 @@ OBR.onReady(async () =>
         }
         else
         {
-            app.innerHTML = `Configuration is GM-Access only. <div id="localStorageWarning"></div>`;
+            // Let's do a player side sanity check here
+            app.innerHTML = `<div class="title">Configuration via GM.
+            <div class="tooltip" id="helpButton" title="Need Help?"></div>
+            </div>
+            <hr><sub>You must have ownership of a token to see it.</sub></br></br>Tokens Owned By You:<div id="playerOwnedTokens"></div><div id="localStorageWarning"></div>`;
             await testEnvironment();
-            await OBR.action.setHeight(90);
-            await OBR.action.setWidth(320);
+            await OBR.action.setHeight(300);
+            await OBR.action.setWidth(350);
+
+            const helpContainer = document.getElementById("helpButton")!;
+            const helpButton = document.createElement('input');
+            helpButton.src = "/help.svg";
+            helpButton.height = 15;
+            helpButton.width = 15;
+            helpButton.type = "image";
+            helpButton.title = "Need Help?";
+            helpButton.onclick = async function ()
+            {
+                await OBR.modal.open({
+                    id: Constants.EXTENSIONWHATSNEW,
+                    url: `/pages/whatsnew.html?gethelp=true`,
+                    height: 500,
+                    width: 350,
+                });
+            }
+            helpContainer.appendChild(helpButton);
         }
 
         OBR.scene.fog.onChange(fog =>
@@ -926,6 +965,10 @@ OBR.onReady(async () =>
                 {
                     updateUI(iItems);
                     await updateMaps(mapAlign);
+                }
+                else
+                {
+                    UpdatePlayerVisionList(items);
                 }
                 await onSceneDataChange();
             }

@@ -6,14 +6,44 @@ import { Constants } from "./utilities/constants";
 const whatsnew = document.querySelector<HTMLDivElement>('#smoke-whatsnew')!;
 const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
-whatsnew.innerHTML = `
+const needHelpMessage = `
+<div>
+  <div class="title">Smoke & Spectre! Help</div>
+  </br>
+  <sub>Token Ownership </sub>
+  </br>
+  <li>If you are logged in and pull a token from your own dock, you are automatically the owner of that token.
+  </br>
+  <li>You can also have a GM assign you as owner, if they use the Player action button, go to Player Permissions and turn on "Owner Only".
+  </br>
+  After this, they can assign owners on a token's ContextMenu anytime.
+  </br>
+  <li>If your GM is using Clash! they can also assign ownership by right-clicking a unit in the Initiative List.
+  </br>
+  </br>
+  <sub>Token Vision</sub>
+  </br>
+  <li>If you see 'Vision Disabled' on a token in your list, it means the GM has not enabled vision for that token.
+  </br>
+  <li>GM-Owned tokens with vision share their vision with all players..
+</div>`;
+const whatsNewMessage = `
   <div>
+    <h1>Smoke & Spectre! 19/11/2023</h1>
+    </br>
+    <li>Added more clarity on the player-end. Their window now shows a list of all tokens they own in the scene and if it has vision enabled.
+    <li>Also added a help button on Player end, to explain how vision works and what THEY can do to fix that. (Generally it means they don't own a token)
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 15/11/2023</h1>
     </br>
     <li>Fixed a bug with the fog color selector hitting the rate limit.
     <li>Added some resilience to Spectre - it'll now backup your Spectre'd objects to the scene. So you can refresh and keep your spectres.
     <li>They will lose their targets though (and on the player end, if you refresh, they disappear for that duration anyway). But you can set them again.
     <li>Also you should be able to 'Un-Spectre' now.
+    </br>
     See you around~ Battle-System (Que!)
     </br>
     </br>
@@ -87,6 +117,12 @@ whatsnew.innerHTML = `
 
 OBR.onReady(async () =>
 {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const help = urlParams.get('gethelp')!;
+    
+    whatsnew.innerHTML = help ? needHelpMessage : whatsNewMessage;
+
     footer.innerHTML = `
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>

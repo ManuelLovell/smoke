@@ -44,7 +44,7 @@
     .tooltip img {
         filter: contrast(60%);
     }
-    
+
     a:hover {
         color: #747bff;
     }
@@ -54,8 +54,7 @@
     }
 }
 
-#localStorageWarning
-{
+#localStorageWarning {
     font-size: 12px;
     font-style: italic;
 }
@@ -64,6 +63,7 @@
     cursor: pointer;
     display: inline;
 }
+
 .tooltip svg {
     height: 0.9em;
     position: relative;
@@ -88,8 +88,7 @@
     margin-bottom: 0;
 }
 
-input
-{
+input {
     background-color: var(--OBR-dark-blue-trans);
     color: var(--light-letters);
     border-style: solid;
@@ -111,28 +110,25 @@ a {
     color: var(--light-letters);
 }
 
-.clr-field > button {
+.clr-field>button {
     height: 16px !important;
     width: 20px !important;
     right: 2px !important;
     margin-top: 2px !important;
 }
 
-.mysteryButton
-{
+.mysteryButton {
     vertical-align: middle;
 }
 
 #mapSubmit,
-.mysteryButton
-{
+.mysteryButton {
     height: 35px;
     background-color: var(--OBR-light-blue);
     cursor: pointer;
 }
 
-input[type=button]:hover
-{
+input[type=button]:hover {
     background-color: var(--OBR-Purple-Select);
 }
 
@@ -282,7 +278,7 @@ input.token-vision-range {
     display: none;
 }
 
-.cbutton input:checked + span {
+.cbutton input:checked+span {
     background-color: var(--OBR-Purple-Select);
 }
 
@@ -322,7 +318,7 @@ li>p {
 
 .grid-settings {
     width: 350px;
-    text-align:left;
+    text-align: left;
 
     display: grid;
     grid-template-columns: 60% 8% auto;
@@ -330,17 +326,23 @@ li>p {
 
 .grid-debug {
     width: 350px;
-    text-align:left;
+    text-align: left;
 
     display: grid;
     grid-template-columns: 60% 40%;
 }
 
 .grid-3 {
-    text-align:center;
+    text-align: center;
     grid-column: span 3;
 }
 
 .grid-2 {
     grid-column: span 2;
+}
+
+#playerOwnedTokens {
+    text-align: left;
+    width: 100%;
+    display: block;
 }
