@@ -29,6 +29,11 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
   <div>
+    <h1>Smoke & Spectre! 23/11/2023</h1>
+    </br>
+    <li>Just forgot to remove the text about Spectres being a one-way transaction.
+    </br>
+    </br>
     <h1>Smoke & Spectre! 19/11/2023</h1>
     </br>
     <li>Clicking the "Enable Dynamic Fog" button OFF now REMOVES THE FOG FILL. BE AWARE.

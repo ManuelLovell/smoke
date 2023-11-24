@@ -346,3 +346,16 @@ li>p {
     width: 100%;
     display: block;
 }
+
+.clickable:not(.RollerButton) {
+    filter: var(--invert);
+}
+
+.clickable:active {
+    filter: var(--invert-click);
+    transform: scale(1.5);
+}
+
+.svgclickable:active {
+    transform: scale(1.5);
+}
