@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, Vector2, Math2, MathM } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, Vector2, Math2, MathM, isPath, Path } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { polygonMode } from "./visionPolygonMode";
@@ -9,6 +9,7 @@ import { sceneCache } from "./../utilities/globals";
 import { squareDistance, comparePosition, isClose, mod } from "./../utilities/math";
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "./../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
+import { getDoorPath, initDoors } from "./doorTool";
 
 export async function setupAutohideMenus(show: boolean): Promise<void>
 {
@@ -867,6 +868,7 @@ async function computeShadow(event: any)
     // Settings
     const persistenceEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true;
     const fowEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] === true;
+    const playerDoors = sceneCache.metadata[`${Constants.EXTENSIONID}/playerDoors`] === true;
 
     // Overlay to cut out trailing fog
     const trailingFogRect = PathKit.NewPath();
@@ -1084,6 +1086,53 @@ async function computeShadow(event: any)
 
     stages[4].pause();
     stages[5].start();
+
+    /// Door Check - Check if user has any doors visible.
+    if (playerDoors || sceneCache.role == "GM")
+    {
+        initDoors();
+    }
+    else
+    {
+        // If it's turned off, we want to cleanse the door menace.
+        const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+        if (localDoorItems.length > 0)
+        {
+            await OBR.scene.local.deleteItems(localDoorItems.map(door => door.id));
+        }
+    }
+
+    /// If the user isn't allowing them to see doors, this should be skipped. So the only check should be on that one thing.
+    const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+    for (const localDoor of localDoorItems)
+    {
+        // Get the ID and Identify the 'RealDoor'
+        const doorPathId = localDoor.metadata[`${Constants.EXTENSIONID}/doorId`];
+        const door = sceneCache.items.find((item) => item.id === doorPathId);
+        if (door)
+        {
+            // If we found a door, compare the array length to see if it's open or not.
+            // Note: Moved the code for that to constants for easier management and re-usability
+            const localDoorPather = localDoor as Path;
+            const localOpen = localDoorPather.commands.length == Constants.DOOROPEN.length;
+            const open = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] ? true : false;
+
+            // If it's already open we don't want to spam updates
+            if (localOpen === open) continue;
+
+            promisesToExecute.push(
+                // Change the icon
+                OBR.scene.local.updateItems([localDoor.id], (doors) =>
+                {
+                    const localdoor = doors[0] as Path;
+                    if (isPath(localdoor))
+                    {
+                        localdoor.commands = getDoorPath(open);
+                    }
+                })
+            );
+        }
+    }
 
     /*
      * Stage 5: Add/remove items in the scene

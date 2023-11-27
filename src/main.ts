@@ -28,111 +28,9 @@ app.innerHTML = `
             <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg class="svgclickable"  fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
         </div>
         <hr>
-        <div id="settings-ui" class="grid-settings" style="display:none;">
-            <div><label for="autodetect_checkbox" title="Automatically detect fog areas based on the current scene's maps">Autodetect Maps</label></div>
-            <div style="grid-column: span 2;"><input type="checkbox" id="autodetect_checkbox" checked></div>
-
-            <div id="boundry_options" class="grid-3" style="display:none;">
-                <span id="map_size">Boundary Size: 
-                    <input type="number" id="mapWidth" name="Width" min="10" max="500"/> x 
-                    <input type="number" id="mapHeight" name="Height" min="10" max="500"/>
-                    <input type="button" id="mapSubmit" value="Update"/>
-                    &nbsp;&nbsp;&nbsp;
-                </span>
-            </div>
-
-            <div><label for="snap_checkbox">Grid Snap</label></div>
-            <div class="grid-2"><input type="checkbox" id="snap_checkbox"></div>
-
-            <div><label for="persistence_checkbox" title="Enabling fog persistence will retain the previously viewed areas of the map">Persistence</label></div>
-            <div><input type="checkbox" id="persistence_checkbox"></div>
-            <div><input type="button" id="persistence_reset" value="Reset"></div>
-
-            <div><label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog + Autohide</label></div>
-            <div><input type="checkbox" id="fow_checkbox"></div>
-            <div><input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088"></div>
-
-            <div>Render Quality</div>
-            <div></div>
-            <div><select id="quality"><option value="fast">Fast</option><option value="accurate">Accurate</option></select></div>
-
-            <div>Convert from <i>Dynamic Fog</i></div>
-            <div></div>
-            <div><input type="button" id="convert_button" value="Convert"></div>
-
-            <div>Unlock Fog Backgrounds</div>
-            <div></div>
-            <div><input type="button" id="background_button" value="Unlock"></div>
-
-            <div></div>
-            <div></div>
-            <div><input type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></div>
-
-            <div class="visionTitle grid-3" style="margin-top: 16px;">Import</div>
-
-            <div class="grid-3" style="margin-bottom: 16px;">Import JSON files with fog data from<br><a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a> and other tools.</div>
-
-            <div>File Format</div>
-            <div></div>
-            <div><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></div>
-
-            <div><label for="dpi_autodetect" title="Whether or not to automatically detect the DPI of imported data based">DPI Autodetect</label></div>
-            <div><input type="checkbox" id="dpi_autodetect" checked></div>
-            <div><input id="import_dpi" disabled type="text" value="150" style="width: 32px;" maxlength="4"></div>
-
-            <div style="margin-bottom: 8px;" title="Which map to align imported lines to">Map Alignment</div>
-            <div></div>
-            <div><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></div>
-
-            <div><input id="import_file" style="width: 190px;" type="file"></div>
-            <div></div>
-            <div><input style="padding: 6px" type="button" id="import_button" value="Import" disabled></div>
-
-            <div id="import_errors" class="grid-3"></div>
-        </div>
-
-        <div id="main-ui" class="grid-main">
-            <div class="visionTitle grid-3">Vision Radius</div>
-            <div class="grid-3"><i>GM-owned tokens give universal vision.</i></div>
-            <p class="grid-3" id="no_tokens_message">Enable vision on your character tokens.</p>
-            <div id="token_list_div" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-                <table style="margin: auto; padding: 0;">
-                <tbody id="token_list"></tbody>
-                </table>
-            </div>
-            <div class="visionTitle grid-3">Spectres!</div>
-            <div id="ghostContainer" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-                <div id="spectreWarning">
-                    Spectre tokens are only visible to specific players.
-                    <br>
-                    Enable vision here after it's been Spectred.
-                    <br>
-                </div>
-                <table style="margin: auto; padding: 0; width: 100%">
-                <colgroup>
-                    <col style="width: 50%;">
-                    <col style="width: 25%;">
-                    <col style="width: 25%;">
-                </colgroup>
-                <tbody id="ghostList">
-                </tbody></table>
-            </div> 
-            <div id="fog_backgrounds" class="grid-3">
-                <div class="visionTitle" style="display: block; padding-top:8px;">Fog Backgrounds</div>
-                <div id="fog_background_list" class="grid-main" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-            </div>
-        </div>
-
-        <div id="debug_div" style="display: none;" class="grid-debug">
-            <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
-            <div>Stage 1: Fog Shapes</div><div id="stage1">N/A</div>
-            <div>Stage 2: Player Vision</div><div id="stage2">N/A</div>
-            <div>Stage 3: Vision Ranges</div><div id="stage3">N/A</div>
-            <div>Stage 4: Persistence+Trailing</div><div id="stage4">N/A</div>
-            <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
-            <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
-            <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-        </div>
+        ${Constants.SETTINGSPAGE}
+        ${Constants.MAINPAGE}
+        ${Constants.DEBUGPAGE}
     </div>
 </div>
 `;
@@ -154,6 +52,7 @@ const mapSubmit = document.getElementById("mapSubmit")! as HTMLInputElement;
 const persistenceCheckbox = document.getElementById("persistence_checkbox")! as HTMLInputElement;
 const autodetectCheckbox = document.getElementById("autodetect_checkbox")! as HTMLInputElement;
 const fowCheckbox = document.getElementById("fow_checkbox")! as HTMLInputElement;
+const doorCheckbox = document.getElementById("door_checkbox")! as HTMLInputElement;
 const fowColor = document.getElementById("fow_color")! as HTMLInputElement;
 const qualityOption = document.getElementById("quality")! as HTMLSelectElement;
 const resetButton = document.getElementById("persistence_reset")! as HTMLInputElement;
@@ -218,13 +117,13 @@ async function setButtonHandler()
     {
         if (!event || !event.target) return;
 
-        if (settingsUIDiv.style.display === "grid")
+        if (settingsUIDiv.style.display === "block")
         {
             settingsUIDiv.style.display = "none";
-            mainUIDiv.style.display = "grid";
+            mainUIDiv.style.display = "block";
         } else
         {
-            settingsUIDiv.style.display = "grid";
+            settingsUIDiv.style.display = "block";
             mainUIDiv.style.display = "none";
         }
     }, false);
@@ -261,6 +160,14 @@ async function setButtonHandler()
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowEnabled`]: target.checked });
+    }, false);
+
+    doorCheckbox.addEventListener("click", async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/playerDoors`]: target.checked });
     }, false);
 
     qualityOption.addEventListener("change", async (event) =>
@@ -451,6 +358,7 @@ function updateUI(items: Image[])
         persistenceCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
         autodetectCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
         fowCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
+        doorCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/playerDoors`] == true;
         fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
         debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
         qualityOption.value = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] as string;
@@ -809,7 +717,6 @@ async function initScene(playerRole: string): Promise<void>
             });
         };
 
-        initDoors();
 
         //Create Whatsnew Button
         const whatsNewButton = document.getElementById("whatsnewbutton")!;

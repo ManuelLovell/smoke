@@ -147,9 +147,9 @@ h1 {
 
 #app {
     max-width: 1280px;
-    margin: 0 auto;
     padding: 1rem;
     text-align: center;
+    width: 100%;
 }
 
 .logo {
@@ -311,17 +311,9 @@ li>p {
 }
 
 .grid-main {
-    width: 350px;
+    width: 100%;
     display: grid;
     grid-template-columns: 10% 50% auto;
-}
-
-.grid-settings {
-    width: 350px;
-    text-align: left;
-
-    display: grid;
-    grid-template-columns: 60% 8% auto;
 }
 
 .grid-debug {
@@ -358,4 +350,44 @@ li>p {
 
 .svgclickable:active {
     transform: scale(1.5);
+}
+
+/* SETTINGS TABLE */
+.tableHeader {
+    font-weight: bolder;
+    font-size: larger;
+    padding-bottom: 8px;
+    text-align: center !important;
+}
+
+#persistence_reset,
+#quality {
+    margin-left: 16px;
+}
+
+.settingsButton {
+    width: 100%;
+    margin: 0 5px;
+}
+
+#opacityHolder {
+    display: flex;
+    justify-content: space-between;
+}
+
+#importTable,
+#settingsTable {
+    margin-top: 5px;
+    width: 100%;
+    border-collapse: collapse;
+    display: table;
+}
+
+#settingsTable td {
+    text-align: left;
+    padding: 2px;
+}
+
+#importTable td {
+    text-align: center;
 }

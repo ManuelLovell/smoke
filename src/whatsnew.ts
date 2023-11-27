@@ -28,7 +28,12 @@ const needHelpMessage = `
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`;
 const whatsNewMessage = `
-  <div>
+    <div>
+    <h1>Smoke & Spectre! 26/11/2023</h1>
+    </br>
+    <li>Doggo did great work with the doors, and people have been asking about letting players see them.  So I re-organized the settings menu and added a <b>'Player-Visible Doors' option</b>.  This should allow for the toggling on/off of player's seeing doors.  As always, check your room in an incognito view to make sure it's what you're expecting!
+    </br>
+    </br>
     <h1>Smoke & Spectre! 23/11/2023</h1>
     </br>
     <li>Just forgot to remove the text about Spectres being a one-way transaction.
