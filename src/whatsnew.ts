@@ -29,6 +29,14 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+    <h1>Smoke & Spectre! 04/12/2023</h1>
+    </br>
+    <li>Update One: Tool options have been surfaced in Settings. So you can set default Line Color/Width/Style. You can thank Andrew(SeveralRecord) because it's hard to tell him no.
+    <li>Update Two: Added an 'Error Indicator' to the top left. You can't miss it. You can click this to see which players are not loading correctly.  This could be from not having a token with vision enabled (So they're just blind), an error in their browser because of script blockers or maybe a bug I don't know about. But now you'll know about it before it ruins your session.  It'll update everytime fog is calculated, so if you see the light staying red - check it out.
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 26/11/2023</h1>
     </br>
     <li>Doggo did great work with the doors, and people have been asking about letting players see them.  So I re-organized the settings menu and added a <b>'Player-Visible Doors' option</b>.  This should allow for the toggling on/off of player's seeing doors.  As always, check your room in an incognito view to make sure it's what you're expecting!

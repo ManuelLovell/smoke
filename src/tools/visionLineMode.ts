@@ -8,6 +8,10 @@ let finishId = "";
 let cancelId = "";
 let cancelLabelId = "";
 
+const DEFAULTCOLOR = "#000000";
+const DEFAULTWIDTH = 8;
+const DEFAULTSTROKE: number[] = [];
+
 async function cleanUpPopovers(): Promise<void>
 {
     await OBR.scene.local.deleteItems([cancelLabelId, finishLabelId, finishId, cancelId]);
@@ -69,8 +73,11 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         const line = buildCurve()
             .tension(0)
             .points([event.pointerPosition, event.pointerPosition])
-            .fillColor("#000000")
+            .strokeColor(sceneCache.metadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(sceneCache.metadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(sceneCache.metadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(0)
+            .fillColor("#000000")
             .layer("DRAWING")
             .name("Vision Line (Line)")
             .closed(false)

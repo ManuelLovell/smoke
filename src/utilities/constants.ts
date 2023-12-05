@@ -7,6 +7,7 @@ export class Constants
     static EXTENSIONWHATSNEW = "com.battle-system.smoke-whatsnew";
     static LINETOOLID = "com.battle-system.linetool";
     static POLYTOOLID = "com.battle-system.polytool";
+    static PROCESSEDID = "com.battle-system.processing";
     static ARMINDOID = "com.armindoflores.fogofwar";
     static VISIONDEFAULT = "30";
     static LABELSID = "com.battle-system.labels";
@@ -147,8 +148,26 @@ export class Constants
                         <td colspan="2"><input class="settingsButton" type="button" id="background_button" value="Unlock Fog Backgrounds"></td>
                     </tr>
                     <tr>
-                        <td colspan="2">Performance<select id="quality"><option value="fast">Fast</option><option value="accurate">Accurate</option></select></td>
+                        <td colspan="2">Performance<select id="quality">
+                            <option value="accurate" selected>Accurate</option>
+                            <option value="fast">Fast</option>
+                        </select></td>
                         <td colspan="2"><input class="settingsButton" type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" style="text-align: center; font-weight: bold;">Tool Options</td>
+                    </tr>
+                    <tr>
+                        <td colspan="4">
+                            <div id="toolOptions">
+                                Width: <input id="tool_width" type="number" value="8" style="width: 40px;" maxlength="2">
+                                 - Color: <input id="tool_color" type="text" value="#000000" style="width: 74px;" maxlength="7">
+                                 - Style: <select id="tool_style">
+                                    <option value="solid" selected>Solid</option>
+                                    <option value="dotted">Dotted</option>
+                                </select>
+                            </div>
+                        </td>
                     </tr>
                 </tbody>
             </table>

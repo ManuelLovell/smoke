@@ -8,6 +8,7 @@ export default {
                 main: path.resolve(__dirname, 'index.html'),
                 linetool: path.resolve(__dirname, 'pages/line.html'),
                 polygontool: path.resolve(__dirname, 'pages/polygon.html'),
+                processed: path.resolve(__dirname, 'pages/processed.html'),
                 whatsnew: path.resolve(__dirname, 'pages/whatsnew.html')
             }
         }

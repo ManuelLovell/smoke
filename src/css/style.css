@@ -391,3 +391,15 @@ li>p {
 #importTable td {
     text-align: center;
 }
+
+.circle-button {
+    margin-top: 6px;
+    padding: 0;
+    float: left;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: yellow;
+    border: 1px solid var(--light-letters);
+    cursor: pointer;
+}

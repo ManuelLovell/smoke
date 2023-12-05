@@ -604,6 +604,7 @@ const playerShadowCache = new ObjectCache(false);
 // This is the function responsible for computing the shadows and the FoW
 async function computeShadow(event: any)
 {
+    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: false });
     busy = true;
     if (!PathKit)
     {
@@ -1240,6 +1241,7 @@ async function computeShadow(event: any)
 
     busy = false;
 
+    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: true });
 }
 document.addEventListener("updateVision", computeShadow);
 
