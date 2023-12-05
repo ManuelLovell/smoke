@@ -237,6 +237,13 @@ async function setButtonHandler()
     }, false);
 
     let debouncer: ReturnType<typeof setTimeout>;
+    fowColor.addEventListener('click', _e =>
+    {
+        Coloris({
+            el: `#${fowColor.id}`,
+            alpha: true
+        });
+    });
     fowColor.addEventListener("input", async (event: Event) =>
     {
         if (!event || !event.target) return;
@@ -366,6 +373,13 @@ async function setButtonHandler()
     }, false);
 
     // Tool Option Handling
+    toolColor.addEventListener('click', _e =>
+    {
+        Coloris({
+            el: `#${toolColor.id}`,
+            alpha: false
+        });
+    });
     toolColor.addEventListener("input", async (event: Event) =>
     {
         if (!event || !event.target) return;
