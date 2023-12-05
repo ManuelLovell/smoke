@@ -889,7 +889,7 @@ async function computeShadow(event: any)
     // This... should just work.. the logic seems sound.
     // During testing I ran into issues joining the paths together where it seemed to create overlapping paths with the union that would end up cutting holes in the path instead of filling them.
     // I can no longer replicate it, but I had turned this code path on, got 2 tokens, and just move them around next to eachother after a fog refresh, and it soon glitched.
-    let enableReuseFog = persistenceEnabled && sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] != 'accurate';
+    let enableReuseFog = persistenceEnabled && sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] == 'fast';
     let reuseFog: Image[] = [];
     let reuseNewFog: any;
 

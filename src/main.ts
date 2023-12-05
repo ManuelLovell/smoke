@@ -191,6 +191,10 @@ async function setButtonHandler()
     {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
+        if (target.value === "fast")
+        {
+            await OBR.notification.show("Notice: Issues can occur when using FAST Performance with PERSISTENCE, specifically with revealing inner fogged areas when traveling in a full circle around them. Use both with caution and care.", "DEFAULT");
+        }
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/quality`]: target.value });
     }, false);
@@ -418,7 +422,7 @@ function updateUI(items: Image[])
         doorCheckbox.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/playerDoors`] == true;
         fowColor.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
         debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
-        qualityOption.value = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] as string;
+        qualityOption.value = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] as string ?? "accurate";
     }
 
     debugDiv.style.display = debug ? 'grid' : 'none';
@@ -949,7 +953,7 @@ OBR.onReady(async () =>
         sceneCache.players = await OBR.party.getPlayers();
 
         if (role === "GM") CheckPlayerProcess(sceneCache.players);
-        
+
         OBR.party.onChange(async (players) =>
         {
             sceneCache.players = players;
