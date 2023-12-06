@@ -914,8 +914,12 @@ async function computeShadow(event: any)
             reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
         } else
         {
+            const item = reuseFog[0];
+            const commands = (item as any).commands;
+            const fillType = (item as any).fillRule === "nonzero" ? PathKit.FillType.WINDING : PathKit.FillType.EVENODD;
             // Initalize the new path builder with the existing item's path:
-            let oldPath = PathKit.FromCmds((reuseFog[0] as any).commands);
+            let oldPath = PathKit.FromCmds(commands);
+            oldPath.setFillType(fillType);
             reuseNewFog.add(oldPath, PathKit.PathOp.UNION);
             oldPath.delete();
         }
@@ -949,7 +953,7 @@ async function computeShadow(event: any)
                 reuseNewFog.add(item, PathKit.PathOp.UNION);
             } else
             {
-                itemsToAdd.push({ cmds: item.toCmds(), visible: false, zIndex: 3, playerId: tokensWithVision[key].id, digest: digest });
+                itemsToAdd.push({ cmds: item.toCmds(), fillRule: item.getFillTypeString(), visible: false, zIndex: 3, playerId: tokensWithVision[key].id, digest: digest });
             }
         } else
         {
@@ -981,9 +985,9 @@ async function computeShadow(event: any)
     if (enableReuseFog)
     {
         const newPath = reuseNewFog.resolve();
-        newPath.setFillType(PathKit.FillType.EVENODD);
 
         const commands = newPath.toCmds();
+        const fillRule = newPath.getFillTypeString();
 
         await OBR.scene.local.updateItems([reuseFog[0].id], (items) =>
         {
@@ -992,7 +996,7 @@ async function computeShadow(event: any)
 
         try
         {
-            localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify([{ digest: 'reuse', commands: commands }]));
+            localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`, JSON.stringify([{ digest: 'reuse', commands: commands, fillRule }]));
         }
         catch (error)
         {
@@ -1047,6 +1051,7 @@ async function computeShadow(event: any)
 
         const trailingFog = buildPath()
             .commands(trailingFogRect.toCmds())
+            .fillRule(trailingFogRect.getFillTypeString())
             .locked(true)
             .fillRule("evenodd")
             .visible(true)
@@ -1070,7 +1075,10 @@ async function computeShadow(event: any)
             {
                 for (const item of items)
                 {
-                    item.commands = trailingFog.commands;
+                    if (isPath(item)) {
+                        item.commands = trailingFog.commands;
+                        item.fillRule = trailingFog.fillRule;
+                    }
                 }
             }, false);
         } else
@@ -1177,7 +1185,7 @@ async function computeShadow(event: any)
         promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
         promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item =>
         {
-            const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
+            const path = buildPath().commands(item.cmds).fillRule(item.fillRule).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
             path.zIndex = item.zIndex;
             return path;
         }))
