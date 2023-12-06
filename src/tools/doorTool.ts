@@ -96,7 +96,7 @@ export async function createLocalDoor(items: Item[])
         }
         doors.push(buildPath().locked(true).commands(getDoorPath(item.metadata[`${Constants.EXTENSIONID}/disabled`] === true)).scale({ x: 0.2, y: 0.2 }).name("Door").position(Math2.centroid(points)).metadata({ [`${Constants.EXTENSIONID}/doorId`]: item.id }).build());
     }
-    if (doors.length > 0) OBR.scene.local.addItems(doors);
+    if (doors.length > 0) await OBR.scene.local.addItems(doors);
 }
 
 /* Note: Removed door image logic to main vision loop code so it can be used for others */

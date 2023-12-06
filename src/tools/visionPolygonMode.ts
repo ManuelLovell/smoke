@@ -48,7 +48,7 @@ async function finishDrawing()
         polygon.points.push(polygon.points[0]);
     });
     if (polygon.points.length >= 4)
-        OBR.scene.items.addItems([polygon]);
+        await OBR.scene.items.addItems([polygon]);
     // Make sure we stop the interaction so others
     // can interact with our new polygon
     stop();

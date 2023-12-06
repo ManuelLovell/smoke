@@ -103,7 +103,6 @@ function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: numb
             // tolerance should be related to the image dpi
             const factor = 8;//importDpi / 16;
             points = simplify(points, factor, false);
-            console.log("simplified points from " + x + " to " + points.length);
         }
 
         for (let chunk = 0; chunk < points.length; chunk += 256) {

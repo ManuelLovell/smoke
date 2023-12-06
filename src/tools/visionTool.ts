@@ -602,10 +602,11 @@ var busy = false;
 const playerShadowCache = new ObjectCache(false);
 
 // This is the function responsible for computing the shadows and the FoW
-async function computeShadow(event: any)
+async function computeShadow(eventDetail: Detail)
 {
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: false });
     busy = true;
+    console.log('computing')
     if (!PathKit)
     {
         // Is this allowed?
@@ -632,10 +633,10 @@ async function computeShadow(event: any)
         visionShapes,
         tokensWithVision,
         invalidateCache,
-    } = event.detail;
+    } = eventDetail;
 
 
-    let size = event.detail.size, offset = event.detail.offset, scale = event.detail.scale;
+    let size = eventDetail.size, offset = eventDetail.offset, scale = eventDetail.scale;
     let [width, height] = size;
 
     const autodetectEnabled = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true;
@@ -697,7 +698,7 @@ async function computeShadow(event: any)
     const obstructionLines: ObstructionLine[] = createObstructionLines(visionShapes);
 
     // Create polygons containing the individual shadows cast by a vision line from the point of view of one player.
-    const polygons: Polygon[][] = createPolygons(obstructionLines, tokensWithVision, width, height, offset, scale);
+    const polygons: Polygon[][] = createPolygons(obstructionLines, tokensWithVision, width, height, offset as any, scale as any);
 
     if (polygons.length == 0)
     {
@@ -962,7 +963,7 @@ async function computeShadow(event: any)
             if (enableDebug)
             {
                 const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true }).build();
-                OBR.scene.local.addItems([debugp]);
+                await OBR.scene.local.addItems([debugp]);
             }
 
             trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
@@ -1066,7 +1067,7 @@ async function computeShadow(event: any)
             // If the old item exists in the scene, reuse it, otherwise you get flickering.
             // Warning: In theory this can use fastUpdate since we only change the path, though it seemed to break with it turned on.
             // Also worth noting that this seems to fail if we use trailingFogRect directly - does buildPath transform it somehow? possibly by the fill rule?
-            OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items =>
+            await OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items =>
             {
                 for (const item of items)
                 {
@@ -1159,18 +1160,18 @@ async function computeShadow(event: any)
 
         if (!persistenceEnabled)
         {
-            OBR.scene.local.deleteItems(oldFog.map((item) => item.id));
+            await OBR.scene.local.deleteItems(oldFog.map((item) => item.id));
         }
 
         // Include the rings in the promise, if available
         if (playerRings.length > 0)
         {
-            OBR.scene.local.addItems(playerRings);
+            await OBR.scene.local.addItems(playerRings);
         }
 
         if (!sceneCache.fog.filled)
         {
-            OBR.scene.fog.setFilled(true);
+            await OBR.scene.fog.setFilled(true);
         }
     } else
     {
@@ -1243,7 +1244,6 @@ async function computeShadow(event: any)
 
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: true });
 }
-document.addEventListener("updateVision", computeShadow);
 
 async function updateTokenVisibility(currentFogPath: any)
 {
@@ -1338,7 +1338,7 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     if (busy)
         return;
 
-    if (!(await OBR.scene.isReady()))
+    if (!sceneCache.ready || !sceneCache.initialized)
         return;
 
     const debugDiv = document.querySelector("#debug_div") as HTMLDivElement;
@@ -1442,23 +1442,21 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     computeTimer.pause();
 
     // Fire an `updateVisionEvent` to launch the `computeShadow` function.
-    const updateVisionEvent = new CustomEvent("updateVision", {
-        detail: {
-            awaitTimer: awaitTimer,
-            computeTimer: computeTimer,
-            allItems: sceneCache.items,
-            metadata: sceneCache.metadata,
-            size: size,
-            offset: offset,
-            scale: scale,
-            tokensWithVision: tokensWithVision,
-            visionShapes: visionShapes,
-            invalidateCache: invalidateCache,
-        } as Detail
-    });
+    const eventDetail: Detail = {
+        awaitTimer: awaitTimer,
+        computeTimer: computeTimer,
+        allItems: sceneCache.items,
+        metadata: sceneCache.metadata,
+        size: size,
+        offset: offset,
+        scale: scale,
+        tokensWithVision: tokensWithVision,
+        visionShapes: visionShapes,
+        invalidateCache: invalidateCache,
+    };
 
     if (!busy)
     {
-        document.dispatchEvent(updateVisionEvent);
+        await computeShadow(eventDetail);
     }
 }

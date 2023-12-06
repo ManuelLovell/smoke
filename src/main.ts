@@ -205,8 +205,7 @@ async function setButtonHandler()
 
         // TODO: isnt there a better way to do this?
         // Update the metadata to tell all the other players that they need to reset:
-        OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/forceReset`]: true });
-        OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/forceReset`]: undefined });
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/triggerReset`]: new Date().toLocaleTimeString() });
     }, false);
 
     debugButton.addEventListener("click", async (event: MouseEvent) =>
@@ -241,7 +240,8 @@ async function setButtonHandler()
     {
         Coloris({
             el: `#${fowColor.id}`,
-            alpha: true
+            alpha: true,
+            forceAlpha: true,
         });
     });
     fowColor.addEventListener("input", async (event: Event) =>
@@ -259,6 +259,7 @@ async function setButtonHandler()
             if (fogRegex.test(target.value))
             {
                 // Remove existing fog, will be regenerated on update:
+
                 await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowColor`]: target.value });
 
                 const fogItems = await OBR.scene.local.getItems(isTrailingFog as ItemFilter<Image>) as Image[];
@@ -280,7 +281,7 @@ async function setButtonHandler()
                 // Remove the old scene metadata, we dont need any of it
                 if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID)
                 {
-                    OBR.scene.setMetadata({ [`${meta}`]: undefined });
+                    await OBR.scene.setMetadata({ [`${meta}`]: undefined });
                 }
             }
 
@@ -377,7 +378,8 @@ async function setButtonHandler()
     {
         Coloris({
             el: `#${toolColor.id}`,
-            alpha: false
+            alpha: false,
+            forceAlpha: false,
         });
     });
     toolColor.addEventListener("input", async (event: Event) =>
@@ -393,7 +395,7 @@ async function setButtonHandler()
             const hexTest = /#[a-f0-9]{6}/
             if (hexTest.test(target.value))
             {
-                console.log("toolColor" + target.value);
+
                 await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolColor`]: target.value });
             }
         }, 400);
@@ -403,7 +405,7 @@ async function setButtonHandler()
     toolStyle.onchange = async (event) =>
     {
         const target = event.currentTarget as HTMLSelectElement;
-        console.log("toolStyle" + target.value);
+
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolStyle`]: target.value == "solid" ? [] : [25, 25] });
     };
 
@@ -415,7 +417,7 @@ async function setButtonHandler()
         // Debounce this input to avoid hitting OBR rate limit
         debouncer = setTimeout(async () =>
         {
-            console.log("toolWdith" + target.value);
+
             await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolWidth`]: target.value });
         }, 400);
     };
@@ -741,7 +743,7 @@ async function initScene(playerRole: string): Promise<void>
             if (sceneFogCache !== null && sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] === true)
             {
                 const savedPaths = JSON.parse(sceneFogCache);
-                console.log('unfreezing ' + savedPaths.length + ' fog paths from localStorage');
+
                 const loadPaths: Promise<void>[] = [];
                 for (let i = 0; i < savedPaths.length; i++)
                 {
@@ -830,6 +832,7 @@ async function initScene(playerRole: string): Promise<void>
             });
         }
     }
+    sceneCache.initialized = true;
 }
 
 /** Check if Local Storage is disabled, or any other things that would merit a warning to the user */
@@ -846,7 +849,7 @@ async function testEnvironment()
     }
 }
 
-async function UpdatePlayerVisionList(items: Item[])
+function UpdatePlayerVisionList(items: Item[])
 {
     const playerListContainer = document.getElementById("playerOwnedTokens")!;
     const itemListHTML: string[] = [];
@@ -993,17 +996,18 @@ OBR.onReady(async () =>
         OBR.scene.onMetadataChange(async (metadata) =>
         {
             // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
-            if (metadata[`${Constants.EXTENSIONID}/forceReset`] === true)
+            const lastResetTime = metadata[`${Constants.EXTENSIONID}/triggerReset`] as string;
+            if (lastResetTime !== "" && lastResetTime !== sceneCache.lastReset)
             {
+                sceneCache.lastReset = lastResetTime;
                 const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-                OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
+                await OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
 
                 const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
                 localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
-
-                // Force an update:
-                onSceneDataChange(true);
-            } else
+                await onSceneDataChange();
+            }
+            else
             {
                 sceneCache.metadata = metadata;
                 if (sceneCache.ready)
@@ -1011,27 +1015,34 @@ OBR.onReady(async () =>
             }
         });
 
+        // This is relevant when swapping between scenes, generally OBR will already have loaded things and we'll be good.
+        sceneCache.ready = await OBR.scene.isReady();
+        if (sceneCache.ready)
+            {
+                await initScene(role);
+                await onSceneDataChange();
+            if (role == "GM") await updateMaps(mapAlign);
+            }
+            else if (role == "GM")
+        {
+                updateUI([]);
+        }
+
+        // On fresh page loads, this will fire substantially later as things go.
         OBR.scene.onReadyChange(async (ready) =>
         {
             sceneCache.ready = ready;
             if (ready)
-            {
-                await initScene(role);
-                await onSceneDataChange();
-            }
-            else if (role == "GM")
-                updateUI([]);
-        });
-
-        sceneCache.ready = await OBR.scene.isReady();
-        if (sceneCache.ready)
         {
             await initScene(role);
             await onSceneDataChange();
-            if (role == "GM") await updateMaps(mapAlign);
         }
         else if (role == "GM")
+            {
+                sceneCache.initialized = false;
             updateUI([]);
+            }
+        });
 
         OBR.theme.onChange((theme) =>
         {

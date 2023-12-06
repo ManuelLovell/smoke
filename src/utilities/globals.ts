@@ -14,6 +14,8 @@ class SceneCash
     fog: Fog;
     ready: boolean;
     snap: boolean;
+    initialized: boolean;
+    lastReset: string;
 
     constructor()
     {
@@ -29,6 +31,8 @@ class SceneCash
         this.fog = {filled: false, style: { color: "white", strokeWidth: 0}};
         this.ready = false;
         this.snap = true;
+        this.initialized = false;
+        this.lastReset = "";
     }
 };
 
