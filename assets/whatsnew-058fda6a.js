@@ -20,6 +20,13 @@ import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+    <h1>Smoke & Spectre! 06/12/2023</h1>
+    </br>
+    <li>Sorry for the bumps lately. The 'black fog' should be fixed now (it was rendering several times and shouldn't have) and this should hopefully come with some performance improvements. Unfortunately while in the process of updating the older code, some unintended things happened. The 'worst' should be fixed as the issue was identified, and now it SHOULD be behaving as expected. Let me know if you are still seeing hiccups in rendering or otherwise. Thanks.
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 04/12/2023</h1>
     </br>
     <li>Update One: Tool options have been surfaced in Settings. So you can set default Line Color/Width/Style. You can thank Andrew(SeveralRecord) because it's hard to tell him no.
