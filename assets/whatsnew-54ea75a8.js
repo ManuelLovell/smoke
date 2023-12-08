@@ -1,4 +1,4 @@
-import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),s=`
+import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                  */const r=document.querySelector("#smoke-whatsnew"),a=document.querySelector("#smoke-whatsnew-notes"),s=`
 <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -20,6 +20,13 @@ import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+    <h1>Smoke & Spectre! 08/12/2023</h1>
+    </br>
+    <li>Lifted the Spectre restriction from Characters only. Spectre anything.. probably. :)
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <h1>Smoke & Spectre! 06/12/2023</h1>
     </br>
     <li>Sorry for the bumps lately. The 'black fog' should be fixed now (it was rendering several times and shouldn't have) and this should hopefully come with some performance improvements. Unfortunately while in the process of updating the older code, some unintended things happened. The 'worst' should be fixed as the issue was identified, and now it SHOULD be behaving as expected. Let me know if you are still seeing hiccups in rendering or otherwise. Thanks.
@@ -130,7 +137,7 @@ import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                 
     'General Stability Fixes.'
     </br>
     </br>
-`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");a.innerHTML=t?s:l,r.innerHTML=`
+`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");r.innerHTML=t?s:l,a.innerHTML=`
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
