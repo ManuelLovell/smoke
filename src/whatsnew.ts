@@ -29,13 +29,6 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
-    <h1>Smoke & Spectre! 08/12/2023</h1>
-    </br>
-    <li>Lifted the Spectre restriction from Characters only. Spectre anything.. probably. :)
-    </br>
-    See you around~ Battle-System (Que!)
-    </br>
-    </br>
     <h1>Smoke & Spectre! 06/12/2023</h1>
     </br>
     <li>Sorry for the bumps lately. The 'black fog' should be fixed now (it was rendering several times and shouldn't have) and this should hopefully come with some performance improvements. Unfortunately while in the process of updating the older code, some unintended things happened. The 'worst' should be fixed as the issue was identified, and now it SHOULD be behaving as expected. Let me know if you are still seeing hiccups in rendering or otherwise. Thanks.
