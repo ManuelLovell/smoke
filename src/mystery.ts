@@ -9,8 +9,7 @@ export async function RunSpectre(players: Player[]): Promise<void>
     const sceneReady = await OBR.scene.isReady();
     if (!sceneReady) return;
 
-    const localGhosts = await OBR.scene.local.getItems(
-        (item): item is Image => item.layer === "CHARACTER");
+    const localGhosts = await OBR.scene.local.getItems();
     const localIds = localGhosts?.map(x => x.id);
     let foundghost = false;
 
@@ -106,12 +105,11 @@ export async function SetupSpectreGM(): Promise<void>
 {
     OBR.scene.local.onChange(async (localItems) =>
     {
-        const ghosts = localItems.filter(x => x.layer == "CHARACTER");
-        if (ghosts.length === 0) return;
+        if (localItems.length === 0) return;
 
         const metadataGhostList: Metadata = {};
 
-        metadataGhostList[`${Constants.EXTENSIONID}/metadata_ghosts`] = ghosts;
+        metadataGhostList[`${Constants.EXTENSIONID}/metadata_ghosts`] = localItems;
         await OBR.player.setMetadata(metadataGhostList);
     });
 
@@ -122,15 +120,13 @@ export async function SetupSpectreGM(): Promise<void>
                 icon: "/ghost.svg",
                 label: "Spectre",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" },
-                    { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "==", coordinator: "&&" }],
-                },
+                    every: [{ key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "==", coordinator: "&&" }]
+                }
             }, {
                 icon: "/ghost.svg",
                 label: "Un-Spectre",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" },
-                    { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "!=", coordinator: "&&" }],
+                    every: [{ key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "!=", coordinator: "&&" }]
                 },
             }
         ],
