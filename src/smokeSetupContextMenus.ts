@@ -13,14 +13,23 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/no-vision.svg",
                 label: "Enable Vision",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "&&" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
+                    every: [
+                        { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], operator: "==", value: undefined, coordinator: "&&" },
+                        { key: ["metadata", `${Constants.SPECTREID}/spectred`], operator: "==", value: undefined }],
+                    some: [
+                        { key: "layer", value: "CHARACTER", coordinator: "||" },
+                        { key: "layer", value: "ATTACHMENT" }],
                 },
             },
             {
                 icon: "/icon.svg",
                 label: "Disable Vision",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "||" }],
+                    every: [
+                        { key: ["metadata", `${Constants.SPECTREID}/spectred`],operator: "==", value: undefined }],
+                    some: [
+                        { key: "layer", value: "CHARACTER", coordinator: "||" },
+                        { key: "layer", value: "ATTACHMENT" }],
                 },
             },
         ],
@@ -89,231 +98,6 @@ export async function SetupContextMenus(): Promise<void>
                     }
                 });
             }
-
-        },
-    });
-
-    // This context appears on vision lines and lets the user toggle whether
-    // they're active or not
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-vision-line`,
-        icons: [
-            {
-                icon: "/icon.svg",
-                label: "Disable Vision Line",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/disabled`], value: undefined, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/disabled`], value: undefined }]
-                },
-            },
-            {
-                icon: "/no-vision.svg",
-                label: "Enable Vision Line",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
-                },
-            }
-        ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`])
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
-                    }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
-                    }
-                }
-            });
-        }
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/switch-one-sided-type`,
-        icons: [
-            {
-                icon: "/two-sided.svg",
-                label: "Two-sided",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: undefined, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: undefined }]
-                },
-            },
-            {
-                icon: "/left-sided.svg",
-                label: "One-sided left",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: "left", coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: "left" }]
-                },
-            },
-            {
-                icon: "/right-sided.svg",
-                label: "One-sided right",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
-                },
-            }
-        ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "right" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "right"))
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/oneSided`];
-                        delete item.metadata[`${Constants.ARMINDOID}/oneSided`];
-                    }
-                    else if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "left" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "left"))
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "right";
-                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "right";
-                    }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "left";
-                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "left";
-                    }
-                }
-            });
-        }
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-fog-background`,
-        icons: [
-            {
-                icon: "/fog-background.svg",
-                label: "Convert To Fog Background",
-                filter: {
-                    every: [{ key: "layer", value: "MAP" }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            if (ctx.items.length > 0)
-            {
-
-                await OBR.scene.items.updateItems(ctx.items, (items: Item[]) =>
-                {
-                    for (let i = 0; i < items.length; i++)
-                    {
-                        items[i].zIndex = 1;
-                        items[i].layer = "FOG";
-                        items[i].disableHit = true;
-                        items[i].locked = false;
-                        items[i].visible = false;
-                        items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] = true;
-                    }
-                });
-            }
-        },
-    });
-
-    // This context menu appears on character tokens and determines whether they
-    // to render their FoW or not
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-vision-menu`,
-        icons: [
-            {
-                icon: "/no-vision.svg",
-                label: "Enable Vision",
-                filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "&&" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
-                },
-            },
-            {
-                icon: "/icon.svg",
-                label: "Disable Vision",
-                filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "||" }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            const enableFog = ctx.items.every(
-                (item) => item.metadata[`${Constants.EXTENSIONID}/hasVision`] === undefined);
-
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableFog)
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
-                    }
-                    else
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                        if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
-                        {
-                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
-                        }
-                    }
-                }
-            });
-        },
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-groupvision-menu`,
-        icons: [
-            {
-                icon: "/no-vision.svg",
-                label: "Toggle Attachments Vision",
-                filter: {
-                    every: [{ key: "layer", value: "NOTE" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            if (ctx.items.length > 0)
-            {
-                const parentIds = ctx.items.map(x => x.id);
-                const attached = await OBR.scene.items.getItemAttachments(parentIds);
-                await OBR.scene.items.updateItems(attached, items =>
-                {
-                    for (const item of items)
-                    {
-                        if (parentIds.includes(item.attachedTo))
-                        {
-                            if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && (item.layer == "CHARACTER" || item.layer == "ATTACHMENT"))
-                            {
-                                delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
-                            }
-                            else if (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
-                            {
-                                item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                                if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
-                                {
-                                    item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
         },
     });
 

@@ -4,7 +4,7 @@ import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
 import { sceneCache } from "./utilities/globals";
 import { Constants } from "./utilities/constants";
-import { isAnyFog, isTrailingFog } from "./utilities/itemFilters";
+import { isAnyFog, isTorch, isTrailingFog } from "./utilities/itemFilters";
 import { importFog, updateMaps } from "./tools/import";
 import { InitializeScene } from "./smokeInitializeScene";
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
@@ -18,18 +18,24 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
     //////////////////
     /// SCENE CHANGES
     //////////////////
-    OBR.scene.fog.onChange(fog =>
+    const fogHandler = OBR.scene.fog.onChange(fog =>
     {
         sceneCache.fog = fog;
     });
 
-    OBR.scene.onReadyChange(async (ready) =>
+    const readyHandler = OBR.scene.onReadyChange(async (ready) =>
     {
         sceneCache.ready = ready;
         if (ready)
         {
+            //Turn off all handlers before Initializing a scene to avoid triggering updates with race conditions
+            KillHandlers();
+
             await InitializeScene();
             await OnSceneDataChange();
+
+            //Reinstate Handlers
+            SetupOBROnChangeHandlers(sceneCache.role);
         }
         else if (role == "GM")
         {
@@ -38,7 +44,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         }
     });
 
-    OBR.scene.grid.onChange(async (grid) =>
+    const gridHandler = OBR.scene.grid.onChange(async (grid) =>
     {
         sceneCache.gridDpi = grid.dpi;
         sceneCache.gridScale = parseInt(grid.scale);
@@ -46,10 +52,10 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
             await OnSceneDataChange();
     });
 
-    OBR.scene.onMetadataChange(async (metadata) =>
+    const sceneMetaHandler = OBR.scene.onMetadataChange(async (metadata) =>
     {
         sceneCache.metadata = metadata;
-        // resets need to propagate to the other players, so handle it via scene metadata change. is there a better way to do this?
+
         const lastResetTime = metadata[`${Constants.EXTENSIONID}/triggerReset`] as string;
         if (lastResetTime !== "" && lastResetTime !== sceneCache.lastReset)
         {
@@ -72,15 +78,27 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         }
     });
 
-    OBR.scene.items.onChange(async (items) =>
+    const sceneItemsHandler = OBR.scene.items.onChange(async (items) =>
     {
         sceneCache.items = items;
+        sceneCache.torchActive = items.some(isTorch);
+
         if (sceneCache.ready)
         {
             if (role == "GM")
             {
                 await SMOKEMAIN.UpdateUI();
                 await updateMaps(SMOKEMAIN.mapAlign!);
+                if (sceneCache.torchActive)
+                {
+                    SMOKEMAIN.qualityOption!.style.display = "none";
+                    SMOKEMAIN.torchQuality!.style.display = "inline-block";
+                }
+                else
+                {
+                    SMOKEMAIN.qualityOption!.style.display = "inline-block";
+                    SMOKEMAIN.torchQuality!.style.display = "none";
+                }
             }
             else
             {
@@ -92,7 +110,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
     //////////////////
     /// PARTY/PLAYER CHANGES
     //////////////////
-    OBR.player.onChange(async (player: Player) =>
+    const playerHandler = OBR.player.onChange(async (player: Player) =>
     {
         const tokens = document.querySelectorAll(".token-table-entry");
         for (let token of tokens)
@@ -113,7 +131,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         }
     });
 
-    OBR.party.onChange(async (players) =>
+    const partyHandler = OBR.party.onChange(async (players) =>
     {
         sceneCache.players = players;
         if (role === "PLAYER")
@@ -126,11 +144,23 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
             SMOKEMAIN.UpdatePlayerProcessUI(players);
         }
     });
-    
-    OBR.theme.onChange((theme) =>
+
+    const themeHandler = OBR.theme.onChange((theme) =>
     {
         Utilities.SetThemeMode(theme, document);
     });
+
+    function KillHandlers()
+    {
+        themeHandler();
+        partyHandler();
+        playerHandler();
+        sceneItemsHandler();
+        sceneMetaHandler();
+        gridHandler();
+        readyHandler();
+        fogHandler();
+    }
 }
 
 export function SetupMainHandlers()
@@ -220,7 +250,7 @@ export function SetupMainHandlers()
     {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
-        
+
         await setupAutohideMenus(target.checked);
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowEnabled`]: target.checked });
     };
@@ -258,13 +288,21 @@ export function SetupMainHandlers()
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/triggerReset`]: new Date().toLocaleTimeString() });
     };
 
-    // Turns on debug mode. I guess. I have no idea.
+    // Turns on debug mode. 
     SMOKEMAIN.debugButton!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
-        const target = event.target as HTMLInputElement;
 
-        SMOKEMAIN.debugDiv!.style.display = SMOKEMAIN.debugDiv!.style.display == 'none' ? 'grid' : 'none';
+        if (SMOKEMAIN.debugDiv!.style.display == 'none')
+        {
+            SMOKEMAIN.debugDiv!.style.display = 'grid';
+            SMOKEMAIN.debugButton!.value = "Disable Debugging";
+        }
+        else
+        {
+            SMOKEMAIN.debugDiv!.style.display = 'none';
+            SMOKEMAIN.debugButton!.value = "Enable Debugging";
+        }
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/debug`]: SMOKEMAIN.debugDiv!.style.display === 'grid' ? true : false });
     };
 
@@ -479,6 +517,7 @@ export function SetupMainHandlers()
 
     SMOKEMAIN.whatsNewButton!.onclick = async function ()
     {
+        SMOKEMAIN.whatsNewIcon?.classList.remove("new-shine");
         await OBR.modal.open({
             id: Constants.EXTENSIONWHATSNEW,
             url: `/pages/whatsnew.html`,

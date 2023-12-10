@@ -15,6 +15,7 @@ class SceneCache
     ready: boolean;
     snap: boolean;
     initialized: boolean;
+    torchActive: boolean;
     lastReset: string;
 
     constructor()
@@ -32,6 +33,7 @@ class SceneCache
         this.ready = false;
         this.snap = true;
         this.initialized = false;
+        this.torchActive = false;
         this.lastReset = "";
     }
 };

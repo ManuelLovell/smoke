@@ -29,6 +29,17 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+    <h1>Smoke & Spectre! 10/12/2023</h1>
+    </br>
+    <li>So.. in an effort to smooth out future development, did a large refactor.  Overall, it should run cleaner and more consistent. Less dupliated calls all around.  Scene changes are handled with more grace.
+    <li>Added a notification bubble so you can tell when things are processing. With large-scale maps (with thousands and thousands of obstructions) performance can take a couple seconds if you're using ACCURATE mode (It's still near instant with Fast).
+    <li>Enabling torches visibly disables 'Performance: Fast' mode. (It always did, but it was never told to the user.)
+    <li>Lots of fixes. I didn't count. Find me on Discord if I missed something.
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
+    <div>
     <h1>Smoke & Spectre! 06/12/2023</h1>
     </br>
     <li>Sorry for the bumps lately. The 'black fog' should be fixed now (it was rendering several times and shouldn't have) and this should hopefully come with some performance improvements. Unfortunately while in the process of updating the older code, some unintended things happened. The 'worst' should be fixed as the issue was identified, and now it SHOULD be behaving as expected. Let me know if you are still seeing hiccups in rendering or otherwise. Thanks.
@@ -146,7 +157,7 @@ OBR.onReady(async () =>
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const help = urlParams.get('gethelp')!;
-    
+
     whatsnew.innerHTML = help ? needHelpMessage : whatsNewMessage;
 
     footer.innerHTML = `

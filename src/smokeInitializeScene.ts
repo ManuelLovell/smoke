@@ -8,7 +8,6 @@ import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
 
 export async function InitializeScene(): Promise<void>
 {
-    console.log("Entering Initialize")
     let fogFilled, fogColor;
     [sceneCache.items,
     sceneCache.metadata,
@@ -27,7 +26,7 @@ export async function InitializeScene(): Promise<void>
     await OBR.scene.items.deleteItems(sceneCache.items.filter(isVisionFog).map(x => x.id));
     
     sceneCache.snap = true;
-    sceneCache.gridScale = sceneCache.gridScale.parsed.multiplier;
+    sceneCache.gridScale = sceneCache.gridScale?.parsed?.multiplier ?? 5;
     sceneCache.fog = { filled: fogFilled, style: { color: fogColor, strokeWidth: 5 } };
 
     let image;
@@ -42,7 +41,7 @@ export async function InitializeScene(): Promise<void>
     // turn map autodetect on by default:
     if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === undefined)
     {
-        SMOKEMAIN.autodetectCheckbox!.checked = true;
+        if (sceneCache.role === "GM") SMOKEMAIN.autodetectCheckbox!.checked = true;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autodetectEnabled`]: true });
     }
     

@@ -2,6 +2,9 @@ import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve, buildLabel, b
 import { Constants } from "../utilities/constants";
 import { sceneCache } from "../utilities/globals";
 
+/// There's a bug in here with OBR interaction API, on the player view when
+/// finishing an object it throws an error because the point is supposedly undefined.
+
 let interaction: [any, any] | [any] | null = null;
 let finishLabelId = "";
 let finishId = "";

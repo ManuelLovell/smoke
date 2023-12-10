@@ -17,14 +17,14 @@ export async function RunSpectre(players: Player[]): Promise<void>
     for (const player of players)
     {
         // For the GM, take the package.
-        const ghostPackage = player.metadata[`${Constants.EXTENSIONID}/metadata_ghosts`] as Image[];
+        const ghostPackage = player.metadata[`${Constants.SPECTREID}/metadata_ghosts`] as Image[];
         if (ghostPackage?.length > 0)
         {
             foundghost = true;
             const ghostIds = ghostPackage.map(x => x.id);
             for (const ghost of ghostPackage)
             {
-                const metadata = ghost.metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
+                const metadata = ghost.metadata[`${Constants.SPECTREID}/viewers`] as string[];
                 if (metadata)
                 {
                     const forMe = metadata.includes(sceneCache.userId);
@@ -110,12 +110,12 @@ export async function SetupSpectreGM(): Promise<void>
 
         const metadataGhostList: Metadata = {};
 
-        metadataGhostList[`${Constants.EXTENSIONID}/metadata_ghosts`] = ghosts;
+        metadataGhostList[`${Constants.SPECTREID}/metadata_ghosts`] = ghosts;
         await OBR.player.setMetadata(metadataGhostList);
     });
 
     await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/context-menu`,
+        id: `${Constants.SPECTREID}/context-menu`,
         icons: [
             {
                 icon: "/ghost.svg",
@@ -158,17 +158,14 @@ export async function SetupSpectreGM(): Promise<void>
                     const ghost = item as Image;
                     ghost.metadata[`${Constants.SPECTREID}/spectred`] = undefined;
 
-                    const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
-
                     const ghostIndex = sceneCache.ghosts.findIndex(x => x.id === ghost.id);
                     sceneCache.ghosts.splice(ghostIndex, 1);
                     const rowElement = document.getElementById(`tr-${ghost.id}`)!;
                     rowElement?.remove();
-                    await OBR.scene.local.updateItems([ghost.id], ghosties =>
-                    {
-                        ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [];
-                    });
+                    
                     await RemoveGhost(ghost);
+
+                    ghost.metadata[`${Constants.SPECTREID}/viewers`] = [];
                     await OBR.scene.items.addItems([ghost]);
                 }
             }
@@ -216,8 +213,8 @@ async function SetupTomSelect(ghost: Image)
     newTr.id = `tr-${ghost.id}`;
     newTr.className = "ghost-table-entry";
     newTr.innerHTML = `<td class="token-name">${name}</td>
-<td><select id="select-${ghost.id}" class="tSelects" multiple autocomplete="off" /></td>
-<td><input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
+        <td><select id="select-${ghost.id}" class="tSelects" multiple autocomplete="off" /></td>
+        <td><input type="button" class="mysteryButton" id="deleteGhost-${ghost.id}" value="Delete"/></td>`;
 
     table.appendChild(newTr);
 
@@ -249,10 +246,10 @@ async function SetupTomSelect(ghost: Image)
             // Dereference from values or it'll mess up the control
             await OBR.scene.local.updateItems([ghostId], ghosties =>
             {
-                const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
+                const metadata = ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] as string[];
                 const index = metadata.findIndex(x => x == id);
                 metadata.splice(index, 1);
-                ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
+                ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = metadata;
             });
         },
         onItemAdd: async function (playerId: string, element: any) 
@@ -262,15 +259,15 @@ async function SetupTomSelect(ghost: Image)
 
             await OBR.scene.local.updateItems([ghostId], ghosties =>
             {
-                const metadata = ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] as string[];
+                const metadata = ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] as string[];
                 if (metadata)
                 {
                     metadata.push(playerId);
-                    ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = metadata;
+                    ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = metadata;
                 }
                 else
                 {
-                    ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [playerId];
+                    ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = [playerId];
                 }
             });
         }
@@ -287,7 +284,7 @@ async function SetupTomSelect(ghost: Image)
         newTr.remove();
         await OBR.scene.local.updateItems([ghost.id], ghosties =>
         {
-            ghosties[0].metadata[`${Constants.EXTENSIONID}/viewers`] = [];
+            ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = [];
         });
         await RemoveGhost(ghost);
     };

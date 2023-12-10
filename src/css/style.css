@@ -19,6 +19,7 @@
     --OBR-dark-blue-trans: rgba(30, 34, 49, 0.6);
     --OBR-light-blue: rgb(60, 62, 75);
     --OBR-Purple-Select: rgb(187, 153, 255, 0.5);
+    --OBR-Purple-Highlight: rgb(187, 153, 255);
 
     --invert: none;
     --invert-click: invert(52%) sepia(81%) saturate(5333%) hue-rotate(331deg) brightness(90%) contrast(88%);
@@ -402,4 +403,30 @@ li>p {
     background-color: yellow;
     border: 1px solid var(--light-letters);
     cursor: pointer;
+}
+
+#forceAccurate {
+    padding-left: 8px;
+    font-weight: bold;
+    color: red;
+    cursor: not-allowed;
+}
+
+@keyframes glow {
+    0% {
+        box-shadow: 0 0 2px 0px red;
+    }
+
+    50% {
+        box-shadow: 0 0 5px 2px red;
+    }
+
+    100% {
+        box-shadow: 0 0 2px 0px red;
+    }
+}
+
+.new-shine {
+    animation: glow 1.5s infinite;
+    border-radius: 50%;
 }

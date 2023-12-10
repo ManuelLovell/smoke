@@ -9,7 +9,6 @@ import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder,
 import { Constants } from "../utilities/constants";
 import { getDoorPath, initDoors } from "./doorTool";
 import { CreateObstructionLines, CreatePolygons } from "./smokeCreateObstructions";
-import { Debounce } from "../utilities/utilities";
 
 // Generally, only one player will move at one time, so let's cache the
 // computed shadows for all players and only update if something has changed
@@ -21,9 +20,9 @@ var busy = false;
 // This is the function responsible for computing the shadows and the FoW
 async function ComputeShadow(eventDetail: Detail)
 {
+    await OBR.action.setBadgeText("Working..");
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: false });
     busy = true;
-    console.log('COMPUTE SHADOW')
     if (!PathKit)
     {
         // Is this allowed?
@@ -34,6 +33,7 @@ async function ComputeShadow(eventDetail: Detail)
         // If we change scenes we should invalidate the cache
         playerShadowCache.invalidate((_, value) => value.shadowPath.delete());
         busy = false;
+        await OBR.action.setBadgeText(undefined);
         return;
     }
 
@@ -46,7 +46,6 @@ async function ComputeShadow(eventDetail: Detail)
     const {
         awaitTimer,
         computeTimer,
-        metadata,
         visionShapes,
         tokensWithVision,
         invalidateCache,
@@ -96,15 +95,15 @@ async function ComputeShadow(eventDetail: Detail)
 
     computeTimer.resume();
 
-    const shouldComputeVision = metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
+    const shouldComputeVision = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
     if (!shouldComputeVision || tokensWithVision.length == 0)
     {
         // Clear fog
         const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-        console.log("No Fog Delete");
         await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
 
         busy = false;
+        await OBR.action.setBadgeText(undefined);
         return;
     }
 
@@ -121,6 +120,7 @@ async function ComputeShadow(eventDetail: Detail)
     if (polygons.length == 0)
     {
         busy = false;
+        await OBR.action.setBadgeText(undefined);
         return;
     }
 
@@ -159,12 +159,11 @@ async function ComputeShadow(eventDetail: Detail)
         // Merge all polygons
         for (const polygon of playerPolygons)
         {
-            console.log("chunk")
             const shape = polygon.fromShape;
             const cmds = [];
 
             cmds.push([PathKit.MOVE_VERB, polygon.pointset[0].x, polygon.pointset[0].y]);
-
+            
             for (let j = 1; j < polygon.pointset.length; j++)
             {
                 cmds.push([PathKit.LINE_VERB, polygon.pointset[j].x, polygon.pointset[j].y]);
@@ -194,6 +193,7 @@ async function ComputeShadow(eventDetail: Detail)
         {
             console.error("Couldn't compute fog");
             busy = false;
+            await OBR.action.setBadgeText(undefined);
             return;
         }
 
@@ -339,7 +339,8 @@ async function ComputeShadow(eventDetail: Detail)
 
             await OBR.scene.local.addItems([path]);
             reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
-        } else
+        }
+        else
         {
             // Initalize the new path builder with the existing item's path:
             let oldPath = PathKit.FromCmds((reuseFog[0] as any).commands);
@@ -412,10 +413,13 @@ async function ComputeShadow(eventDetail: Detail)
 
         const commands = newPath.toCmds();
 
-        await OBR.scene.local.updateItems([reuseFog[0].id], (items) =>
+        if (reuseFog.length > 0)
         {
-            items[0].commands = commands;
-        });
+            await OBR.scene.local.updateItems([reuseFog[0].id], (items) =>
+            {
+                if (items.length > 0) items[0].commands = commands;
+            });
+        }
 
         try
         {
@@ -610,7 +614,6 @@ async function ComputeShadow(eventDetail: Detail)
 
         if (!persistenceEnabled)
         {
-            console.log("No Persistence Delete");
             promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
         }
 
@@ -668,6 +671,7 @@ async function ComputeShadow(eventDetail: Detail)
     busy = false;
 
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: true });
+    await OBR.action.setBadgeText(undefined);
 }
 
 async function updateTokenVisibility(currentFogPath: any)
@@ -764,7 +768,9 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         return;
 
     if (!sceneCache.ready || !sceneCache.initialized)
+    {
         return;
+    }
 
     const debugDiv = document.querySelector("#debug_div") as HTMLDivElement;
     //enableDebug = !(debugDiv.style.display === 'none');
@@ -870,7 +876,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         awaitTimer: awaitTimer,
         computeTimer: computeTimer,
         allItems: sceneCache.items,
-        metadata: sceneCache.metadata,
         size: size,
         offset: offset,
         scale: scale,
