@@ -78,7 +78,7 @@
                         <td colspan="2">Performance<select id="quality">
                             <option value="accurate" selected>Accurate</option>
                             <option value="fast">Fast</option>
-                        </select></td>
+                        </select><div id="forceAccurate" style="display: none;" title="A token is being used as a 'Light Source' and Performance is locked in 'Accuracy Mode'."> Torch-Mode</div></td>
                         <td colspan="2"><input class="settingsButton" type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></td>
                     </tr>
                     <tr>
@@ -139,4 +139,4 @@
             <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
             <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-        </div>`}export{Ds as C,Ns as O,ws as a,Ls as b,Ms as c,xs as d,Is as i};
+        </div>`}export{Ds as C,Ns as O,Ms as a,xs as b,ws as c,Ls as d,Is as i};

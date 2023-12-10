@@ -1,4 +1,4 @@
-import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),s=`
+import{O as e,C as n}from"./constants-0de41b86.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),s=`
 <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -19,6 +19,17 @@ import{O as e,C as n}from"./constants-8c00d11a.js";/* empty css                 
   </br>
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
+    <div>
+    <h1>Smoke & Spectre! 10/12/2023</h1>
+    </br>
+    <li>So.. in an effort to smooth out future development, did a large refactor.  Overall, it should run cleaner and more consistent. Less dupliated calls all around.  Scene changes are handled with more grace.
+    <li>Added a notification bubble so you can tell when things are processing. With large-scale maps (with thousands and thousands of obstructions) performance can take a couple seconds if you're using ACCURATE mode (It's still near instant with Fast).
+    <li>Enabling torches visibly disables 'Performance: Fast' mode. (It always did, but it was never told to the user.)
+    <li>Lots of fixes. I didn't count. Find me on Discord if I missed something.
+    </br>
+    See you around~ Battle-System (Que!)
+    </br>
+    </br>
     <div>
     <h1>Smoke & Spectre! 06/12/2023</h1>
     </br>
