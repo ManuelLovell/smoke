@@ -1,612 +1,29 @@
-import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, Vector2, Math2, MathM, isPath, Path } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, isPath, Path } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
-import { polygonMode } from "./visionPolygonMode";
-import { lineMode } from "./visionLineMode";
-import { Timer } from "./../utilities/debug";
-import { ObjectCache } from "./../utilities/cache";
-import { sceneCache } from "./../utilities/globals";
-import { squareDistance, comparePosition, isClose, mod } from "./../utilities/math";
-import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "./../utilities/itemFilters";
+import { Timer } from "../utilities/debug";
+import { ObjectCache } from "../utilities/cache";
+import { sceneCache } from "../utilities/globals";
+import { comparePosition } from "../utilities/math";
+import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "../utilities/itemFilters";
 import { Constants } from "../utilities/constants";
 import { getDoorPath, initDoors } from "./doorTool";
+import { CreateObstructionLines, CreatePolygons } from "./smokeCreateObstructions";
+import { Debounce } from "../utilities/utilities";
 
-export async function setupAutohideMenus(show: boolean): Promise<void>
-{
-    if (show)
-    {
-        await OBR.contextMenu.create({
-            id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
-            icons: [
-                {
-                    icon: "/autohide-off.svg",
-                    label: "Enable Autohide",
-                    filter: {
-                        every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined }],
-                        roles: ["GM"]
-                    },
-                },
-                {
-                    icon: "/autohide-on.svg",
-                    label: "Disable Autohide",
-                    filter: {
-                        every: [{ key: "layer", value: "CHARACTER" }],
-                        roles: ["GM"]
-                    },
-                },
-            ],
-            async onClick(ctx)
-            {
-                const enableFog = ctx.items.every(
-                    (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
-
-                await OBR.scene.items.updateItems(ctx.items, items =>
-                {
-                    for (const item of items)
-                    {
-                        if (!enableFog)
-                        {
-                            delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
-                        }
-                        else
-                        {
-                            item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
-                        }
-                    }
-                });
-            },
-        });
-    } else
-    {
-        await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/toggle-autohide-menu`);
-    }
-}
-
-export async function setupContextMenus(): Promise<void>
-{
-    // This context menu appears on character tokens and determines whether they
-    // to render their FoW or not
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-vision-menu`,
-        icons: [
-            {
-                icon: "/no-vision.svg",
-                label: "Enable Vision",
-                filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "&&" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
-                },
-            },
-            {
-                icon: "/icon.svg",
-                label: "Disable Vision",
-                filter: {
-                    every: [{ key: "layer", value: "CHARACTER", coordinator: "||" }, { key: "layer", value: "ATTACHMENT", coordinator: "||" }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            const enableFog = ctx.items.every(
-                (item) => item.metadata[`${Constants.EXTENSIONID}/hasVision`] === undefined);
-
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableFog)
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
-                    }
-                    else
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                        if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
-                        {
-                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
-                        }
-                    }
-                }
-            });
-        },
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-groupvision-menu`,
-        icons: [
-            {
-                icon: "/no-vision.svg",
-                label: "Toggle Attachments Vision",
-                filter: {
-                    every: [{ key: "layer", value: "NOTE" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], value: undefined }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            if (ctx.items.length > 0)
-            {
-                const parentIds = ctx.items.map(x => x.id);
-                const attached = await OBR.scene.items.getItemAttachments(parentIds);
-                await OBR.scene.items.updateItems(attached, items =>
-                {
-                    for (const item of items)
-                    {
-                        if (parentIds.includes(item.attachedTo))
-                        {
-                            if (item.metadata[`${Constants.EXTENSIONID}/hasVision`] && (item.layer == "CHARACTER" || item.layer == "ATTACHMENT"))
-                            {
-                                delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
-                            }
-                            else if (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
-                            {
-                                item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                                if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
-                                {
-                                    item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.VISIONDEFAULT;
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-
-        },
-    });
-
-    // This context appears on vision lines and lets the user toggle whether
-    // they're active or not
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-vision-line`,
-        icons: [
-            {
-                icon: "/icon.svg",
-                label: "Disable Vision Line",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/disabled`], value: undefined, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/disabled`], value: undefined }]
-                },
-            },
-            {
-                icon: "/no-vision.svg",
-                label: "Enable Vision Line",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
-                },
-            }
-        ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`])
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
-                    }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
-                    }
-                }
-            });
-        }
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/switch-one-sided-type`,
-        icons: [
-            {
-                icon: "/two-sided.svg",
-                label: "Two-sided",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: undefined, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: undefined }]
-                },
-            },
-            {
-                icon: "/left-sided.svg",
-                label: "One-sided left",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.EXTENSIONID}/oneSided`], value: "left", coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/oneSided`], value: "left" }]
-                },
-            },
-            {
-                icon: "/right-sided.svg",
-                label: "One-sided right",
-                filter: {
-                    some: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "||" },
-                    { key: ["metadata", `${Constants.ARMINDOID}/isVisionLine`], value: true }],
-                },
-            }
-        ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "right" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "right"))
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/oneSided`];
-                        delete item.metadata[`${Constants.ARMINDOID}/oneSided`];
-                    }
-                    else if ((item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                        && (item.metadata[`${Constants.EXTENSIONID}/oneSided`] == "left" || item.metadata[`${Constants.ARMINDOID}/oneSided`] == "left"))
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "right";
-                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "right";
-                    }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] || item.metadata[`${Constants.ARMINDOID}/isVisionLine`])
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/oneSided`] = "left";
-                        item.metadata[`${Constants.ARMINDOID}/oneSided`] = "left";
-                    }
-                }
-            });
-        }
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-fog-background`,
-        icons: [
-            {
-                icon: "/fog-background.svg",
-                label: "Convert To Fog Background",
-                filter: {
-                    every: [{ key: "layer", value: "MAP" }],
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            if (ctx.items.length > 0)
-            {
-
-                await OBR.scene.items.updateItems(ctx.items, (items: Item[]) =>
-                {
-                    for (let i = 0; i < items.length; i++)
-                    {
-                        items[i].zIndex = 1;
-                        items[i].layer = "FOG";
-                        items[i].disableHit = true;
-                        items[i].locked = false;
-                        items[i].visible = false;
-                        items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] = true;
-                    }
-                });
-            }
-        },
-    });
-
-}
-
-
-export async function createTool(): Promise<void>
-{
-    // This is the tool the extension offers to draw vision liens
-    await OBR.tool.create({
-        id: `${Constants.EXTENSIONID}/vision-tool`,
-        icons: [
-            {
-                icon: "/icon.svg",
-                label: "Setup Vision",
-            },
-        ],
-        async onClick()
-        {
-            await OBR.tool.activateTool(`${Constants.EXTENSIONID}/vision-tool`);
-        },
-    });
-}
-
-export async function createMode(): Promise<void>
-{
-    // Create "add polygon" mode
-    await OBR.tool.createMode({
-        id: `${Constants.EXTENSIONID}/add-vision-polygon-mode`,
-        icons: [
-            {
-                icon: "/object.svg",
-                label: "Add Obstruction Object",
-                filter: {
-                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
-                },
-            },
-        ],
-        onToolClick: polygonMode.onToolClick,
-        onToolMove: polygonMode.onToolMove,
-        onKeyDown: polygonMode.onKeyDown
-    });
-
-    // Create "add line" mode
-    await OBR.tool.createMode({
-        id: `${Constants.EXTENSIONID}/add-vision-line-mode`,
-        icons: [
-            {
-                icon: "/line.svg",
-                label: "Add Obstruction Line",
-                filter: {
-                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
-                },
-            },
-        ],
-        onToolClick: lineMode.onToolClick,
-        onToolMove: lineMode.onToolMove,
-        onKeyDown: lineMode.onKeyDown
-    });
-}
-
-// This function is responsible for updating the performance information in the
-// main extension iframe
-function updatePerformanceInformation(performanceInfo: { [key: string]: any }): void
-{
-    for (const [key, value] of Object.entries(performanceInfo))
-    {
-        const element = document.getElementById(key);
-        if (key == "compute_time" || key == "communication_time" || key[0] == 's')
-        {
-            if (element) element.innerText = Number.parseFloat(value).toFixed(1) + 'ms';
-        } else
-        {
-            if (element) element.innerText = value;
-        }
-    }
-}
-
-interface ObstructionLine
-{
-    startPosition: Vector2,
-    endPosition: Vector2,
-    originalShape: any,
-    oneSided: string
-}
-
-interface Polygon
-{
-    pointset: Vector2[],
-    fromShape: any
-}
-
-function createObstructionLines(visionShapes: any): ObstructionLine[]
-{
-    let obstructionLines: ObstructionLine[] = [];
-    for (const shape of visionShapes)
-    {
-        if (!shape.points || shape.points.length <= 1) continue;
-        for (let i = 0; i < shape.points.length - 1; i++)
-        {
-            let start: Vector2, end: Vector2;
-
-            const shapeTransform = MathM.fromItem(shape);
-            const startTransform = MathM.fromPosition(shape.points[i]);
-            const endTransform = MathM.fromPosition(shape.points[i + 1]);
-
-            start = MathM.decompose(MathM.multiply(shapeTransform, startTransform)).position;
-            end = MathM.decompose(MathM.multiply(shapeTransform, endTransform)).position;
-
-            obstructionLines.push({
-                startPosition: start,
-                endPosition: end,
-                originalShape: shape,
-                oneSided: shape.metadata[`${Constants.EXTENSIONID}/oneSided`]
-            });
-        }
-    }
-    return obstructionLines;
-}
-
-// Main fog visibility calculation occurs here.
-
-function createPolygons(visionLines: ObstructionLine[], tokensWithVision: any, width: number, height: number, offset: [number, number], scale: [number, number]): Polygon[][]
-{
-    let polygons: Polygon[][] = [];
-    let lineCounter = 0, skipCounter = 0;
-    let size = [width, height];
-    const gmIds = sceneCache.players.filter(x => x.role == "GM");
-    const useOptimisations = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] != 'accurate';
-
-    // If we have no torches in the scene at all, we can calculate the player vision without worrying about all the obstruction lines outside of the player view range.
-    // Unfortunately because of the way torches are rendered, (in particular that we calculate partial visibilty for them), we need full visibility calculated and cant use this optimisation if there are any torches at all.
-    const sceneHasTorches = tokensWithVision.some(isTorch);
-
-    for (const token of tokensWithVision)
-    {
-        const myToken = (sceneCache.userId === token.createdUserId);
-        const gmToken = gmIds.some(x => x.id == token.createdUserId);
-        if ((!myToken && sceneCache.role !== "GM") && !gmToken) continue;
-
-        const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
-
-        const cacheResult = playerShadowCache.getValue(token.id);
-        polygons.push([]);
-        if (cacheResult !== undefined && comparePosition(cacheResult.player.position, token.position) && cacheResult.player.metadata[`${Constants.EXTENSIONID}/visionRange`] === visionRangeMeta)
-        {
-            continue; // The result is cached and will be used later, no need to do work
-        }
-
-        // use the token vision range to potentially skip any obstruction lines out of range:
-        let visionRange = 1000 * sceneCache.gridDpi;
-        if (visionRangeMeta)
-        {
-            visionRange = sceneCache.gridDpi * ((visionRangeMeta) / sceneCache.gridScale + .5);
-        }
-
-        for (const line of visionLines)
-        {
-            const signedDistance = (token.position.x - line.startPosition.x) * (line.endPosition.y - line.startPosition.y) - (token.position.y - line.startPosition.y) * (line.endPosition.x - line.startPosition.x);
-            if (line.oneSided !== undefined)
-            {
-                if ((line.oneSided == "right" && signedDistance > 0) || (line.oneSided == "left" && signedDistance < 0))
-                    continue;
-            }
-
-            // exclude any lines outside of the fog area
-            // can pathkit do this better / faster?
-            let lsx = line.startPosition.x, lsy = line.startPosition.y, lex = line.endPosition.x, ley = line.endPosition.y;
-            if ((lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]) || (lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1]))
-            {
-                skipCounter++;
-                continue;
-            }
-
-            // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines
-            if (useOptimisations && (!sceneHasTorches || isTorch(token)))
-            {
-                const segments: Vector2[] = [line.startPosition, line.endPosition];
-                const length = Math2.distance(line.startPosition, line.endPosition);
-                const segmentFactor = 3; // this causes load but increases accuracy, because we calculate maxSegments as a proportion of the visionRange divided by the segment factor to increase resolution
-                const maxSegments = Math.floor(length / (visionRange / segmentFactor));
-
-                for (let i = 1; i < maxSegments; i++)
-                {
-                    segments.push(Math2.lerp(line.startPosition, line.endPosition, (i / maxSegments)));
-                }
-
-                let skip = true;
-                for (const segment of segments)
-                {
-                    if (Math2.compare(token.position, segment, visionRange))
-                    {
-                        skip = false;
-                    }
-                };
-
-                if (skip)
-                {
-                    skipCounter++;
-                    continue;
-                }
-            }
-
-            lineCounter++;
-
-            // *1st step* - compute the points in the polygon representing the shadow
-            // cast by `line` from the point of view of `player`.
-
-            const v1 = { x: line.startPosition.x - token.position.x, y: line.startPosition.y - token.position.y };
-            const v2 = { x: line.endPosition.x - token.position.x, y: line.endPosition.y - token.position.y };
-
-            var proj1 = { x: 0, y: 0 }, proj2 = { x: 0, y: 0 };
-            var xlim1 = 0, ylim1 = 0, xlim2 = 0, ylim2 = 0;
-
-            // Make sure we don't go past the image borders
-            //! This is probably not required if we later compute the intersection
-            //! (using PathKit) of these polygons with a base rectangle the size of
-            //! our background image
-            if (v1.x < 0) xlim1 = offset[0] * scale[0];
-            else xlim1 = (width + offset[0]) * scale[0];
-            if (v1.y < 0) ylim1 = offset[1] * scale[1];
-            else ylim1 = (height + offset[1]) * scale[1];
-            if (v2.x < 0) xlim2 = offset[0] * scale[0];
-            else xlim2 = (width + offset[0]) * scale[0];
-            if (v2.y < 0) ylim2 = offset[1] * scale[1];
-            else ylim2 = (height + offset[1]) * scale[1];
-
-            const options1 = [], options2 = [];
-            if (v1.x != 0)
-            {
-                const m = v1.y / v1.x;
-                const b = line.startPosition.y - m * line.startPosition.x;
-                options1.push({ x: xlim1, y: m * xlim1 + b });
-            }
-            if (v1.y != 0)
-            {
-                const n = v1.x / v1.y;
-                const c = n * line.startPosition.y - line.startPosition.x;
-                options1.push({ x: n * ylim1 - c, y: ylim1 });
-            }
-            if (v2.x != 0)
-            {
-                const m = v2.y / v2.x;
-                const b = line.endPosition.y - m * line.endPosition.x;
-                options2.push({ x: xlim2, y: m * xlim2 + b });
-            }
-            if (v2.y != 0)
-            {
-                const n = v2.x / v2.y;
-                const c = n * line.endPosition.y - line.endPosition.x;
-                options2.push({ x: n * ylim2 - c, y: ylim2 });
-            }
-
-            if (options1.length == 1 || squareDistance(options1[0], line.startPosition) < squareDistance(options1[1], line.startPosition))
-                proj1 = options1[0];
-            else
-                proj1 = options1[1];
-
-            if (options2.length == 1 || squareDistance(options2[0], line.endPosition) < squareDistance(options2[1], line.endPosition))
-                proj2 = options2[0];
-            else
-                proj2 = options2[1];
-
-            const pointset = [
-                { x: line.startPosition.x, y: line.startPosition.y },
-                proj1,
-                proj2,
-                { x: line.endPosition.x, y: line.endPosition.y },
-            ];
-
-            // Find out in which edge each solution lies
-            const corners = [
-                { x: (width + offset[0]) * scale[0], y: offset[1] * scale[1] },
-                { x: (width + offset[0]) * scale[0], y: (height + offset[1]) * scale[1] },
-                { x: offset[0] * scale[0], y: (height + offset[1]) * scale[1] },
-                { x: offset[0] * scale[0], y: offset[1] * scale[1] },
-            ];
-            const edges = [0, 0];
-            let i = 0;
-            for (const proj of [proj1, proj2])
-            {
-                if (isClose(proj.y, offset[1] * scale[1]))
-                    edges[i] = 0;
-                else if (isClose(proj.y, (height + offset[1]) * scale[1]))
-                    edges[i] = 2;
-                else if (isClose(proj.x, offset[0] * scale[0]))
-                    edges[i] = 3;
-                else if (isClose(proj.x, (width + offset[0]) * scale[0]))
-                    edges[i] = 1;
-
-                i++;
-            }
-
-            let direction = Math.sign(signedDistance);
-            direction = direction == 0 ? 1 : -direction;
-            const last = direction == 1 ? edges[1] : mod(edges[1] - 1, 4);
-            for (let k = edges[0] + (direction == 1 ? 0 : -1); mod(k, 4) != last; k += direction)
-            {
-                pointset.splice(pointset.length - 2, 0, corners[mod(k, 4)]);
-            }
-
-            polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
-        }
-    }
-
-    return polygons;
-}
-
+// Generally, only one player will move at one time, so let's cache the
+// computed shadows for all players and only update if something has changed
+export const playerShadowCache = new ObjectCache(false);
 var PathKit: any;
 var busy = false;
 
-// Generally, only one player will move at one time, so let's cache the
-// computed shadows for all players and only update if something has
-// changed
-const playerShadowCache = new ObjectCache(false);
 
 // This is the function responsible for computing the shadows and the FoW
-async function computeShadow(eventDetail: Detail)
+async function ComputeShadow(eventDetail: Detail)
 {
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/processed`]: false });
     busy = true;
-    console.log('computing')
+    console.log('COMPUTE SHADOW')
     if (!PathKit)
     {
         // Is this allowed?
@@ -684,6 +101,7 @@ async function computeShadow(eventDetail: Detail)
     {
         // Clear fog
         const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+        console.log("No Fog Delete");
         await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
 
         busy = false;
@@ -695,10 +113,10 @@ async function computeShadow(eventDetail: Detail)
      */
 
     // Extract all obstruction lines
-    const obstructionLines: ObstructionLine[] = createObstructionLines(visionShapes);
+    const obstructionLines: ObstructionLine[] = CreateObstructionLines(visionShapes);
 
     // Create polygons containing the individual shadows cast by a vision line from the point of view of one player.
-    const polygons: Polygon[][] = createPolygons(obstructionLines, tokensWithVision, width, height, offset as any, scale as any);
+    const polygons: Polygon[][] = CreatePolygons(obstructionLines, tokensWithVision, width, height, offset as any, scale as any);
 
     if (polygons.length == 0)
     {
@@ -732,7 +150,7 @@ async function computeShadow(eventDetail: Detail)
         }
 
         cacheMisses++;
-        const playerPolygons: Polygon[] = polygons[j];
+        const playerPolygons = polygons[j];
         const pathBuilder = new PathKit.SkOpBuilder();
         const tempPath = PathKit.NewPath().rect(offset[0], offset[1], size[0], size[1]);
         pathBuilder.add(tempPath, PathKit.PathOp.UNION);
@@ -741,21 +159,29 @@ async function computeShadow(eventDetail: Detail)
         // Merge all polygons
         for (const polygon of playerPolygons)
         {
+            console.log("chunk")
             const shape = polygon.fromShape;
-            const newPath = PathKit.NewPath();
+            const cmds = [];
 
-            newPath.moveTo(polygon.pointset[0].x, polygon.pointset[0].y);
+            cmds.push([PathKit.MOVE_VERB, polygon.pointset[0].x, polygon.pointset[0].y]);
+
             for (let j = 1; j < polygon.pointset.length; j++)
             {
-                newPath.lineTo(polygon.pointset[j].x, polygon.pointset[j].y);
+                cmds.push([PathKit.LINE_VERB, polygon.pointset[j].x, polygon.pointset[j].y]);
             }
+            const newPath = PathKit.FromCmds(cmds);
 
             if (shape.style.closed != false)
             {
-                const shapePath = PathKit.NewPath();
-                shapePath.moveTo(shape.points[0].x * shape.scale.x + shape.position.x, shape.points[0].y * shape.scale.y + shape.position.y);
+                const shapeCmds = [];
+                shapeCmds.push([PathKit.MOVE_VERB, shape.points[0].x * shape.scale.x + shape.position.x, shape.points[0].y * shape.scale.y + shape.position.y]);
+
                 for (let i = 1; i < shape.points.length - 1; i++)
-                    shapePath.lineTo(shape.points[i].x * shape.scale.x + shape.position.x, shape.points[i].y * shape.scale.y + shape.position.y);
+                {
+                    shapeCmds.push([PathKit.LINE_VERB, shape.points[i].x * shape.scale.x + shape.position.x, shape.points[i].y * shape.scale.y + shape.position.y]);
+                }
+
+                const shapePath = PathKit.FromCmds(shapeCmds);
                 newPath.op(shapePath, PathKit.PathOp.DIFFERENCE);
                 shapePath.delete();
             }
@@ -898,7 +324,7 @@ async function computeShadow(eventDetail: Detail)
     if (enableReuseFog)
     {
         // Reuse the same localItem and change the path.
-        reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+        reuseFog = localItemCache.filter(item => isVisionFog(item));
         reuseNewFog = new PathKit.SkOpBuilder();
         dedup_digest["reuse"] = true;
 
@@ -1034,8 +460,6 @@ async function computeShadow(eventDetail: Detail)
         return isVisionFog(item) && dedup_digest[dedup_index] === undefined;
     });
 
-
-
     if (fowEnabled)
     {
         let fowColor = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
@@ -1074,7 +498,8 @@ async function computeShadow(eventDetail: Detail)
                     item.commands = trailingFog.commands;
                 }
             }, false);
-        } else
+        }
+        else
         {
             promisesToExecute.push(OBR.scene.local.addItems([trailingFog]));
         }
@@ -1090,14 +515,14 @@ async function computeShadow(eventDetail: Detail)
     stages[5].start();
 
     /// Door Check - Check if user has any doors visible.
+    const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
     if (playerDoors || sceneCache.role == "GM")
     {
-        initDoors();
+        await initDoors();
     }
     else
     {
         // If it's turned off, we want to cleanse the door menace.
-        const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
         if (localDoorItems.length > 0)
         {
             await OBR.scene.local.deleteItems(localDoorItems.map(door => door.id));
@@ -1105,7 +530,6 @@ async function computeShadow(eventDetail: Detail)
     }
 
     /// If the user isn't allowing them to see doors, this should be skipped. So the only check should be on that one thing.
-    const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
     for (const localDoor of localDoorItems)
     {
         // Get the ID and Identify the 'RealDoor'
@@ -1186,6 +610,7 @@ async function computeShadow(eventDetail: Detail)
 
         if (!persistenceEnabled)
         {
+            console.log("No Persistence Delete");
             promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
         }
 
@@ -1218,7 +643,7 @@ async function computeShadow(eventDetail: Detail)
 
     if (useTokenVisibility)
     {
-        updateTokenVisibility(currentFogPath);
+        await updateTokenVisibility(currentFogPath);
         currentFogPath.delete();
     }
     stages[6].pause();
@@ -1248,7 +673,7 @@ async function computeShadow(eventDetail: Detail)
 async function updateTokenVisibility(currentFogPath: any)
 {
     const toggleTokens: Image[] = [];
-    const tokens = sceneCache.items.filter((item) => isAutohide(item) && isImage(item));
+    const tokens = sceneCache.items.filter((item) => isAutohide(item) && isImage(item)) as Image[];
 
     // this might not be the right thing to do with complex paths.. union should be sufficient when we intersect later..
     currentFogPath.simplify();
@@ -1333,7 +758,7 @@ let previousPersistenceEnabled: boolean;
 let previousFowColor: string;
 let enableDebug = false;
 
-export async function onSceneDataChange(forceUpdate?: boolean)
+export async function OnSceneDataChange(forceUpdate?: boolean)
 {
     if (busy)
         return;
@@ -1383,7 +808,8 @@ export async function onSceneDataChange(forceUpdate?: boolean)
         scale[1] = 1;
         offset[0] = 0;
         offset[1] = 0;
-    } else
+    }
+    else
     {
         size[0] = backgroundImage.width * backgroundImage.scale.x;
         size[1] = backgroundImage.height * backgroundImage.scale.y;
@@ -1395,7 +821,6 @@ export async function onSceneDataChange(forceUpdate?: boolean)
         // This fixes images being offset from the original position in the earlier versions, though doesnt apply to smoke:
         // const offset = [backgroundImage.position.x - (backgroundImage.grid.offset.x * dpiRatio), backgroundImage.position.y - (backgroundImage.grid.offset.y * dpiRatio)];
     }
-
 
     if (sceneCache.role == "GM")
     {
@@ -1441,7 +866,6 @@ export async function onSceneDataChange(forceUpdate?: boolean)
     previousPersistenceEnabled = persistenceEnabled;
     computeTimer.pause();
 
-    // Fire an `updateVisionEvent` to launch the `computeShadow` function.
     const eventDetail: Detail = {
         awaitTimer: awaitTimer,
         computeTimer: computeTimer,
@@ -1457,6 +881,24 @@ export async function onSceneDataChange(forceUpdate?: boolean)
 
     if (!busy)
     {
-        await computeShadow(eventDetail);
+        await ComputeShadow(eventDetail);
+    }
+}
+
+// This function is responsible for updating the performance information in the
+// main extension iframe
+function updatePerformanceInformation(performanceInfo: { [key: string]: any }): void
+{
+    for (const [key, value] of Object.entries(performanceInfo))
+    {
+        const element = document.getElementById(key);
+        if (key == "compute_time" || key == "communication_time" || key[0] == 's')
+        {
+            if (element) element.innerText = Number.parseFloat(value).toFixed(1) + 'ms';
+        }
+        else
+        {
+            if (element) element.innerText = value;
+        }
     }
 }

@@ -6,8 +6,7 @@ import "tom-select/dist/css/tom-select.css";
 
 export async function RunSpectre(players: Player[]): Promise<void>
 {
-    const sceneReady = await OBR.scene.isReady();
-    if (!sceneReady) return;
+    if (!sceneCache.ready) return;
 
     const localGhosts = await OBR.scene.local.getItems(
         (item): item is Image => item.layer === "CHARACTER");

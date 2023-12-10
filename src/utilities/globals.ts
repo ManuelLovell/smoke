@@ -1,10 +1,10 @@
-import { Fog, Image, Metadata, Player } from "@owlbear-rodeo/sdk";
+import { Fog, Item, Image, Metadata, Player } from "@owlbear-rodeo/sdk";
 
-class SceneCash
+class SceneCache
 {
     userId: string;
-    role: string;
-    items: Image[];
+    role: "GM" | "PLAYER";
+    items: Item[];
     ghosts: Image[];
     players: Player[];
     metadata: Metadata;
@@ -36,4 +36,4 @@ class SceneCash
     }
 };
 
-export const sceneCache = new SceneCash();
+export const sceneCache = new SceneCache();

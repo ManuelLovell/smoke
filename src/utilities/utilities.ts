@@ -1,4 +1,5 @@
-import { Theme } from "@owlbear-rodeo/sdk";
+import { Player, Theme } from "@owlbear-rodeo/sdk";
+import { Constants } from "./constants";
 
 export function GetGUID(): string
 {
@@ -10,6 +11,62 @@ export function GetGUID(): string
         return (c === "x" ? r : (r & 0x3 | 0x8)).toString(16);
     });
     return guid;
+}
+
+export function Debounce(func: () => any, delay: number): () => void
+{
+    let timeoutId: number;
+
+    return function debounced(): void
+    {
+        clearTimeout(timeoutId);
+
+        timeoutId = setTimeout(() =>
+        {
+            func();
+        }, delay);
+    };
+}
+
+export function isObjectEmpty(obj: Record<string, any>): boolean
+{
+    for (const key in obj)
+    {
+        if (obj.hasOwnProperty(key))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+export function TestEnvironment()
+{
+    try
+    {
+        localStorage.setItem("STORAGECHECK", "test");
+    }
+    catch (error)
+    {
+        const storageWarningElement = document.getElementById("localStorageWarning")!;
+        storageWarningElement.innerText = "Local Storage disabled. Some features will not function.";
+    }
+}
+
+export function CheckPlayerProcess(players: Player[])
+{
+    const processedIndicator = document.getElementById("processedIndicator") as HTMLButtonElement;
+    const playersProcessed = players.every(player => player.metadata[`${Constants.EXTENSIONID}/processed`] === true);
+    if (playersProcessed)
+    {
+        processedIndicator.style.backgroundColor = "green";
+        processedIndicator.title = "Everything looks good.";
+    }
+    else
+    {
+        processedIndicator.style.backgroundColor = "red";
+        processedIndicator.title = "A player is having trouble processing/seeing.";
+    }
 }
 
 export function InvertColor(hex: any)

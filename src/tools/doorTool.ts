@@ -1,59 +1,6 @@
-import OBR, { buildPath, Item, Curve, isCurve, ItemFilter, Vector2, Math2, MathM, PathCommand, Path, isPath } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, Item, isCurve, Vector2, Math2, MathM, PathCommand } from "@owlbear-rodeo/sdk";
 import { sceneCache } from "../utilities/globals";
 import { Constants } from "../utilities/constants";
-
-export async function setupDoorMenus(): Promise<void>
-{
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-door`,
-        icons: [
-            {
-                icon: "/opendoor.svg",
-                label: "Enable Door",
-                filter: {
-                    every: [{ key: "layer", value: "DRAWING" }, { key: ["metadata", `${Constants.EXTENSIONID}/isDoor`], value: undefined }, { key: ["metadata", `${Constants.EXTENSIONID}/doorId`], value: undefined }],
-                    roles: ["GM"]
-                },
-            },
-            {
-                icon: "/closedoor.svg",
-                label: "Disable Door",
-                filter: {
-                    every: [{ key: "layer", value: "DRAWING" }, { key: ["metadata", `${Constants.EXTENSIONID}/doorId`], value: undefined }],
-                    roles: ["GM"]
-                },
-            },
-        ],
-        async onClick(ctx)
-        {
-            const enableDoor = ctx.items.every(
-                (item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === undefined);
-
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableDoor)
-                    {
-                        delete item.metadata[`${Constants.EXTENSIONID}/isDoor`];
-                    }
-                    else
-                    {
-                        item.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
-                    }
-                }
-            });
-
-            if (!enableDoor)
-            {
-                await removeLocalDoor(ctx.items);
-            } else
-            {
-                await createLocalDoor(ctx.items);
-            }
-        },
-    });
-}
 
 export async function removeLocalDoor(items: Item[])
 {
@@ -132,7 +79,7 @@ export async function toggleDoor(toggleDoorId: string)
 export async function initDoors()
 {
     const doors = await OBR.scene.items.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
-    createLocalDoor(doors);
+    await createLocalDoor(doors);
 }
 
 
