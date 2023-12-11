@@ -4,7 +4,7 @@ import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
 import { sceneCache } from "./utilities/globals";
 import { Constants } from "./utilities/constants";
-import { isAnyFog, isTorch, isTrailingFog } from "./utilities/itemFilters";
+import { isAnyFog, isTrailingFog } from "./utilities/itemFilters";
 import { importFog, updateMaps } from "./tools/import";
 import { InitializeScene } from "./smokeInitializeScene";
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
@@ -81,7 +81,6 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
     const sceneItemsHandler = OBR.scene.items.onChange(async (items) =>
     {
         sceneCache.items = items;
-        sceneCache.torchActive = items.some(isTorch);
 
         if (sceneCache.ready)
         {
@@ -89,16 +88,6 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
             {
                 await SMOKEMAIN.UpdateUI();
                 await updateMaps(SMOKEMAIN.mapAlign!);
-                if (sceneCache.torchActive)
-                {
-                    SMOKEMAIN.qualityOption!.style.display = "none";
-                    SMOKEMAIN.torchQuality!.style.display = "inline-block";
-                }
-                else
-                {
-                    SMOKEMAIN.qualityOption!.style.display = "inline-block";
-                    SMOKEMAIN.torchQuality!.style.display = "none";
-                }
             }
             else
             {
@@ -271,7 +260,8 @@ export function SetupMainHandlers()
         const target = event.target as HTMLInputElement;
         if (target.value === "fast")
         {
-            await OBR.notification.show("Notice: Issues can occur when using FAST Performance with PERSISTENCE, specifically with revealing inner fogged areas when traveling in a full circle around them. Use both with caution and care.", "DEFAULT");
+            // This has been fixed, so lets not scare anyone away anymore:
+            // await OBR.notification.show("Notice: Issues can occur when using FAST Performance with PERSISTENCE, specifically with revealing inner fogged areas when traveling in a full circle around them. Use both with caution and care.", "DEFAULT");
         }
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/quality`]: target.value });

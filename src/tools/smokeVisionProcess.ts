@@ -13,7 +13,7 @@ import { CreateObstructionLines, CreatePolygons } from "./smokeCreateObstruction
 // Generally, only one player will move at one time, so let's cache the
 // computed shadows for all players and only update if something has changed
 export const playerShadowCache = new ObjectCache(false);
-var PathKit: any;
+export var PathKit: any;
 var busy = false;
 
 
@@ -36,6 +36,9 @@ async function ComputeShadow(eventDetail: Detail)
         await OBR.action.setBadgeText(undefined);
         return;
     }
+
+    // remove debug visualisations from any previous pass..
+    OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
 
     const stages = [];
     for (let i = 0; i <= 6; i++) stages.push(new Timer());
@@ -319,6 +322,7 @@ async function ComputeShadow(eventDetail: Detail)
     let enableReuseFog = persistenceEnabled && sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] == 'fast';
     let reuseFog: Image[] = [];
     let reuseNewFog: any;
+    let oldPath: any = null;
 
     // Reuse a single (but insanely complex) path to avoid overhead of lots of fog items
     if (enableReuseFog)
@@ -343,9 +347,8 @@ async function ComputeShadow(eventDetail: Detail)
         else
         {
             // Initalize the new path builder with the existing item's path:
-            let oldPath = PathKit.FromCmds((reuseFog[0] as any).commands);
-            reuseNewFog.add(oldPath, PathKit.PathOp.UNION);
-            oldPath.delete();
+            oldPath = PathKit.FromCmds((reuseFog[0] as any).commands);
+            oldPath.setFillType(PathKit.FillType.EVENODD);
         }
     }
 
@@ -408,6 +411,13 @@ async function ComputeShadow(eventDetail: Detail)
     const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
     if (enableReuseFog)
     {
+        // Warning: the order of these operations affects the outcome in PathKit (even though it probably shouldnt).
+        // the path visible by the player needs to get added first before the old path gets added.
+        if (oldPath !== null)
+        {
+            reuseNewFog.add(oldPath, PathKit.PathOp.UNION);
+        }
+
         const newPath = reuseNewFog.resolve();
         newPath.setFillType(PathKit.FillType.EVENODD);
 
@@ -429,6 +439,10 @@ async function ComputeShadow(eventDetail: Detail)
         {
         }
 
+        if (oldPath !== null)
+        {
+            oldPath.delete();
+        }
         newPath.delete();
         reuseNewFog.delete();
     } else if (persistenceEnabled)
@@ -606,7 +620,7 @@ async function ComputeShadow(eventDetail: Detail)
         promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
         promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item =>
         {
-            const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
+            const path = buildPath().commands(item.cmds).fillRule("evenodd").locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
             path.zIndex = item.zIndex;
             return path;
         }))

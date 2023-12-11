@@ -1,6 +1,6 @@
 import OBR, { Item, Player, isImage } from "@owlbear-rodeo/sdk";
 import { sceneCache } from './utilities/globals';
-import { isTokenWithVisionForUI, isTorch } from './utilities/itemFilters';
+import { isTokenWithVisionForUI } from './utilities/itemFilters';
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
 import { Constants } from "./utilities/constants";
 import { SetupSpectreGM } from "./spectreMain";
@@ -39,7 +39,6 @@ export class SmokeMain
     public doorCheckbox?: HTMLInputElement;
     public fowColor?: HTMLInputElement;
     public qualityOption?: HTMLSelectElement;
-    public torchQuality?: HTMLDivElement;
     public resetButton?: HTMLInputElement;
     public convertButton?: HTMLInputElement;
     public settingsButton?: HTMLInputElement;
@@ -111,7 +110,6 @@ export class SmokeMain
         this.doorCheckbox = document.getElementById("door_checkbox") as HTMLInputElement;
         this.fowColor = document.getElementById("fow_color") as HTMLInputElement;
         this.qualityOption = document.getElementById("quality") as HTMLSelectElement;
-        this.torchQuality = document.getElementById("forceAccurate") as HTMLDivElement;
         this.resetButton = document.getElementById("persistence_reset") as HTMLInputElement;
         this.convertButton = document.getElementById("convert_button") as HTMLInputElement;
         this.settingsButton = document.getElementById("settings_button") as HTMLInputElement;
@@ -277,18 +275,6 @@ export class SmokeMain
         for (const player of playersWithVision)
         {
             AddUnitVisionUI(player);
-        }
-
-        sceneCache.torchActive = sceneCache.items.some(isTorch);
-        if (sceneCache.torchActive)
-        {
-            SMOKEMAIN.qualityOption!.style.display = "none";
-            SMOKEMAIN.torchQuality!.style.display = "inline-block";
-        }
-        else
-        {
-            SMOKEMAIN.qualityOption!.style.display = "inline-block";
-            SMOKEMAIN.torchQuality!.style.display = "none";
         }
     }
 
