@@ -411,15 +411,15 @@ async function ComputeShadow(eventDetail: Detail)
     const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
     if (enableReuseFog)
     {
+        const newPath = reuseNewFog.resolve();
+        newPath.setFillType(PathKit.FillType.EVENODD);
+
         // Warning: the order of these operations affects the outcome in PathKit (even though it probably shouldnt).
         // the path visible by the player needs to get added first before the old path gets added.
         if (oldPath !== null)
         {
-            reuseNewFog.add(oldPath, PathKit.PathOp.UNION);
+            newPath.op(oldPath, PathKit.PathOp.UNION);
         }
-
-        const newPath = reuseNewFog.resolve();
-        newPath.setFillType(PathKit.FillType.EVENODD);
 
         const commands = newPath.toCmds();
 
