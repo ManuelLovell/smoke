@@ -3,7 +3,7 @@ import { Constants } from "../utilities/constants";
 import { sceneCache } from "../utilities/globals";
 import { isTorch } from "../utilities/itemFilters";
 import { comparePosition, squareDistance, isClose, mod } from "../utilities/math";
-import { playerShadowCache, PathKit } from "./smokeVisionProcess";
+import { playerShadowCache, PathKit, enableVisionDebug } from "./smokeVisionProcess";
 
 
 function CheckLineOcclusionByPoly(line: Vector2[], poly: Vector2[]): boolean
@@ -98,10 +98,9 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     const sceneHasTorches = tokensWithVision.some(isTorch);
 
     // Now witness the firepower of this fully armed and operational battlestation:
-    const debugOcclusion: boolean = false;
-    let debugPath;
-    if (debugOcclusion) {
-        debugPath = PathKit.NewPath();
+    let cullingDebugPath;
+    if (enableVisionDebug) {
+        cullingDebugPath = PathKit.NewPath();
     }
 
     if (tokensWithVision.length === 0)
@@ -155,7 +154,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                     const torchBoundingRect = GetRectFromPoints(token.position, visionRange, torch.position, torchVisionRange);
                     torchBounds.push(torchBoundingRect);
 
-                    if (debugOcclusion) {
+                    if (enableVisionDebug) {
                         let path = PathKit.NewPath();
                         path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
                             .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
@@ -163,8 +162,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                             .lineTo(torchBoundingRect[3].x, torchBoundingRect[3].y)
                             .closePath();
 
-                        const debugp = buildPath().fillRule("evenodd").commands(path.toCmds()).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").name("smokedebug").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
-                        OBR.scene.local.addItems([debugp]);
+                        const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+                        OBR.scene.local.addItems([debugPath]);
                         path.delete();
                     }
                 }
@@ -226,8 +225,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
             if (skip)
             {
-                if (debugOcclusion) {
-                    debugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
+                if (enableVisionDebug) {
+                    cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
                 }
                 skipCounter++;
                 continue;
@@ -329,14 +328,14 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
         }
     }
 
-    if (debugOcclusion)
+    if (enableVisionDebug)
     {
         console.log('skip', skipCounter, 'lines', lineCounter);
 
-        const debugp = buildPath().commands(debugPath.toCmds()).visible(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
-        OBR.scene.local.addItems([debugp]);
+        const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+        OBR.scene.local.addItems([debugPath]);
 
-        debugPath.delete();
+        cullingDebugPath.delete();
     }
 
     return polygons;

@@ -258,11 +258,6 @@ export function SetupMainHandlers()
     {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
-        if (target.value === "fast")
-        {
-            // This has been fixed, so lets not scare anyone away anymore:
-            // await OBR.notification.show("Notice: Issues can occur when using FAST Performance with PERSISTENCE, specifically with revealing inner fogged areas when traveling in a full circle around them. Use both with caution and care.", "DEFAULT");
-        }
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/quality`]: target.value });
     };

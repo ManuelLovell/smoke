@@ -16,6 +16,9 @@ export const playerShadowCache = new ObjectCache(false);
 export var PathKit: any;
 var busy = false;
 
+// dev setting to enable debug visualisations
+export const enableVisionDebug = false;
+
 
 // This is the function responsible for computing the shadows and the FoW
 async function ComputeShadow(eventDetail: Detail)
@@ -37,8 +40,11 @@ async function ComputeShadow(eventDetail: Detail)
         return;
     }
 
-    // remove debug visualisations from any previous pass..
-    OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
+    if (enableVisionDebug)
+    {
+        // remove debug visualisations from any previous pass..
+        await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
+    }
 
     const stages = [];
     for (let i = 0; i <= 6; i++) stages.push(new Timer());
@@ -390,10 +396,10 @@ async function ComputeShadow(eventDetail: Detail)
 
         if (fowEnabled)
         {
-            if (enableDebug)
+            if (enableVisionDebug)
             {
-                const debugp = buildPath().commands(item.toCmds()).visible(item.visible).fillColor('#550000').strokeColor("#00FF00").layer("DRAWING").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true }).build();
-                await OBR.scene.local.addItems([debugp]);
+                const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+                await OBR.scene.local.addItems([debugPath]);
             }
 
             trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
@@ -726,10 +732,10 @@ async function updateTokenVisibility(currentFogPath: any)
         tempPath.closePath();
 
         // debug - blue token bounding path
-        if (enableDebug)
+        if (enableVisionDebug)
         {
-            const ring = buildPath().strokeColor('#0000ff').fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
-            await OBR.scene.local.addItems([ring]);
+            const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+            await OBR.scene.local.addItems([debugPath]);
         }
 
         pathBuilder.add(tempPath, PathKit.PathOp.UNION);
@@ -745,10 +751,10 @@ async function updateTokenVisibility(currentFogPath: any)
         }
 
         // debug - red intersection path
-        if (enableDebug)
+        if (enableVisionDebug)
         {
-            const ring = buildPath().fillRule("evenodd").strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
-            await OBR.scene.local.addItems([ring]);
+            const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+            await OBR.scene.local.addItems([debugPath]);
         }
         tempPath.delete();
         pathBuilder.delete();
@@ -774,7 +780,6 @@ let previousAutodetectEnabled: boolean;
 let previousFowEnabled: boolean;
 let previousPersistenceEnabled: boolean;
 let previousFowColor: string;
-let enableDebug = false;
 
 export async function OnSceneDataChange(forceUpdate?: boolean)
 {
@@ -785,10 +790,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     {
         return;
     }
-
-    const debugDiv = document.querySelector("#debug_div") as HTMLDivElement;
-    //enableDebug = !(debugDiv.style.display === 'none');
-    //enableDebug = true;
 
     const [awaitTimer, computeTimer] = [new Timer(), new Timer()];
 
