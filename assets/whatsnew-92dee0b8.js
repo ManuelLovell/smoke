@@ -1,4 +1,4 @@
-import{O as e,C as n}from"./constants-0de41b86.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),s=`
+import{O as e,C as n}from"./constants-531af983.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),s=`
 <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>

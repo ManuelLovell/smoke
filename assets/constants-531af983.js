@@ -78,7 +78,7 @@
                         <td colspan="2">Performance<select id="quality">
                             <option value="accurate" selected>Accurate</option>
                             <option value="fast">Fast</option>
-                        </select><div id="forceAccurate" style="display: none;" title="A token is being used as a 'Light Source' and Performance is locked in 'Accuracy Mode'."> Torch-Mode</div></td>
+                        </select></td>
                         <td colspan="2"><input class="settingsButton" type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></td>
                     </tr>
                     <tr>
