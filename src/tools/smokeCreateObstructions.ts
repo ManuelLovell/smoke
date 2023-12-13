@@ -1,9 +1,55 @@
-import { Vector2, MathM, Math2 } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, Vector2, MathM, Math2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/constants";
 import { sceneCache } from "../utilities/globals";
 import { isTorch } from "../utilities/itemFilters";
 import { comparePosition, squareDistance, isClose, mod } from "../utilities/math";
-import { playerShadowCache } from "./smokeVisionProcess";
+import { playerShadowCache, PathKit, enableVisionDebug } from "./smokeVisionProcess";
+
+
+function CheckLineOcclusionByPoly(line: Vector2[], poly: Vector2[]): boolean
+{
+    if (Math2.pointInPolygon(line[0], poly) || Math2.pointInPolygon(line[0], poly))
+    {
+        return true;
+    }
+
+    return LineIntersect(line, [poly[0], poly[1]]) || LineIntersect(line, [poly[1], poly[2]]) || LineIntersect(line, [poly[2], poly[3]]) || LineIntersect(line, [poly[3], poly[0]]);
+}
+
+function LineIntersect(l1: Vector2[], l2: Vector2[]): boolean
+{
+    const det = (l1[1].x - l1[0].x) * (l2[1].y - l2[0].y) - (l2[1].x - l2[0].x) * (l1[1].y - l1[0].y);
+    const a = ((l2[1].y - l2[0].y) * (l2[1].x - l1[0].x) + (l2[0].x - l2[1].x) * (l2[1].y - l1[0].y)) / det;
+    const b = ((l1[0].y - l1[1].y) * (l2[1].x - l1[0].x) + (l1[1].x - l1[0].x) * (l2[1].y - l1[0].y)) / det;
+
+    return a >= 0 && a <= 1 && b >= 0 && b <= 1;
+}
+
+// find either side of the circle from the perspective of a given angle
+function CalculatePointOnCircle(center: Vector2, radius: number, angle: number): Vector2
+{
+    return { x: center.x + radius * Math.cos(angle), y: center.y + radius * Math.sin(angle) };
+}
+
+// create a rect that starts at p1*radius and extends around the p2*radius
+function GetRectFromPoints(p1: Vector2, r1: number, p2: Vector2, r2: number): Vector2[]
+{
+    const angle = Math.atan2(p1.y - p2.y, p1.x - p2.x);
+
+    let p1p1 = CalculatePointOnCircle(p1, r1, angle + Math.PI / 2);
+    let p1p2 = CalculatePointOnCircle(p1, r1, angle - Math.PI / 2);
+    let p2p1 = CalculatePointOnCircle(p2, r2, angle + Math.PI / 2);
+    let p2p2 = CalculatePointOnCircle(p2, r2, angle - Math.PI / 2);
+
+    const direction: Vector2 = Math2.normalize(Math2.subtract(p1, p2));
+    p1p1 = Math2.add(p1p1, Math2.multiply(direction, r1));
+    p1p2 = Math2.add(p1p2, Math2.multiply(direction, r1));
+
+    p2p1 = Math2.add(p2p1, Math2.multiply(direction, 0-r2));
+    p2p2 = Math2.add(p2p2, Math2.multiply(direction, 0-r2));
+
+    return [p1p1, p1p2, p2p2, p2p1];
+}
 
 export function CreateObstructionLines(visionShapes: any): ObstructionLine[]
 {
@@ -37,7 +83,6 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
     const gmIds = sceneCache.players.filter(x => x.role === "GM");
-    const useOptimisations = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] !== 'accurate';
 
     const corners = [
         { x: (width + offset[0]) * scale[0], y: offset[1] * scale[1] },
@@ -51,6 +96,12 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     const extensionId = Constants.EXTENSIONID;
 
     const sceneHasTorches = tokensWithVision.some(isTorch);
+
+    // Now witness the firepower of this fully armed and operational battlestation:
+    let cullingDebugPath;
+    if (enableVisionDebug) {
+        cullingDebugPath = PathKit.NewPath();
+    }
 
     if (tokensWithVision.length === 0)
     {
@@ -84,6 +135,41 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
             visionRange = gridDpi * ((visionRangeMeta) / sceneCache.gridScale + 0.5);
         }
 
+        const torchBounds:Vector2[][] = [];
+        if (sceneHasTorches && !isTorch(token))
+        {
+            for (const torch of tokensWithVision)
+            {
+                if (isTorch(torch))
+                {
+                    const torchVisionRangeMeta = torch.metadata[`${Constants.EXTENSIONID}/visionRange`];
+
+                    // use the token vision range to potentially skip any obstruction lines out of range:
+                    let torchVisionRange = 1000 * sceneCache.gridDpi;
+                    if (torchVisionRangeMeta) {
+                        torchVisionRange = sceneCache.gridDpi * ((torchVisionRangeMeta) / sceneCache.gridScale + .5);
+                    }
+
+                    // Create the bounds of the torch and scale the occlusion radius slightly:
+                    const torchBoundingRect = GetRectFromPoints(token.position, visionRange, torch.position, torchVisionRange);
+                    torchBounds.push(torchBoundingRect);
+
+                    if (enableVisionDebug) {
+                        let path = PathKit.NewPath();
+                        path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
+                            .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
+                            .lineTo(torchBoundingRect[2].x, torchBoundingRect[2].y)
+                            .lineTo(torchBoundingRect[3].x, torchBoundingRect[3].y)
+                            .closePath();
+
+                        const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+                        OBR.scene.local.addItems([debugPath]);
+                        path.delete();
+                    }
+                }
+            }
+        }
+
         for (const line of visionLines)
         {
             const signedDistance = (token.position.x - line.startPosition.x) * (line.endPosition.y - line.startPosition.y) - (token.position.y - line.startPosition.y) * (line.endPosition.x - line.startPosition.x);
@@ -103,33 +189,47 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                 continue;
             }
 
-            // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines
-            if (useOptimisations && (!sceneHasTorches || isTorch(token)))
+            // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines. we compensate for this by adjusting the detection by 5% of the vision range.
+            const segments: Vector2[] = [line.startPosition, line.endPosition];
+            const length = Math2.distance(line.startPosition, line.endPosition);
+            const segmentFactor = 3; // this causes load but increases accuracy, because we calculate maxSegments as a proportion of the visionRange divided by the segment factor to increase resolution
+            const maxSegments = Math.floor(length / (visionRange / segmentFactor));
+
+            for (let i = 1; i < maxSegments; i++)
             {
-                const segments: Vector2[] = [line.startPosition, line.endPosition];
-                const length = Math2.distance(line.startPosition, line.endPosition);
-                const segmentFactor = 3; // this causes load but increases accuracy, because we calculate maxSegments as a proportion of the visionRange divided by the segment factor to increase resolution
-                const maxSegments = Math.floor(length / (visionRange / segmentFactor));
+                segments.push(Math2.lerp(line.startPosition, line.endPosition, (i / maxSegments)));
+            }
 
-                for (let i = 1; i < maxSegments; i++)
+            let skip = true;
+            for (const segment of segments)
+            {
+                // add 5% to the visionRange as a precaution:
+                if (Math2.compare(token.position, segment, visionRange * 1.05))
                 {
-                    segments.push(Math2.lerp(line.startPosition, line.endPosition, (i / maxSegments)));
+                    skip = false;
+                    break;
                 }
+            };
 
-                let skip = true;
-                for (const segment of segments)
-                {
-                    if (Math2.compare(token.position, segment, visionRange))
+
+            // if the token we're calculating is not a torch, then check torch occlusion based on the bounding triangles
+            if (skip && sceneHasTorches && !isTorch(token)) {
+                for (const bounds of torchBounds) {
+                    if (CheckLineOcclusionByPoly([line.startPosition, line.endPosition], bounds))
                     {
                         skip = false;
+                        break;
                     }
-                };
-
-                if (skip)
-                {
-                    skipCounter++;
-                    continue;
                 }
+            }
+
+            if (skip)
+            {
+                if (enableVisionDebug) {
+                    cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
+                }
+                skipCounter++;
+                continue;
             }
 
             lineCounter++;
@@ -226,6 +326,16 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
+    }
+
+    if (enableVisionDebug)
+    {
+        console.log('skip', skipCounter, 'lines', lineCounter);
+
+        const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+        OBR.scene.local.addItems([debugPath]);
+
+        cullingDebugPath.delete();
     }
 
     return polygons;

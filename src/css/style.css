@@ -405,13 +405,6 @@ li>p {
     cursor: pointer;
 }
 
-#forceAccurate {
-    padding-left: 8px;
-    font-weight: bold;
-    color: red;
-    cursor: not-allowed;
-}
-
 @keyframes glow {
     0% {
         box-shadow: 0 0 2px 0px red;
