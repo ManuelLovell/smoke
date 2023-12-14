@@ -5,6 +5,7 @@ import { sceneCache } from "./utilities/globals";
 import { isVisionFog, isBackgroundImage } from "./utilities/itemFilters";
 import { SMOKEMAIN } from './smokeMain';
 import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
+import { setupAutohideMenus } from "./smokeSetupContextMenus";
 
 export async function InitializeScene(): Promise<void>
 {
@@ -46,6 +47,8 @@ export async function InitializeScene(): Promise<void>
     }
     
     AddBorderIfNoAutoDetect();
+    
+    setupAutohideMenus(sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true);
 
     if (sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`] === undefined)
     {

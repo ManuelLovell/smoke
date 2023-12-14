@@ -8,7 +8,7 @@ import { updateMaps } from "./tools/import";
 import { SetupMainHandlers, SetupOBROnChangeHandlers } from "./smokeHandlers";
 import { AddUnitVisionUI } from "./smokeVisionUI";
 import { InitializeScene } from "./smokeInitializeScene";
-import { SetupContextMenus } from "./smokeSetupContextMenus";
+import { SetupContextMenus, setupAutohideMenus } from "./smokeSetupContextMenus";
 import { SetupTools } from "./smokeSetupTools";
 import * as Utilities from "./utilities/utilities";
 import "./css/style.css";
@@ -351,6 +351,7 @@ export class SmokeMain
         }
         else if (role == "GM")
         {
+            setupAutohideMenus(false);
             await this.UpdateUI();
         }
         // This needs to be last to avoid getting blasted by all the Initialization
