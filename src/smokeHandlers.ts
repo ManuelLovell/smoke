@@ -129,6 +129,18 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         }
         else
         {
+            const playerContextMenu = document.getElementById("playerListing")!;
+            playerContextMenu.innerHTML = "";
+            playerContextMenu.appendChild(SMOKEMAIN.GetEmptyContextItem());
+
+            for (const player of players)
+            {
+                const listItem = document.createElement("li");
+                listItem.id = player.id;
+                listItem.textContent = player.name;
+                listItem.style.color = player.color;
+                playerContextMenu.appendChild(listItem);
+            }
             UpdateSpectreTargets();
             SMOKEMAIN.UpdatePlayerProcessUI(players);
         }

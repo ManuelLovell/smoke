@@ -70,6 +70,10 @@ export class Constants
     ];
 
     static MAINPAGE = `
+    <div id="contextMenu" class="context-menu" style="display: none">
+    Assign Owner:
+        <ul id="playerListing"></ul>
+    </div>
     <div id="main-ui" class="grid-main">
             <div class="visionTitle grid-3">Vision Radius</div>
             <div class="grid-3"><i>GM-owned tokens give universal vision.</i></div>

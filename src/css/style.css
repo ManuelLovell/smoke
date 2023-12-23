@@ -247,6 +247,7 @@ input.token-vision-range {
     max-width: 10em;
     vertical-align: middle;
     text-align: left;
+    cursor: pointer;
 }
 
 .token-table-selected .token-name {
@@ -422,4 +423,37 @@ li>p {
 .new-shine {
     animation: glow 1.5s infinite;
     border-radius: 50%;
+}
+
+
+/* Owner Context Menu */
+.context-menu {
+    position: absolute;
+    text-align: center;
+    background-color: var(--OBR-offset-back);
+    border: 1px solid grey;
+    border-radius: 10px;
+}
+
+.context-menu ul {
+    padding: 0px;
+    margin: 0px;
+    min-width: 120px;
+    list-style: none;
+}
+
+.context-menu ul li {
+    padding-bottom: 4px;
+    padding-top: 4px;
+    border: 1px solid grey;
+    cursor: pointer;
+}
+
+.context-menu ul li a {
+    text-decoration: none;
+    color: black;
+}
+
+.context-menu ul li:hover {
+    background: var(--OBR-light-blue);
 }

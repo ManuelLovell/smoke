@@ -40,8 +40,15 @@ export async function AddBorderIfNoAutoDetect()
     }
 }
 
+/** Its actually Unit ID, not player.. */
 export function AddUnitVisionUI(player: Item)
 {
+    function HideMenu()
+    {
+        document.getElementById("contextMenu")!
+            .style.display = "none"
+    }
+
     const tr = document.getElementById(`tr-${player.id}`);
     if (tr)
     {
@@ -55,7 +62,7 @@ export function AddUnitVisionUI(player: Item)
         if (rangeInput)
         {
             if (!unlimitedCheckbox.checked && !blindCheckbox.checked)
-                rangeInput.value = player.metadata[`${Constants.EXTENSIONID}/visionRange`]
+                rangeInput.value = player.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
                     ? player.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
                     : Constants.VISIONDEFAULT;
         }
@@ -74,12 +81,13 @@ export function AddUnitVisionUI(player: Item)
     }
     else
     {
+        const ownerColor = sceneCache.players.find(owner => player.createdUserId === owner.id)?.color;
         const currentPlayer = sceneCache.items.find(x => x.id === player.id)!;
         // Create new item for this token
         const newTr = document.createElement("tr");
         newTr.id = `tr-${currentPlayer.id}`;
         newTr.className = "token-table-entry";
-        newTr.innerHTML = `<td class="token-name">${currentPlayer.name}</td>
+        newTr.innerHTML = `<td id="contextLocator" data-color="${ownerColor}" class="token-name">${currentPlayer.name}</td>
                            <td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td>
                            <td>
                             <div class="cbutton"><label title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
@@ -93,6 +101,11 @@ export function AddUnitVisionUI(player: Item)
         const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
         const torchCheckbox = newTr.getElementsByClassName("torch-vision")[0] as HTMLInputElement;
         const blindCheckbox = newTr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
+        const nameLabel = (newTr.getElementsByClassName("token-name")[0] as HTMLTableCellElement).style.textShadow = `
+        -2px -2px 2px ${ownerColor},
+        2px -2px 2px ${ownerColor},
+        -2px 2px 2px ${ownerColor},
+        2px 2px 2px ${ownerColor}`;
 
         if (rangeInput)
         {
@@ -199,5 +212,85 @@ export function AddUnitVisionUI(player: Item)
         {
             // default behavior is fine here - this allows mousewheel to adjust the number up and down when the input is selected
         });
+
+        // Add a contextmenu to allow swapping the owner of the token without needing the permissions setting
+        newTr.oncontextmenu = async function (e)
+        {
+            e.preventDefault();
+            const oldRow = e.currentTarget as HTMLTableRowElement;
+
+            const contextMenu = document.getElementById("contextMenu")!;
+
+            const onClickContext = (e: Event) =>
+            {
+                e.preventDefault();
+            };
+
+            // Add event listener for CTXMenu selection
+            const onClickListItem = async (e: MouseEvent) =>
+            {
+                const target = e.target as HTMLUListElement;
+
+                const unitId = contextMenu.getAttribute("currentUnit")!;
+                const newColor = sceneCache.players.find(owner => target.id === owner.id)?.color;
+                const tr = document.getElementById(`tr-${unitId}`) as HTMLTableRowElement;
+                const cell = tr.getElementsByClassName("token-name")[0] as HTMLTableCellElement;
+                if (newColor)
+                {
+                    cell.style.textShadow = `
+                    -2px -2px 2px ${newColor},
+                    2px -2px 2px ${newColor},
+                    -2px 2px 2px ${newColor},
+                    2px 2px 2px ${newColor}`;
+                }
+                else { cell.style.textShadow = ""}
+
+                await OBR.scene.items.updateItems([unitId], items =>
+                {
+                    for (const item of items)
+                    {
+                        item.createdUserId = target.id;
+                    }
+                });
+
+                contextMenu.style.display = "none";
+                e.stopPropagation();
+
+                window.removeEventListener("click", onClickOutside);
+                contextMenu.removeEventListener("click", onClickListItem);
+                contextMenu.removeEventListener("contextmenu", onClickContext);
+            };
+
+            // Store unit ID
+            contextMenu.setAttribute("currentUnit", oldRow.id.substring(3));
+
+            // Add listener to click away
+            const onClickOutside = () =>
+            {
+                contextMenu.style.display = "none";
+                window.removeEventListener("click", onClickOutside);
+                contextMenu.removeEventListener("click", onClickListItem);
+                contextMenu.removeEventListener("contextmenu", onClickContext);
+            };
+
+            contextMenu.addEventListener("click", onClickListItem);
+            contextMenu.addEventListener("contextmenu", onClickContext);
+            window.addEventListener("click", onClickOutside);
+
+            if (contextMenu.style.display == "block")
+            {
+                HideMenu();
+            }
+            else
+            {
+                // Don't let the menu go off window, it'll cut
+                const adjustedLeft = Math.min(e.pageX, window.innerWidth - 150);
+                const adjustedTop = Math.min(e.pageY, (window.innerHeight > 300 ? window.innerHeight - 50 : window.innerHeight) - 120);
+
+                contextMenu.style.display = 'block';
+                contextMenu.style.left = adjustedLeft + "px";
+                contextMenu.style.top = adjustedTop + "px";
+            }
+        }
     }
 }

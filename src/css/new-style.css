@@ -50,7 +50,7 @@
 }
 
 body {
-    height: 92%;
+    height: 90%;
 }
 
 #smoke-whatsnew {
@@ -67,12 +67,15 @@ body {
 }
 
 footer {
+    display: flex;
     position: fixed;
     left: 0;
+    right: 0;
     bottom: 0;
-    height: 7%;
-    width: 100%;
-    text-align: center;
+    height: 45px;
+    width: calc(100% - 10px);
+    padding: 0 4px 0 4px;
+
 }
 
 .close {
@@ -110,12 +113,17 @@ footer {
     color: var(--OBR-Purple-Highlight);
 }
 
-a {
-    font-weight: bolder;
+a:not(.patreon) {
     border-style: solid;
     border-width: 1px;
     border-radius: 15px;
     padding: 5px;
+    margin-left: 10px;
+    margin-bottom:5px;
+}
+
+a {
+    font-weight: bolder;
 }
 
 a:link {

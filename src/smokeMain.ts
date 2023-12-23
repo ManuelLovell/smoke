@@ -130,6 +130,18 @@ export class SmokeMain
         this.importDpi = document.getElementById("import_dpi") as HTMLInputElement;
         this.importFormat = document.getElementById("import_format") as HTMLSelectElement;
 
+        // Setup Player Owner Context Menu
+        const playerContextMenu = document.getElementById("playerListing")!;
+        playerContextMenu.appendChild(this.GetEmptyContextItem());
+        for (const player of sceneCache.players)
+        {
+            const listItem = document.createElement("li");
+            listItem.id = player.id;
+            listItem.textContent = player.name;
+            listItem.style.color = player.color;
+            playerContextMenu.appendChild(listItem);
+        };
+
         Coloris.init();
     }
 
@@ -163,6 +175,14 @@ export class SmokeMain
             });
         }
         helpContainer.appendChild(helpButton);
+    }
+
+    public GetEmptyContextItem()
+    {
+        const listItem = document.createElement("li");
+        listItem.id = sceneCache.userId;
+        listItem.textContent = "Self";
+        return listItem;
     }
 
     /** Populates PlayerId, Party and SceneReady */
@@ -360,7 +380,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.1");
+export const SMOKEMAIN = new SmokeMain("2.11");
 OBR.onReady(async () =>
 {
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings
