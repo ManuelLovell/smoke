@@ -1,4 +1,4 @@
-import{O as e,C as a}from"./constants-60dbadaa.js";/* empty css                  */const i=document.querySelector("#smoke-whatsnew"),s=document.querySelector("#smoke-whatsnew-notes"),r=`
+import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),i=document.querySelector("#smoke-whatsnew-notes"),r=`
 <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -20,6 +20,11 @@ import{O as e,C as a}from"./constants-60dbadaa.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+        <h1>Smoke & Spectre! 1/14/2024</h1>
+        </br>
+        Minor change on the UI, as not everyone is using the same measurement system.  Smoke's measurements don't really reflect whatever the 'unit' is set as in OBR (So if it was set to FT, Bananas, Puppies - it still functioned the same.) To reflect this, the measurement is now just called 'units'. It's a nothing change, but hopefully makes things clearer.
+        </br>
+        </br>
         <h1>Smoke & Spectre! 12/22/2023</h1>
         </br>
         <li>To cut out the middle-man of having to turn on "Owner-Only" on tokens for per-player-vision to work, you can now RIGHT-CLICK a unit in the Smoke! window and assign it's owner there. One and done.
@@ -72,9 +77,9 @@ import{O as e,C as a}from"./constants-60dbadaa.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");i.innerHTML=t?r:l,s.innerHTML=`
+`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");a.innerHTML=o?r:l,i.innerHTML=`
     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
-    <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(a.EXTENSIONWHATSNEW)}});
+    <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(s.EXTENSIONWHATSNEW)}});
