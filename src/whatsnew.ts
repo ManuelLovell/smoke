@@ -29,6 +29,11 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 1/14/2024</h1>
+        </br>
+        Minor change on the UI, as not everyone is using the same measurement system.  Smoke's measurements don't really reflect whatever the 'unit' is set as in OBR (So if it was set to FT, Bananas, Puppies - it still functioned the same.) To reflect this, the measurement is now just called 'units'. It's a nothing change, but hopefully makes things clearer.
+        </br>
+        </br>
         <h1>Smoke & Spectre! 12/22/2023</h1>
         </br>
         <li>To cut out the middle-man of having to turn on "Owner-Only" on tokens for per-player-vision to work, you can now RIGHT-CLICK a unit in the Smoke! window and assign it's owner there. One and done.

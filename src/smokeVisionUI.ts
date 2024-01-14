@@ -88,11 +88,13 @@ export function AddUnitVisionUI(player: Item)
         newTr.id = `tr-${currentPlayer.id}`;
         newTr.className = "token-table-entry";
         newTr.innerHTML = `<td id="contextLocator" data-color="${ownerColor}" class="token-name">${currentPlayer.name}</td>
-                           <td><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">ft</span></td>
-                           <td>
-                            <div class="cbutton"><label title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span>&infin;</span></label></div>
-                            <div class="cbutton"><label title="Turn token into a light source"><input type="checkbox" class="torch-vision"><span>&#128294;</span></label></div>
-                            <div class="cbutton"><label title="Disable vision on this token"><input type="checkbox" class="no-vision"><span>None</span></label></div>
+                           <td class="token-vision-container" title="The unit of measurement for your grid"><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">units</span></td>
+                           <td class="token-vision-container-grid">
+                            <div class="vision-container-div">
+                                <label class="cbutton" title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span class="emoji">&infin;</span></label>
+                                <label class="cbutton" title="Turn token into a light source"><input type="checkbox" class="torch-vision"><span class="emoji">&#128294;</span></label>
+                                <label class="cbutton" title="Disable vision on this token"><input type="checkbox" class="no-vision"><span class="emoji">&#8856;</span></label>
+                            </div>
                            </td>`;
         SMOKEMAIN.table!.appendChild(newTr);
 
