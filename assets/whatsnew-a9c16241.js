@@ -20,6 +20,11 @@ import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+        <h1>Smoke & Spectre! 1/16/2024</h1>
+        </br>
+        Minor bug fix for some bad null checking in.. a really obscure scenario.
+        </br>
+        </br>
         <h1>Smoke & Spectre! 1/14/2024</h1>
         </br>
         Minor change on the UI, as not everyone is using the same measurement system.  Smoke's measurements don't really reflect whatever the 'unit' is set as in OBR (So if it was set to FT, Bananas, Puppies - it still functioned the same.) To reflect this, the measurement is now just called 'units'. It's a nothing change, but hopefully makes things clearer.
@@ -77,7 +82,7 @@ import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");a.innerHTML=o?r:l,i.innerHTML=`
+`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");a.innerHTML=t?r:l,i.innerHTML=`
     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
