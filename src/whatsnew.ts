@@ -29,6 +29,11 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 1/16/2024</h1>
+        </br>
+        Minor bug fix for some bad null checking in.. a really obscure scenario.
+        </br>
+        </br>
         <h1>Smoke & Spectre! 1/14/2024</h1>
         </br>
         Minor change on the UI, as not everyone is using the same measurement system.  Smoke's measurements don't really reflect whatever the 'unit' is set as in OBR (So if it was set to FT, Bananas, Puppies - it still functioned the same.) To reflect this, the measurement is now just called 'units'. It's a nothing change, but hopefully makes things clearer.
