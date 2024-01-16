@@ -282,6 +282,11 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                 options2.push({ x: n * ylim2 - c, y: ylim2 });
             }
 
+            if (options1.length === 0 || options2.length === 0)
+            {
+                continue;
+            } 
+
             if (options1.length == 1 || squareDistance(options1[0], line.startPosition) < squareDistance(options1[1], line.startPosition))
                 proj1 = options1[0];
             else
