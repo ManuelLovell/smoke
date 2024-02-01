@@ -29,6 +29,13 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 1/31/2024</h1>
+        Hello again!  Minor (but needed) changes today.
+        </br> You'll notice the 'Finish' and 'Cancel' labels that have plagued you for so long are gone. They have been moved.
+        </br> Their new home is in the little info popup at the top of the screen when you start using the tool. So you should have an easier time getting those perfect end-to-end lines now.
+        </br> Sorry this one took so long!
+        </br>
+        </br>
         <h1>Smoke & Spectre! 1/16/2024</h1>
         </br>
         Minor bug fix for some bad null checking in.. a really obscure scenario.

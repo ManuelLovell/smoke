@@ -3,10 +3,6 @@ import { Constants } from "../utilities/constants";
 import { sceneCache } from "../utilities/globals";
 
 let interaction: [any, any] | [any] | null = null;
-let finishLabelId = "";
-let finishId = "";
-let cancelId = "";
-let cancelLabelId = "";
 
 const DEFAULTCOLOR = "#000000";
 const DEFAULTWIDTH = 8;
@@ -14,15 +10,11 @@ const DEFAULTSTROKE: number[] = [];
 
 async function cleanUpPopovers(): Promise<void>
 {
-    await OBR.scene.local.deleteItems([cancelLabelId, finishLabelId, finishId, cancelId]);
-    finishLabelId = "";
-    finishId = "";
-    cancelLabelId = "";
-    cancelId = "";
     await OBR.popover.close(Constants.LINETOOLID);
+    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishLine`]: false });
 }
 
-async function cancelDrawing(): Promise<void>
+export async function cancelDrawing(): Promise<void>
 {
     if (!interaction)
         return;
@@ -31,9 +23,10 @@ async function cancelDrawing(): Promise<void>
     stop();
     interaction = null;
     await cleanUpPopovers();
+    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/cancelLine`]: false });
 }
 
-async function finishDrawing(): Promise<void>
+export async function finishDrawing(): Promise<void>
 {
     if (!interaction)
         return;
@@ -52,7 +45,9 @@ async function finishDrawing(): Promise<void>
     // can interact with our new line
     stop();
     interaction = null;
+
     await cleanUpPopovers();
+    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishLine`]: false });
 }
 
 async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
@@ -61,14 +56,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         return;
     if (!interaction)
     {
-        
-        const finishLabel = buildLabel()
-            .plainText("Finish [Enter]")
-            .position({x: event.pointerPosition.x, y: event.pointerPosition.y - 50})
-            .fillOpacity(.95)
-            .backgroundOpacity(.5)
-            .layer("POPOVER")
-            .build();
+        const toBuild = [];
 
         const line = buildCurve()
             .tension(0)
@@ -85,74 +73,22 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
 
         interaction = await OBR.interaction.startItemInteraction(line);
 
-        const finish = buildShape()
-            .shapeType("CIRCLE")
-            .strokeColor("#FFFFFF")
-            .width(8)
-            .height(8)
-            .strokeWidth(2)
-            .position(event.pointerPosition)
-            .layer("POPOVER")
-            .build();
-            
-        const cancel = buildShape()
-            .shapeType("CIRCLE")
-            .strokeColor("#FFFFFF")
-            .width(8)
-            .height(8)
-            .strokeWidth(2)
-            .position(event.pointerPosition)
-            .layer("POPOVER")
-            .visible(false)
-            .build();
-        const cancelLabel = buildLabel()
-            .plainText("Cancel [Escape]")
-            .position(event.pointerPosition)
-            .fillOpacity(.95)
-            .backgroundOpacity(.5)
-            .layer("POPOVER")
-            .pointerDirection("UP")
-            .build();
-
-        await OBR.scene.local.addItems([finishLabel, finish, cancel, cancelLabel]);
-        finishLabelId = finishLabel.id;
-        finishId = finish.id;
-        cancelLabelId = cancelLabel.id;
-        cancelId = cancel.id;
-        
         //Create Tooltip
         await OBR.popover.open({
             id: Constants.LINETOOLID,
             url: `/pages/line.html`,
-            height: 40,
-            width: 400,
+            height: 70,
+            width: 350,
             disableClickAway: true
         });
     }
     else
     {
-        if (event.target && (event.target.id === finishLabelId || event.target.id === finishId))
-            await finishDrawing();
-        else if (event.target && (event.target.id === cancelLabelId || event.target.id === cancelId))
-            await cancelDrawing();
-        else
+        const [update] = interaction;
+        update((line: Curve) =>
         {
-            const [update] = interaction;
-            //let newPos = await OBR.scene.grid.snapPosition(event.pointerPosition, undefined, true);
-            update((line: Curve) =>
-            {
-                //line.points.push(newPos);
-                line.points.push(event.pointerPosition);
-            });
-
-            await OBR.scene.local.updateItems(item => item.id == finishId || item.id == finishLabelId, items =>
-            {
-                for (const item of items)
-                {
-                    item.position = event.pointerPosition;
-                }
-            });
-        }
+            line.points.push(event.pointerPosition);
+        });
     }
 }
 

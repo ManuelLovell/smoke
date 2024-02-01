@@ -1,4 +1,4 @@
-import OBR, { Item, Image, ItemFilter, Player, isImage } from "@owlbear-rodeo/sdk";
+import OBR, { Item, Image, ItemFilter, Player, isImage, Metadata } from "@owlbear-rodeo/sdk";
 import Coloris from "@melloware/coloris";
 import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
@@ -12,6 +12,8 @@ import { toggleDoor } from "./tools/doorTool";
 import { RunSpectre, UpdateSpectreTargets } from "./spectreMain";
 import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
 import { setupAutohideMenus } from "./smokeSetupContextMenus";
+import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "./tools/visionLineMode";
+import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "./tools/visionPolygonMode";
 
 export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
 {
@@ -118,6 +120,30 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         {
             toggleDoor(player.selection[0]);
         }
+
+        const metadata = player.metadata as Metadata;
+        const lineToolMeta = metadata[`${Constants.EXTENSIONID}/finishLine`] ?? false;
+        if (lineToolMeta === true)
+        {
+            FinishLineDrawing();
+        }
+        const lineToolMetaOther = metadata[`${Constants.EXTENSIONID}/cancelLine`] ?? false;
+        if (lineToolMetaOther === true)
+        {
+            CancelLineDrawing();
+        }
+
+        const polyToolMeta = metadata[`${Constants.EXTENSIONID}/finishPoly`] ?? false;
+        if (polyToolMeta === true)
+        {
+            FinishPolyDrawing();
+        }
+        const polyToolMetaOther = metadata[`${Constants.EXTENSIONID}/cancelPoly`] ?? false;
+        if (lineToolMetaOther === true)
+        {
+            CancelPolyDrawing();
+        }
+        
     });
 
     const partyHandler = OBR.party.onChange(async (players) =>
