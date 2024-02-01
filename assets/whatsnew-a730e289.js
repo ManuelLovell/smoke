@@ -1,4 +1,4 @@
-import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                  */const a=document.querySelector("#smoke-whatsnew"),i=document.querySelector("#smoke-whatsnew-notes"),r=`
+import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                  */const s=document.querySelector("#smoke-whatsnew"),i=document.querySelector("#smoke-whatsnew-notes"),r=`
 <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -20,6 +20,13 @@ import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+        <h1>Smoke & Spectre! 1/31/2024</h1>
+        Hello again!  Minor (but needed) changes today.
+        </br> You'll notice the 'Finish' and 'Cancel' labels that have plagued you for so long are gone. They have been moved.
+        </br> Their new home is in the little info popup at the top of the screen when you start using the tool. So you should have an easier time getting those perfect end-to-end lines now.
+        </br> Sorry this one took so long!
+        </br>
+        </br>
         <h1>Smoke & Spectre! 1/16/2024</h1>
         </br>
         Minor bug fix for some bad null checking in.. a really obscure scenario.
@@ -82,9 +89,9 @@ import{O as e,C as s}from"./constants-60dbadaa.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");a.innerHTML=t?r:l,i.innerHTML=`
+`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");s.innerHTML=t?r:l,i.innerHTML=`
     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
     </div>
-    <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(s.EXTENSIONWHATSNEW)}});
+    <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(a.EXTENSIONWHATSNEW)}});
