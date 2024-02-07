@@ -26,7 +26,7 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Disable Vision",
                 filter: {
                     every: [
-                        { key: ["metadata", `${Constants.SPECTREID}/spectred`],operator: "==", value: undefined }],
+                        { key: ["metadata", `${Constants.SPECTREID}/spectred`], operator: "==", value: undefined }],
                     some: [
                         { key: "layer", value: "CHARACTER", coordinator: "||" },
                         { key: "layer", value: "ATTACHMENT" }],
@@ -237,13 +237,46 @@ export async function SetupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/bounding-grid`,
+        icons: [
+            {
+                icon: "/icon.svg",
+                label: "Smoke Bounding Grid",
+                filter: {
+                    every: [
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/grid`],
+                            value: true
+                        }],
+                },
+            },
+        ],
+        async onClick(_ctx)
+        {
+            await OBR.notification.show("This is the Smoke&Spectre Bounding Grid. It contains the area your fog can be drawn in. To remove this and have fog contained dynamically by the size of your map(s), turn on AutoDetect Maps in Settings.", "INFO");
+        },
+    });
+
+    await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/toggle-door`,
         icons: [
             {
                 icon: "/opendoor.svg",
                 label: "Enable Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" }, { key: ["metadata", `${Constants.EXTENSIONID}/isDoor`], value: undefined }, { key: ["metadata", `${Constants.EXTENSIONID}/doorId`], value: undefined }],
+                    every: [{ key: "layer", value: "DRAWING" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
+                        value: undefined
+                    },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/doorId`],
+                        value: undefined
+                    },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/grid`],
+                        value: undefined
+                    }],
                     roles: ["GM"]
                 },
             },
@@ -251,7 +284,15 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/closedoor.svg",
                 label: "Disable Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" }, { key: ["metadata", `${Constants.EXTENSIONID}/doorId`], value: undefined }],
+                    every: [{ key: "layer", value: "DRAWING" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/doorId`],
+                        value: undefined
+                    },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/grid`],
+                        value: undefined
+                    }],
                     roles: ["GM"]
                 },
             },

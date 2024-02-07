@@ -11,32 +11,18 @@ export async function AddBorderIfNoAutoDetect()
     {
         if (foundBorder.length == 0)
         {
-            let drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).visible(false).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
+            let drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).visible(false).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").strokeOpacity(.5).fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
             drawing.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
+            drawing.metadata[`${Constants.EXTENSIONID}/grid`] = true;
             drawing.id = Constants.GRIDID;
             await OBR.scene.items.addItems([drawing]);
-        }
-        else
-        {
-            const grid = sceneCache.items.find(x => x.id === Constants.GRIDID);
-            await OBR.scene.items.updateItems([Constants.GRIDID], grid =>
-            {
-                grid[0].visible = false;
-                grid[0].style.strokeOpacity = 1;
-                grid[0].disableHit = false;
-            });
         }
     }
 
     if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true
         && foundBorder.length > 0)
     {
-        await OBR.scene.items.updateItems([Constants.GRIDID], grid =>
-        {
-            grid[0].visible = false;
-            grid[0].style.strokeOpacity = .1;
-            grid[0].disableHit = true;
-        });
+        await OBR.scene.items.deleteItems([Constants.GRIDID]);
     }
 }
 
@@ -245,7 +231,7 @@ export function AddUnitVisionUI(player: Item)
                     -2px 2px 2px ${newColor},
                     2px 2px 2px ${newColor}`;
                 }
-                else { cell.style.textShadow = ""}
+                else { cell.style.textShadow = "" }
 
                 await OBR.scene.items.updateItems([unitId], items =>
                 {

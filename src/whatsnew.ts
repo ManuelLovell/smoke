@@ -29,6 +29,12 @@ const needHelpMessage = `
 </div>`;
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 2/6/2024</h1>
+        That darn bounding grid.
+        </br> I've turned it off by default.  It now deletes instead of hides if you have auto-detect on.
+        </br> I also added a fake-menu button that just tells you what it is when you select it.
+        </br> I hope this helps.
+        </br>
         <h1>Smoke & Spectre! 1/31/2024</h1>
         Hello again!  Minor (but needed) changes today.
         </br> You'll notice the 'Finish' and 'Cancel' labels that have plagued you for so long are gone. They have been moved.

@@ -4,7 +4,6 @@ import { Constants } from "./utilities/constants";
 import { sceneCache } from "./utilities/globals";
 import { isVisionFog, isBackgroundImage } from "./utilities/itemFilters";
 import { SMOKEMAIN } from './smokeMain';
-import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
 import { setupAutohideMenus } from "./smokeSetupContextMenus";
 
 export async function InitializeScene(): Promise<void>
@@ -45,8 +44,6 @@ export async function InitializeScene(): Promise<void>
         if (sceneCache.role === "GM") SMOKEMAIN.autodetectCheckbox!.checked = true;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autodetectEnabled`]: true });
     }
-    
-    AddBorderIfNoAutoDetect();
     
     setupAutohideMenus(sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true);
 
