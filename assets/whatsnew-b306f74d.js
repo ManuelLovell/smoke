@@ -20,6 +20,12 @@ import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+        <h1>Smoke & Spectre! 2/6/2024</h1>
+        That darn bounding grid.
+        </br> I've turned it off by default.  It now deletes instead of hides if you have auto-detect on.
+        </br> I also added a fake-menu button that just tells you what it is when you select it.
+        </br> I hope this helps.
+        </br>
         <h1>Smoke & Spectre! 1/31/2024</h1>
         Hello again!  Minor (but needed) changes today.
         </br> You'll notice the 'Finish' and 'Cancel' labels that have plagued you for so long are gone. They have been moved.
@@ -89,7 +95,7 @@ import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const o=window.location.search,t=new URLSearchParams(o).get("gethelp");s.innerHTML=t?r:l,i.innerHTML=`
+`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");s.innerHTML=o?r:l,i.innerHTML=`
     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
