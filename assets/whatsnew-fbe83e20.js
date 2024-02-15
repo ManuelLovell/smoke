@@ -21,6 +21,9 @@ import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                 
 </div>`,l=`
     <div>
         <h1>Smoke & Spectre! 2/6/2024</h1>
+        Minor update. Fixed the non-functioning 'Cancel Polygon' button'.
+        </br>
+        <h1>Smoke & Spectre! 2/6/2024</h1>
         That darn bounding grid.
         </br> I've turned it off by default.  It now deletes instead of hides if you have auto-detect on.
         </br> I also added a fake-menu button that just tells you what it is when you select it.
