@@ -27,8 +27,13 @@ const needHelpMessage = `
   </br>
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`;
+
+
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 2/6/2024</h1>
+        Minor update. Fixed the non-functioning 'Cancel Polygon' button'.
+        </br>
         <h1>Smoke & Spectre! 2/6/2024</h1>
         That darn bounding grid.
         </br> I've turned it off by default.  It now deletes instead of hides if you have auto-detect on.

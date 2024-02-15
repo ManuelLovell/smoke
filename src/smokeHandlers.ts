@@ -1,4 +1,4 @@
-import OBR, { Item, Image, ItemFilter, Player, isImage, Metadata } from "@owlbear-rodeo/sdk";
+import OBR, { Item, Image, ItemFilter, Player, Metadata } from "@owlbear-rodeo/sdk";
 import Coloris from "@melloware/coloris";
 import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
@@ -139,7 +139,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
             FinishPolyDrawing();
         }
         const polyToolMetaOther = metadata[`${Constants.EXTENSIONID}/cancelPoly`] ?? false;
-        if (lineToolMetaOther === true)
+        if (polyToolMetaOther === true)
         {
             CancelPolyDrawing();
         }
