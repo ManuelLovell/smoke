@@ -82,25 +82,25 @@ async function ComputeShadow(eventDetail: Detail)
 
             if (map.rotation > 0)
             {
-                const width = Math.abs(right - left);
-                const height = Math.abs(bottom - top);
+                const twidth = Math.abs(right - left);
+                const theight = Math.abs(bottom - top);
                 switch (map.rotation)
                 {
                     case 270:
-                        top -= height;
-                        bottom -= height;
+                        top -= theight;
+                        bottom -= theight;
                         break;
 
                     case 180:
-                        top -= height;
-                        bottom -= height;
-                        left -= width;
-                        right -= width;
+                        top -= theight;
+                        bottom -= theight;
+                        left -= twidth;
+                        right -= twidth;
                         break;
 
                     case 90:
-                        left -= width;
-                        right -= width;
+                        left -= twidth;
+                        right -= twidth;
                         break;
                 }
             }

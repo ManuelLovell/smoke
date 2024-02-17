@@ -33,6 +33,7 @@ const whatsNewMessage = `
     <div>
         <h1>Smoke & Spectre! 2/17/2024</h1>
         Minor fix for rotated maps not calculating fog in the right spot with auto-detect.
+        </br> To be clear, it's maps rotated in increments of 90s. If you're doing something else I don't know what to do with you.
         </br>
         <h1>Smoke & Spectre! 2/6/2024</h1>
         Minor update. Fixed the non-functioning 'Cancel Polygon' button'.
