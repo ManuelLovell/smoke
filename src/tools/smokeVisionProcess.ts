@@ -74,8 +74,36 @@ async function ComputeShadow(eventDetail: Detail)
         for (let map of maps)
         {
             let dpiRatio = sceneCache.gridDpi / map.grid.dpi;
-            let left = map.position.x - (dpiRatio * map.grid.offset.x) * map.scale.x, top = map.position.y - (dpiRatio * map.grid.offset.y) * map.scale.y;
-            let right = left + (dpiRatio * map.image.width) * map.scale.x, bottom = top + (dpiRatio * map.image.height) * map.scale.y;
+
+            let left = map.position.x - (dpiRatio * map.grid.offset.x) * map.scale.x;
+            let top = map.position.y - (dpiRatio * map.grid.offset.y) * map.scale.y;
+            let right = left + (dpiRatio * map.image.width) * map.scale.x;
+            let bottom = top + (dpiRatio * map.image.height) * map.scale.y;
+
+            if (map.rotation > 0)
+            {
+                const width = Math.abs(right - left);
+                const height = Math.abs(bottom - top);
+                switch (map.rotation)
+                {
+                    case 270:
+                        top -= height;
+                        bottom -= height;
+                        break;
+
+                    case 180:
+                        top -= height;
+                        bottom -= height;
+                        left -= width;
+                        right -= width;
+                        break;
+
+                    case 90:
+                        left -= width;
+                        right -= width;
+                        break;
+                }
+            }
 
             if (!mapbox.length)
             {
@@ -172,7 +200,7 @@ async function ComputeShadow(eventDetail: Detail)
             const cmds = [];
 
             cmds.push([PathKit.MOVE_VERB, polygon.pointset[0].x, polygon.pointset[0].y]);
-            
+
             for (let j = 1; j < polygon.pointset.length; j++)
             {
                 cmds.push([PathKit.LINE_VERB, polygon.pointset[j].x, polygon.pointset[j].y]);

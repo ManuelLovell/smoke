@@ -380,7 +380,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.16");
+export const SMOKEMAIN = new SmokeMain("2.17");
 OBR.onReady(async () =>
 {
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings
