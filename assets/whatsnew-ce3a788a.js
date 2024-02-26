@@ -1,5 +1,5 @@
-import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                  */const i=document.querySelector("#smoke-whatsnew"),s=document.querySelector("#smoke-whatsnew-notes"),r=`
-<div>
+import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                  */const s=document.querySelector("#smoke-whatsnew"),i=document.querySelector("#smoke-whatsnew-notes"),r=`
+  <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
   <sub>Token Ownership </sub>
@@ -20,6 +20,13 @@ import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,l=`
     <div>
+        <h1>Smoke & Spectre! 2/25/2024</h1>
+        'Bigger' update today!
+        </br> Finally got around to making the brush tool. It's been on my list for awhile, because I really want to smooth the curve of making dungeons.
+        </br> This is part 1, and part 2 is later down the pipe.
+        </br>
+        <img class="news-image" src="/smokebrush.gif" alt="Smokey GIF">
+        </br> If you like seeing these updates and ease of use updates, be sure to show some support at Patreon! (It's free unless you don't want it to be free.)
         <h1>Smoke & Spectre! 2/17/2024</h1>
         Minor fix for rotated maps not calculating fog in the right spot with auto-detect.
         </br> To be clear, it's maps rotated in increments of 90s. If you're doing something else I don't know what to do with you.
@@ -102,7 +109,7 @@ import{O as e,C as a}from"./constants-866d02a8.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");i.innerHTML=o?r:l,s.innerHTML=`
+`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");s.innerHTML=o?r:l,i.innerHTML=`
     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
     <div class="mask"></div>
