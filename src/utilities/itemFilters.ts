@@ -58,23 +58,32 @@ function isBackgroundBorder(item: Item)
         && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] || item.metadata[`${Constants.ARMINDOID}/isBackgroundImage`]);
 }
 
-function isTrailingFog(item: Item) { 
+function isTrailingFog(item: Item)
+{
     return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`];
 }
 
-function isAnyFog(item: Item) { 
-    return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`] 
-        || item.metadata[`${Constants.EXTENSIONID}/isVisionFog`] 
+function isAnyFog(item: Item)
+{
+    return item.metadata[`${Constants.EXTENSIONID}/isTrailingFog`]
+        || item.metadata[`${Constants.EXTENSIONID}/isVisionFog`]
         || item.metadata[`${Constants.ARMINDOID}/isVisionFog`]
         || item.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`];
 }
 
-function isTorch(item: Item) { 
+function isBrushSquare(item: Item)
+{
+    return item.metadata[`${Constants.EXTENSIONID}/isBrushSquare`];
+}
+
+function isTorch(item: Item)
+{
     return item.metadata[`${Constants.EXTENSIONID}/visionTorch`];
 }
 
-function isAutohide(item: Item) {
+function isAutohide(item: Item)
+{
     return item.layer == "CHARACTER" && !isTokenWithVisionForUI(item) && item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
 }
 
-export { isBackgroundImage, isVisionFog, isVisionLine, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog, isTorch, isAutohide };
+export { isBackgroundImage, isVisionFog, isVisionLine, isBrushSquare, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog, isTorch, isAutohide };

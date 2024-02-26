@@ -66,6 +66,10 @@ body {
     margin-bottom: 20px;
 }
 
+.news-image {
+    width: 100%;
+}
+
 footer {
     display: flex;
     position: fixed;
@@ -86,13 +90,13 @@ footer {
     transition: background 0.5s;
     margin-right: 26px;
     position: absolute;
-    float:right;
+    float: right;
     top: 0;
     right: 0;
     font-weight: bolder;
     font-size: 31px;
     line-height: 0.95;
-    margin-top:-2px;
+    margin-top: -2px;
 }
 
 .close:after,
@@ -119,7 +123,7 @@ a:not(.patreon) {
     border-radius: 15px;
     padding: 5px;
     margin-left: 10px;
-    margin-bottom:5px;
+    margin-bottom: 5px;
 }
 
 a {
@@ -148,22 +152,6 @@ a:active {
     color: yellow;
     background-color: transparent;
     text-decoration: underline;
-}
-
-.timer {
-    background: -webkit-linear-gradient(left, var(--OBR-Purple-Highlight) 50%, #eee 50%);
-    border-radius: 100%;
-    height: calc(var(--size) * 1px);
-    width: calc(var(--size) * 1px);
-    animation: time calc(var(--duration) * 1s) steps(1000, start) infinite;
-    -webkit-mask: radial-gradient(transparent 50%, #000 50%);
-    mask: radial-gradient(transparent 50%, #000 50%);
-    position: absolute;
-    float:right;
-    top: 0;
-    right: 0;
-    margin-right:20px;
-    margin-top:-1.5px;
 }
 
 .title {
@@ -209,4 +197,3 @@ a:active {
         -webkit-transform: rotate(-180deg);
     }
 }
-

@@ -7,7 +7,7 @@ const whatsnew = document.querySelector<HTMLDivElement>('#smoke-whatsnew')!;
 const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
 
 const needHelpMessage = `
-<div>
+  <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
   <sub>Token Ownership </sub>
@@ -31,6 +31,13 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div>
+        <h1>Smoke & Spectre! 2/25/2024</h1>
+        'Bigger' update today!
+        </br> Finally got around to making the brush tool. It's been on my list for awhile, because I really want to smooth the curve of making dungeons.
+        </br> This is part 1, and part 2 is later down the pipe.
+        </br>
+        <img class="news-image" src="/smokebrush.gif" alt="Smokey GIF">
+        </br> If you like seeing these updates and ease of use updates, be sure to show some support at Patreon! (It's free unless you don't want it to be free.)
         <h1>Smoke & Spectre! 2/17/2024</h1>
         Minor fix for rotated maps not calculating fog in the right spot with auto-detect.
         </br> To be clear, it's maps rotated in increments of 90s. If you're doing something else I don't know what to do with you.

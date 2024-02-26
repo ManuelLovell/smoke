@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import { lineMode } from "./tools/visionLineMode";
 import { polygonMode } from "./tools/visionPolygonMode";
+import { brushMode } from "./tools/visionBrushMode";
 import { Constants } from "./utilities/constants";
 
 export async function SetupTools(): Promise<void>
@@ -52,5 +53,25 @@ export async function SetupTools(): Promise<void>
         onToolClick: lineMode.onToolClick,
         onToolMove: lineMode.onToolMove,
         onKeyDown: lineMode.onKeyDown
+    });
+    
+    // Create "brush" mode
+    await OBR.tool.createMode({
+        id: `${Constants.EXTENSIONID}/add-vision-brush-mode`,
+        icons: [
+            {
+                icon: "/brush.svg",
+                label: "Paint Obstructions by Grid",
+                filter: {
+                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
+                },
+            },
+        ],
+        onToolDown: brushMode.onActivate,
+        onToolUp: brushMode.onDeactivate,
+        onToolDragStart: brushMode.onDragStart,
+        onToolDragMove: brushMode.onDragMove,
+        onToolDragEnd: brushMode.onDragEnd,
+        onToolDragCancel: brushMode.onDragCancel,
     });
 }
