@@ -545,7 +545,7 @@ export function SetupMainHandlers()
             id: Constants.EXTENSIONWHATSNEW,
             url: `/pages/whatsnew.html`,
             height: 500,
-            width: 350,
+            width: 400,
         });
     };
 

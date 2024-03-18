@@ -131,9 +131,11 @@ OBR.onReady(async () =>
     whatsnew.innerHTML = help ? needHelpMessage : whatsNewMessage;
 
     footer.innerHTML = `
-    <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
-    <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
-    <div class="mask"></div>
+    <div id="buttonWrapper">
+        <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
+        <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
+        <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic\nTutorial</a>
+        <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced\nTutorial</a>
     </div>
     <div class="close">⤬</div>`;
 
