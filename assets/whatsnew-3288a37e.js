@@ -1,4 +1,4 @@
-import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                  */const s=document.querySelector("#smoke-whatsnew"),i=document.querySelector("#smoke-whatsnew-notes"),r=`
+import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                  */const s=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),i=`
   <div>
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -109,9 +109,13 @@ import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");s.innerHTML=o?r:l,i.innerHTML=`
-    <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
-    <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Join the OBR Discord!</a>
-    <div class="mask"></div>
+`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");s.innerHTML=o?i:l,r.innerHTML=`
+    <div id="buttonWrapper">
+        <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
+        <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
+        <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic
+Tutorial</a>
+        <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced
+Tutorial</a>
     </div>
     <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(a.EXTENSIONWHATSNEW)}});
