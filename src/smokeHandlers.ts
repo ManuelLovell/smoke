@@ -103,6 +103,16 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
     //////////////////
     const playerHandler = OBR.player.onChange(async (player: Player) =>
     {
+        if (sceneCache.role !== player.role)
+        {
+            sceneCache.role = player.role;
+            if (sceneCache.role === "GM")
+            {
+                await OBR.action.setHeight(510);
+                await OBR.action.setWidth(420);
+            }
+            await SMOKEMAIN.SoftReset(sceneCache.role);
+        }
         const tokens = document.querySelectorAll(".token-table-entry");
         for (let token of tokens)
         {

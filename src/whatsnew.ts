@@ -3,11 +3,11 @@ import '/src/css/new-style.css'
 import { Constants } from "./utilities/constants";
 
 
-const whatsnew = document.querySelector<HTMLDivElement>('#smoke-whatsnew')!;
-const footer = document.querySelector<HTMLElement>('#smoke-whatsnew-notes')!;
+const whatsnew = document.querySelector<HTMLDivElement>('#bs-whatsnew')!;
+const footer = document.querySelector<HTMLElement>('#bs-whatsnew-notes')!;
 
 const needHelpMessage = `
-  <div>
+  <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
   <sub>Token Ownership </sub>
@@ -30,7 +30,10 @@ const needHelpMessage = `
 
 
 const whatsNewMessage = `
-    <div>
+    <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/3/2024</h1>
+        Minor bugfix/update.
+        </br> Better handling for multiple GMs. Previously, a change in role would not trigger Smoke to reload the UI and set the appropriate handlers. Now it does! (or should).
         <h1>Smoke & Spectre! 2/25/2024</h1>
         'Bigger' update today!
         </br> Finally got around to making the brush tool. It's been on my list for awhile, because I really want to smooth the curve of making dungeons.
@@ -127,21 +130,46 @@ OBR.onReady(async () =>
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const help = urlParams.get('gethelp')!;
-
+    const subscriberId = urlParams.get('subscriber')!;
+    const subscriber = subscriberId === "true";
     whatsnew.innerHTML = help ? needHelpMessage : whatsNewMessage;
 
     footer.innerHTML = `
-    <div id="buttonWrapper">
-        <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
-        <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
-        <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic\nTutorial</a>
-        <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced\nTutorial</a>
+    <div id="footButtonContainer">
+        <button id="settingButton" type="button" title="Access the settings"><embed id="settingsIcon" class="svg settings" src="/w-settings.svg" /></button>
+        <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
+        <button id="patreonButton" type="button" ${subscriber ? 'title="Thank you for subscribing!"' : 'title="Check out the Battle-System Patreon"'}>
+        ${subscriber ? '<embed id="patreonLogo" class="svg thankyou" src="/w-thankyou.svg" />'
+            : '<embed id="patreonLogo" class="svg patreon" src="/w-patreon.png" />'}</button>
     </div>
-    <div class="close">⤬</div>`;
+    <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
+    `;
+    // footer.innerHTML = `
+    // <div id="buttonWrapper">
+    //     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
+    //     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
+    //     <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic\nTutorial</a>
+    //     <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced\nTutorial</a>
+    // </div>
+    // <div class="close">⤬</div>`;
 
-    const closebutton = document.querySelector<HTMLElement>('.close')!;
+    const closebutton = document.getElementById('closeButton');
     closebutton!.onclick = async () =>
     {
         await OBR.modal.close(Constants.EXTENSIONWHATSNEW);
+    };
+
+    const patreonButton = document.getElementById('patreonButton');
+    patreonButton!.onclick = async (e) =>
+    {
+        e.preventDefault();
+        window.open("https://www.patreon.com/battlesystem", "_blank");
+    };
+
+    const discordButton = document.getElementById('discordButton');
+    discordButton!.onclick = async (e) =>
+    {
+        e.preventDefault();
+        window.open("https://discord.gg/ANZKDmWzr6", "_blank");
     };
 });

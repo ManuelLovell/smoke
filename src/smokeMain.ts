@@ -338,6 +338,41 @@ export class SmokeMain
         }
     }
 
+    public async SoftReset(role: "GM" | "PLAYER")
+    {
+        if (role === "GM")
+        {
+            this.SetupGMElements();
+            SetupMainHandlers();
+            this.UpdatePlayerProcessUI(sceneCache.players);
+
+            await Promise.all([
+                SetupContextMenus(),
+                SetupTools(),
+                SetupSpectreGM(),
+            ]);
+        }
+        else
+        {
+            this.SetupPlayerElements();
+        }
+
+        if (sceneCache.ready)
+        {
+            await InitializeScene();
+            await OnSceneDataChange();
+            if (role == "GM")
+            {
+                await updateMaps(this.mapAlign!);
+            }
+        }
+        if (role == "GM")
+        {
+            setupAutohideMenus(false);
+            await this.UpdateUI();
+        }
+    }
+
     public async Start(role: "GM" | "PLAYER")
     {
         await this.BuildUserCache();
@@ -380,7 +415,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.2");
+export const SMOKEMAIN = new SmokeMain("2.21");
 OBR.onReady(async () =>
 {
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings
