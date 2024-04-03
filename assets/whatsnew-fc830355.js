@@ -1,5 +1,5 @@
-import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                  */const s=document.querySelector("#smoke-whatsnew"),r=document.querySelector("#smoke-whatsnew-notes"),i=`
-  <div>
+import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                  */const h=document.querySelector("#bs-whatsnew"),u=document.querySelector("#bs-whatsnew-notes"),c=`
+  <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
   <sub>Token Ownership </sub>
@@ -18,8 +18,11 @@ import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                 
   <li>If you see 'Vision Disabled' on a token in your list, it means the GM has not enabled vision for that token.
   </br>
   <li>GM-Owned tokens with vision share their vision with all players..
-</div>`,l=`
-    <div>
+</div>`,b=`
+    <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/3/2024</h1>
+        Minor bugfix/update.
+        </br> Better handling for multiple GMs. Previously, a change in role would not trigger Smoke to reload the UI and set the appropriate handlers. Now it does! (or should).
         <h1>Smoke & Spectre! 2/25/2024</h1>
         'Bigger' update today!
         </br> Finally got around to making the brush tool. It's been on my list for awhile, because I really want to smooth the curve of making dungeons.
@@ -109,13 +112,12 @@ import{O as e,C as a}from"./constants-bb32cdb1.js";/* empty css                 
         </br>
         </br>
     </div>
-`;e.onReady(async()=>{const t=window.location.search,o=new URLSearchParams(t).get("gethelp");s.innerHTML=o?i:l,r.innerHTML=`
-    <div id="buttonWrapper">
-        <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
-        <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
-        <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic
-Tutorial</a>
-        <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced
-Tutorial</a>
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";h.innerHTML=i?c:b,u.innerHTML=`
+    <div id="footButtonContainer">
+        <button id="settingButton" type="button" title="Access the settings"><embed id="settingsIcon" class="svg settings" src="/w-settings.svg" /></button>
+        <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
+        <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
+        ${o?'<embed id="patreonLogo" class="svg thankyou" src="/w-thankyou.svg" />':'<embed id="patreonLogo" class="svg patreon" src="/w-patreon.png" />'}</button>
     </div>
-    <div class="close">⤬</div>`;const n=document.querySelector(".close");n.onclick=async()=>{await e.modal.close(a.EXTENSIONWHATSNEW)}});
+    <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
+    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")}});
