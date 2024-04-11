@@ -20,6 +20,11 @@ import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,b=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/11</h1>
+        Minor bugfix.
+        </br> Addressed the lag when clicking to place a point when drawing obstructions.
+        </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
+        </br>
         <h1>Smoke & Spectre! 4/3/2024</h1>
         Minor bugfix/update.
         </br> Better handling for multiple GMs. Previously, a change in role would not trigger Smoke to reload the UI and set the appropriate handlers. Now it does! (or should).
@@ -120,4 +125,4 @@ import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                 
         ${o?'<embed id="patreonLogo" class="svg thankyou" src="/w-thankyou.svg" />':'<embed id="patreonLogo" class="svg patreon" src="/w-patreon.png" />'}</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")}});
+    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")}});
