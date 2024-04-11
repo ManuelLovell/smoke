@@ -53,7 +53,9 @@ export async function finishDrawing(): Promise<void>
 async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
 {
     if (event.transformer)
+    {
         return;
+    }
     if (!interaction)
     {
         const toBuild = [];

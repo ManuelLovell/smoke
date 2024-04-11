@@ -33,9 +33,10 @@ export async function SetupTools(): Promise<void>
                 },
             },
         ],
-        onToolClick: polygonMode.onToolClick,
+        onToolDown: polygonMode.onToolClick,
         onToolMove: polygonMode.onToolMove,
-        onKeyDown: polygonMode.onKeyDown
+        onKeyDown: polygonMode.onKeyDown,
+        preventDrag: { dragging: false }
     });
 
     // Create "add line" mode
@@ -50,11 +51,12 @@ export async function SetupTools(): Promise<void>
                 },
             },
         ],
-        onToolClick: lineMode.onToolClick,
+        onToolDown: lineMode.onToolClick, // Tool 'click' is slightly less responsive compared to check for the down state, clearly this wont allow dragging
         onToolMove: lineMode.onToolMove,
-        onKeyDown: lineMode.onKeyDown
+        onKeyDown: lineMode.onKeyDown,
+        preventDrag: { dragging: false }
     });
-    
+
     // Create "brush" mode
     await OBR.tool.createMode({
         id: `${Constants.EXTENSIONID}/add-vision-brush-mode`,

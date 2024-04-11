@@ -31,6 +31,11 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/11</h1>
+        Minor bugfix.
+        </br> Addressed the lag when clicking to place a point when drawing obstructions.
+        </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
+        </br>
         <h1>Smoke & Spectre! 4/3/2024</h1>
         Minor bugfix/update.
         </br> Better handling for multiple GMs. Previously, a change in role would not trigger Smoke to reload the UI and set the appropriate handlers. Now it does! (or should).

@@ -84,6 +84,7 @@ body {
 
 #newsContainer {
     width: 100%;
+    padding-right: 4px;
 }
 
 #settingsPage,
