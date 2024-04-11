@@ -141,11 +141,12 @@ OBR.onReady(async () =>
 
     footer.innerHTML = `
     <div id="footButtonContainer">
-        <button id="settingButton" type="button" title="Access the settings"><embed id="settingsIcon" class="svg settings" src="/w-settings.svg" /></button>
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${subscriber ? 'title="Thank you for subscribing!"' : 'title="Check out the Battle-System Patreon"'}>
         ${subscriber ? '<embed id="patreonLogo" class="svg thankyou" src="/w-thankyou.svg" />'
             : '<embed id="patreonLogo" class="svg patreon" src="/w-patreon.png" />'}</button>
+        <button id="basicTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Basic</br>Tutorial</button>
+        <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
     `;
@@ -176,5 +177,19 @@ OBR.onReady(async () =>
     {
         e.preventDefault();
         window.open("https://discord.gg/ANZKDmWzr6", "_blank");
+    };
+    
+    const basicButton = document.getElementById('basicTutorial');
+    basicButton!.onclick = async (e) =>
+    {
+        e.preventDefault();
+        window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw", "_blank");
+    };
+    
+    const advButton = document.getElementById('advTutorial');
+    advButton!.onclick = async (e) =>
+    {
+        e.preventDefault();
+        window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP", "_blank");
     };
 });

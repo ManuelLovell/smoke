@@ -68,10 +68,11 @@ body {
     width: 100%;
     flex-direction: column;
 }
-.news-image
-{
+
+.news-image {
     width: 100%;
 }
+
 #settingsContainer {
     display: none;
 }
@@ -127,6 +128,26 @@ footer {
 #patreonButton,
 #discordButton {
     float: left;
+}
+
+button {
+    border-radius: 6px;
+    text-wrap: wrap;
+    border: 2px solid transparent;
+    font-family: inherit;
+    cursor: pointer;
+    background-color: var(--OBR-dark-blue);
+    color: var(--light-letters);
+    font-weight: bold;
+}
+
+button:hover {
+    border: 2px solid var(--OBR-Purple-Select);
+}
+
+button:focus,
+button:focus-visible {
+    outline: 4px auto -webkit-focus-ring-color;
 }
 
 .svg {
