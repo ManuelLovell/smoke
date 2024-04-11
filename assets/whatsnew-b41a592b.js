@@ -1,4 +1,4 @@
-import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                  */const h=document.querySelector("#bs-whatsnew"),u=document.querySelector("#bs-whatsnew-notes"),c=`
+import{O as n,C as h}from"./constants-bb32cdb1.js";/* empty css                  */const c=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),m=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,7 +18,7 @@ import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                 
   <li>If you see 'Vision Disabled' on a token in your list, it means the GM has not enabled vision for that token.
   </br>
   <li>GM-Owned tokens with vision share their vision with all players..
-</div>`,b=`
+</div>`,w=`
     <div id="newsContainer">
         <h1>Smoke & Spectre! 4/11</h1>
         Minor bugfix.
@@ -117,12 +117,13 @@ import{O as n,C as d}from"./constants-bb32cdb1.js";/* empty css                 
         </br>
         </br>
     </div>
-`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";h.innerHTML=i?c:b,u.innerHTML=`
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";c.innerHTML=i?m:w,b.innerHTML=`
     <div id="footButtonContainer">
-        <button id="settingButton" type="button" title="Access the settings"><embed id="settingsIcon" class="svg settings" src="/w-settings.svg" /></button>
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
         ${o?'<embed id="patreonLogo" class="svg thankyou" src="/w-thankyou.svg" />':'<embed id="patreonLogo" class="svg patreon" src="/w-patreon.png" />'}</button>
+        <button id="basicTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Basic</br>Tutorial</button>
+        <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")}});
+    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(h.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const d=document.getElementById("basicTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const u=document.getElementById("advTutorial");u.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
