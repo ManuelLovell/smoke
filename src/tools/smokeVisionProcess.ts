@@ -292,15 +292,17 @@ async function ComputeShadow(eventDetail: Detail)
             ellipse.delete();
 
             // Get Color for Players
-            const owner = sceneCache.players.find(x => x.id === token.createdUserId);
+            const owner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
             if (owner && sceneCache.role === "GM" && !isTorch(token))
             {
                 // Add indicator rings intended for the GM
-                const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
-                    .position({ x: token.position.x, y: token.position.y }).width(visionRange * 2)
-                    .height(visionRange * 2).shapeType("CIRCLE").metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).build();
-
-                playerRings.push(playerRing);
+                if (owner.role !== "GM")
+                {
+                    const playerRing = buildShape().strokeColor(owner.color).fillOpacity(0)
+                        .position({ x: token.position.x, y: token.position.y }).width(visionRange * 2)
+                        .height(visionRange * 2).shapeType("CIRCLE").metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true }).locked(true).build();
+                    playerRings.push(playerRing);
+                }
             }
         }
     }

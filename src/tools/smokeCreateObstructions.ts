@@ -111,7 +111,6 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     for (const token of tokensWithVision)
     {
         const myToken = (sceneCache.userId === token.createdUserId);
-        //const gmToken = gmIds.some(x => x.id === token.createdUserId);
         const tokenOwner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         const gmToken = tokenOwner?.role === "GM";
 
