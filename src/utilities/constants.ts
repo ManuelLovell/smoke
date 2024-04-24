@@ -77,7 +77,7 @@ export class Constants
     </div>
     <div id="main-ui" class="grid-main">
             <div class="visionTitle grid-3">Vision Radius</div>
-            <div class="grid-3"><i>GM-owned tokens give universal vision.</i></div>
+            <div class="grid-3"><i>Note: GM-owned tokens give universal vision.</i></div>
             <p class="grid-3" id="no_tokens_message">Enable vision on your character tokens.</p>
             <div id="token_list_div" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
                 <table style="margin: auto; padding: 0;">
@@ -153,10 +153,8 @@ export class Constants
                         <td colspan="2"><input class="settingsButton" type="button" id="background_button" value="Unlock Fog Backgrounds"></td>
                     </tr>
                     <tr>
-                        <td colspan="2">Performance<select id="quality">
-                            <option value="accurate" selected>Accurate</option>
-                            <option value="fast">Fast</option>
-                        </select></td>
+                        <td><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines" title="Unlock all Obstruction Lines on the Scene"></td>
+                        <td><input class="settingsButton" type="button" id="lock_button" value="Lock Lines" title="Lock all Obstruction Lines on the Scene"></td>
                         <td colspan="2"><input class="settingsButton" type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></td>
                     </tr>
                     <tr>

@@ -131,8 +131,9 @@ function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: numb
                 .fillColor("#000000")
                 .fillOpacity(0)
                 .layer("DRAWING")
-                .name("Vision Line (Line)")
+                .name("Vision Line (Import)")
                 .closed(false)
+                .locked(true)
                 .build();
 
             line.visible = false;

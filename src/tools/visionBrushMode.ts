@@ -267,8 +267,9 @@ function GetLine(lines: PointLine[]): Curve[]
             .fillOpacity(0)
             .fillColor("#000000")
             .layer("DRAWING")
-            .name("Vision Line (Line)")
+            .name("Vision Line (Brushed)")
             .closed(false)
+            .locked(true)
             .build();
 
         line.visible = false;

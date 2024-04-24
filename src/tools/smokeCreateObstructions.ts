@@ -1,4 +1,4 @@
-import OBR, { buildPath, Vector2, MathM, Math2 } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, Vector2, MathM, Math2, Player } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/constants";
 import { sceneCache } from "../utilities/globals";
 import { isTorch } from "../utilities/itemFilters";
@@ -111,7 +111,9 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     for (const token of tokensWithVision)
     {
         const myToken = (sceneCache.userId === token.createdUserId);
-        const gmToken = gmIds.some(x => x.id === token.createdUserId);
+        //const gmToken = gmIds.some(x => x.id === token.createdUserId);
+        const tokenOwner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+        const gmToken = tokenOwner?.role === "GM";
 
         if ((!myToken && sceneCache.role !== "GM") && !gmToken)
         {

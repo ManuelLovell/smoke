@@ -1,4 +1,4 @@
-import OBR, { Image, Item, buildShape } from "@owlbear-rodeo/sdk";
+import OBR, { Image, Item, Player, buildShape } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/constants";
 import { sceneCache } from "./utilities/globals";
 import { SMOKEMAIN } from "./smokeMain";
@@ -67,13 +67,23 @@ export function AddUnitVisionUI(player: Item)
     }
     else
     {
-        const ownerColor = sceneCache.players.find(owner => player.createdUserId === owner.id)?.color;
+        const owner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${player.createdUserId}`] as Player;
+        //const owner = sceneCache.players.find(owner => player.createdUserId === owner.id);
+        let ownerColor = owner?.color;
+        let ownerText = owner?.name ? `This token is owned by ${owner.name}.` : "This token is owned by you.";
+
+        if (!ownerColor && (player.createdUserId !== sceneCache.userId))
+        {
+            ownerColor = "#aeb0af";
+            ownerText = "This tokens owner is not in the room currently.";
+        }
+
         const currentPlayer = sceneCache.items.find(x => x.id === player.id)!;
         // Create new item for this token
         const newTr = document.createElement("tr");
         newTr.id = `tr-${currentPlayer.id}`;
         newTr.className = "token-table-entry";
-        newTr.innerHTML = `<td id="contextLocator" data-color="${ownerColor}" class="token-name">${currentPlayer.name}</td>
+        newTr.innerHTML = `<td id="contextLocator" title="${ownerText}" ${ownerColor === "#aeb0af" ? 'style="color:black !important; font-style: italic;" ' : ''}data-color="${ownerColor}" class="token-name">${currentPlayer.name}</td>
                            <td class="token-vision-container" title="The unit of measurement for your grid"><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">units</span></td>
                            <td class="token-vision-container-grid">
                             <div class="vision-container-div">

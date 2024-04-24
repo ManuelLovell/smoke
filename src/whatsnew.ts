@@ -31,6 +31,18 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/24</h1>
+        'Major' fixes today.
+        </br></br> The 'Performance' option was removed. Accurate was no longer needed, and was causing a lot of issues for people who left it on - as the amount of fog shapes that built up over a few hours would bog down processing.
+        </br> Unlock/Lock All (obstruction) Line buttons were added. Nice and fast way to lock down the map, or open up for editing.
+        </br> Obstruction Lines are now locked by default.  Why weren't they like this before? I don't know.
+        </br> GM tokens in the list are now colored like a player's token is, to remove ambiguity of owner. (Though if two people are the same color, that's on you.)
+        </br> Added help text on mouse-over to the tokens on the GM list to specify owner further.
+        </br></br> User Data is now cached to the scene - what this means for Smoke is that it'll process correctly when people are not there.
+        </br> - So if your GM isn't there, but there are GM tokens that should give sight - those should work.
+        </br> - Or if you're the GM, the tokens should retain their ownership color.
+        </br> This is mostly QoL stuff, but needed nonetheless.  After I circle back on some other things I'll see what can be done on processing speed.
+        </br></br> Enjoy.
         <h1>Smoke & Spectre! 4/11</h1>
         Minor bugfix.
         </br> Addressed the lag when clicking to place a point when drawing obstructions.

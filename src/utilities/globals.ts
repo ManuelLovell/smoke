@@ -3,6 +3,8 @@ import { Fog, Item, Image, Metadata, Player } from "@owlbear-rodeo/sdk";
 class SceneCache
 {
     userId: string;
+    userName: string;
+    userColor: string;
     role: "GM" | "PLAYER";
     items: Item[];
     ghosts: Image[];
@@ -21,6 +23,8 @@ class SceneCache
     constructor()
     {
         this.userId = "";
+        this.userName = "";
+        this.userColor = "";
         this.role = "PLAYER";
         this.items = [];
         this.players = [];

@@ -71,6 +71,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .layer("DRAWING")
             .name("Vision Line (Line)")
             .closed(false)
+            .locked(true)
             .build();
 
         interaction = await OBR.interaction.startItemInteraction(line);

@@ -38,7 +38,6 @@ export class SmokeMain
     public fowCheckbox?: HTMLInputElement;
     public doorCheckbox?: HTMLInputElement;
     public fowColor?: HTMLInputElement;
-    public qualityOption?: HTMLSelectElement;
     public resetButton?: HTMLInputElement;
     public convertButton?: HTMLInputElement;
     public settingsButton?: HTMLInputElement;
@@ -46,6 +45,9 @@ export class SmokeMain
     public debugDiv?: HTMLDivElement;
     public debugButton?: HTMLButtonElement;
     public backgroundButton?: HTMLDivElement;
+
+    public lockFogButton?: HTMLButtonElement;
+    public unlockFogButton?: HTMLButtonElement;
 
     // Tool settings
     public toolWidth?: HTMLInputElement;
@@ -109,7 +111,6 @@ export class SmokeMain
         this.fowCheckbox = document.getElementById("fow_checkbox") as HTMLInputElement;
         this.doorCheckbox = document.getElementById("door_checkbox") as HTMLInputElement;
         this.fowColor = document.getElementById("fow_color") as HTMLInputElement;
-        this.qualityOption = document.getElementById("quality") as HTMLSelectElement;
         this.resetButton = document.getElementById("persistence_reset") as HTMLInputElement;
         this.convertButton = document.getElementById("convert_button") as HTMLInputElement;
         this.settingsButton = document.getElementById("settings_button") as HTMLInputElement;
@@ -117,6 +118,9 @@ export class SmokeMain
         this.debugDiv = document.getElementById("debug_div") as HTMLDivElement;
         this.debugButton = document.getElementById("debug_button") as HTMLButtonElement;
         this.backgroundButton = document.getElementById("background_button") as HTMLDivElement;
+        
+        this.lockFogButton = document.getElementById("lock_button") as HTMLButtonElement;
+        this.unlockFogButton = document.getElementById("unlock_button") as HTMLButtonElement;
 
         this.toolWidth = document.getElementById("tool_width") as HTMLInputElement;
         this.toolColor = document.getElementById("tool_color") as HTMLInputElement;
@@ -188,15 +192,28 @@ export class SmokeMain
     /** Populates PlayerId, Party and SceneReady */
     private async BuildUserCache()
     {
-        const [userId, players, isSceneReady] = await Promise.all([
+        const [userId, userName, userColor, players, isSceneReady] = await Promise.all([
             OBR.player.getId(),
+            OBR.player.getName(),
+            OBR.player.getColor(),
             OBR.party.getPlayers(),
             OBR.scene.isReady()
         ]);
 
         sceneCache.userId = userId;
+        sceneCache.userName = userName;
+        sceneCache.userColor = userColor;
         sceneCache.players = players;
         sceneCache.ready = isSceneReady;
+
+        await OBR.scene.setMetadata({
+            [`${Constants.EXTENSIONID}/USER-${sceneCache.userId}`]:
+            {
+                role: sceneCache.role,
+                name: sceneCache.userName,
+                color: sceneCache.userColor
+            }
+        });
     }
 
     public async UpdateUI()
@@ -213,7 +230,6 @@ export class SmokeMain
             this.fowCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
             this.doorCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/playerDoors`] == true;
             this.fowColor!.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
-            this.qualityOption!.value = sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] as string ?? "accurate";
             debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
         }
 
@@ -391,7 +407,7 @@ export class SmokeMain
         }
         else
         {
-            this.SetupPlayerElements();
+            await this.SetupPlayerElements();
             Utilities.TestEnvironment();
         }
 
@@ -403,6 +419,10 @@ export class SmokeMain
             {
                 await updateMaps(this.mapAlign!);
             }
+            else
+            {
+                this.UpdatePlayerVisionList(sceneCache.items);
+            }
         }
         else if (role == "GM")
         {
@@ -410,12 +430,12 @@ export class SmokeMain
             await this.UpdateUI();
         }
         // This needs to be last to avoid getting blasted by all the Initialization
-        SetupOBROnChangeHandlers(role);
+        SetupOBROnChangeHandlers();
         this.HighlightWhatsNew();
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.22");
+export const SMOKEMAIN = new SmokeMain("2.3");
 OBR.onReady(async () =>
 {
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings

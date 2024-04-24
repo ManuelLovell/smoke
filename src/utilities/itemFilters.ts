@@ -1,4 +1,4 @@
-import { Item, Image } from "@owlbear-rodeo/sdk";
+import { Item } from "@owlbear-rodeo/sdk";
 import { Constants } from "./constants";
 import { sceneCache } from "./globals";
 

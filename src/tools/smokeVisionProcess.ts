@@ -1,4 +1,4 @@
-import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, isPath, Path } from "@owlbear-rodeo/sdk";
+import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, isPath, Path, Player } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
 import { Timer } from "../utilities/debug";
@@ -18,7 +18,6 @@ var busy = false;
 
 // dev setting to enable debug visualisations
 export const enableVisionDebug = false;
-
 
 // This is the function responsible for computing the shadows and the FoW
 async function ComputeShadow(eventDetail: Detail)
@@ -266,9 +265,12 @@ async function ComputeShadow(eventDetail: Detail)
     {
         const token = tokensWithVision[i];
         const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`];
-        const gmIds = sceneCache.players.filter(x => x.role == "GM");
+        //const gmIds = sceneCache.players.filter(x => x.role == "GM");
         const myToken = (sceneCache.userId === tokensWithVision[i].createdUserId);
-        const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
+        //const gmToken = gmIds.some(x => x.id == tokensWithVision[i].createdUserId);
+
+        const tokenOwner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${tokensWithVision[i].createdUserId}`] as Player;
+        const gmToken = tokenOwner?.role === "GM";
 
         if (isTorch(token))
         {
@@ -353,13 +355,12 @@ async function ComputeShadow(eventDetail: Detail)
     // This... should just work.. the logic seems sound.
     // During testing I ran into issues joining the paths together where it seemed to create overlapping paths with the union that would end up cutting holes in the path instead of filling them.
     // I can no longer replicate it, but I had turned this code path on, got 2 tokens, and just move them around next to eachother after a fog refresh, and it soon glitched.
-    let enableReuseFog = persistenceEnabled && sceneCache.metadata[`${Constants.EXTENSIONID}/quality`] == 'fast';
     let reuseFog: Image[] = [];
     let reuseNewFog: any;
     let oldPath: any = null;
 
     // Reuse a single (but insanely complex) path to avoid overhead of lots of fog items
-    if (enableReuseFog)
+    if (persistenceEnabled)
     {
         // Reuse the same localItem and change the path.
         reuseFog = localItemCache.filter(item => isVisionFog(item));
@@ -391,7 +392,7 @@ async function ComputeShadow(eventDetail: Detail)
 
     // Iterate over each of the fog paths (per token), and either:
     //   Add them to the list of fog items to add to the scene, deduplicating based on a hash of the fog path,
-    //   or, if persistence/enableReuseFog is enabled, then add the paths to a single path to reuse the existing fog item in the scene.
+    //   or, if persistence/persistenceEnabled is enabled, then add the paths to a single path to reuse the existing fog item in the scene.
 
     for (const key of Object.keys(itemsPerPlayer) as any)
     {
@@ -409,7 +410,7 @@ async function ComputeShadow(eventDetail: Detail)
 
         if (dedup.length === 0)
         {
-            if (enableReuseFog)
+            if (persistenceEnabled)
             {
                 reuseNewFog.add(item, PathKit.PathOp.UNION);
             } else
@@ -443,7 +444,7 @@ async function ComputeShadow(eventDetail: Detail)
     }
 
     const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
-    if (enableReuseFog)
+    if (persistenceEnabled)
     {
         const newPath = reuseNewFog.resolve();
         newPath.setFillType(PathKit.FillType.EVENODD);
@@ -504,7 +505,7 @@ async function ComputeShadow(eventDetail: Detail)
     // Hard to measure the impact, however it appears to cut about 20ms per token that didnt move since we last updated the fog.
     // This becomes unnecessary if we can get the other code path working to join all the fog items into a single path.
     //
-    // This has become somewhat irrelevant for two reasons: we're using scene.local which doesnt have this performance hit, and enableReuseFog bypasses this completely
+    // This has become somewhat irrelevant for two reasons: we're using scene.local which doesnt have this performance hit, and persistenceEnabled bypasses this completely
 
     const oldFog = localItemCache.filter((item) =>
     {
@@ -824,12 +825,18 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     awaitTimer.start(); awaitTimer.pause();
     computeTimer.start();
 
-    // How much overhead is all this?
-
-    const gmPlayers = sceneCache.players.filter(x => x.role == "GM");
-    const gmTokens = sceneCache.items.filter(item => (item.layer == "CHARACTER" || item.layer == "ATTACHMENT") && gmPlayers.some(gm => item.createdUserId === gm.id)
-        && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
-        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`]);
+    // Only check characters and attachments
+    const gmTokens: Item[] = [];
+    const filteredItems = sceneCache.items.filter(item => (item.layer == "CHARACTER" || item.layer == "ATTACHMENT"));
+    for (const fItem of filteredItems)
+    {
+        // Only check items with vision
+        if ((fItem.metadata[`${Constants.EXTENSIONID}/hasVision`] || fItem.metadata[`${Constants.ARMINDOID}/hasVision`]) && !fItem.metadata[`${Constants.EXTENSIONID}/visionBlind`])
+        {
+            const tokenOwner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${fItem.createdUserId}`] as Player;
+            if (tokenOwner?.role === "GM") gmTokens.push(fItem);
+        }
+    }
 
     const allTokensWithVision = (sceneCache.role == "GM") ? sceneCache.items.filter(isTokenWithVision) : sceneCache.items.filter(isTokenWithVisionIOwn).concat(gmTokens);
 
@@ -875,8 +882,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     {
         const mapHeight = document.getElementById("mapHeight")! as HTMLInputElement;
         const mapWidth = document.getElementById("mapWidth")! as HTMLInputElement;
-        mapWidth.value = (Math.round(size[0]) / sceneCache.gridDpi).toString();
-        mapHeight.value = (Math.round(size[1]) / sceneCache.gridDpi).toString();
+        if (mapWidth) mapWidth.value = (Math.round(size[0]) / sceneCache.gridDpi).toString();
+        if (mapHeight) mapHeight.value = (Math.round(size[1]) / sceneCache.gridDpi).toString();
     }
 
     // Check if any values have changed and a re-draw is necessary

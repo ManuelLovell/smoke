@@ -68,6 +68,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .fillColor("#000000")
             .layer("DRAWING")
             .name("Vision Line (Polygon)")
+            .locked(true)
             .build();
 
         interaction = await OBR.interaction.startItemInteraction(polygon);

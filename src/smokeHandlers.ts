@@ -1,10 +1,10 @@
-import OBR, { Item, Image, ItemFilter, Player, Metadata } from "@owlbear-rodeo/sdk";
+import OBR, { Item, Image, ItemFilter, Player, Metadata, Path } from "@owlbear-rodeo/sdk";
 import Coloris from "@melloware/coloris";
 import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
 import { sceneCache } from "./utilities/globals";
 import { Constants } from "./utilities/constants";
-import { isAnyFog, isTrailingFog } from "./utilities/itemFilters";
+import { isAnyFog, isIndicatorRing, isTrailingFog, isVisionLine } from "./utilities/itemFilters";
 import { importFog, updateMaps } from "./tools/import";
 import { InitializeScene } from "./smokeInitializeScene";
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
@@ -15,7 +15,7 @@ import { setupAutohideMenus } from "./smokeSetupContextMenus";
 import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "./tools/visionLineMode";
 import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "./tools/visionPolygonMode";
 
-export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
+export function SetupOBROnChangeHandlers()
 {
     //////////////////
     /// SCENE CHANGES
@@ -37,9 +37,9 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
             await OnSceneDataChange();
 
             //Reinstate Handlers
-            SetupOBROnChangeHandlers(sceneCache.role);
+            SetupOBROnChangeHandlers();
         }
-        else if (role == "GM")
+        else if (sceneCache.role == "GM")
         {
             sceneCache.initialized = false;
             await SMOKEMAIN.UpdateUI();
@@ -86,7 +86,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
 
         if (sceneCache.ready)
         {
-            if (role == "GM")
+            if (sceneCache.role == "GM")
             {
                 await SMOKEMAIN.UpdateUI();
                 await updateMaps(SMOKEMAIN.mapAlign!);
@@ -103,6 +103,7 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
     //////////////////
     const playerHandler = OBR.player.onChange(async (player: Player) =>
     {
+        if (sceneCache.userColor !== player.color) sceneCache.userColor = player.color;
         if (sceneCache.role !== player.role)
         {
             sceneCache.role = player.role;
@@ -111,8 +112,20 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
                 await OBR.action.setHeight(510);
                 await OBR.action.setWidth(420);
             }
+            // Using this to track offline player role status
+            await OBR.scene.setMetadata({
+                [`${Constants.EXTENSIONID}/USER-${sceneCache.userId}`]:
+                {
+                    role: sceneCache.role,
+                    name: sceneCache.userName,
+                    color: sceneCache.userColor
+                }
+            });
+
             await SMOKEMAIN.SoftReset(sceneCache.role);
+            if (sceneCache.role === "PLAYER") SMOKEMAIN.UpdatePlayerVisionList(sceneCache.items);
         }
+
         const tokens = document.querySelectorAll(".token-table-entry");
         for (let token of tokens)
         {
@@ -153,13 +166,13 @@ export function SetupOBROnChangeHandlers(role: "GM" | "PLAYER")
         {
             CancelPolyDrawing();
         }
-        
+
     });
 
     const partyHandler = OBR.party.onChange(async (players) =>
     {
         sceneCache.players = players;
-        if (role === "PLAYER")
+        if (sceneCache.role === "PLAYER")
         {
             await RunSpectre(players);
         }
@@ -224,11 +237,9 @@ export function SetupMainHandlers()
         }
 
         const target = event.target as HTMLInputElement;
+
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionEnabled`]: target.checked });
-        if (!target.checked)
-        {
-            await OBR.scene.fog.setFilled(false);
-        }
+        await OBR.scene.fog.setFilled(target.checked);
     };
 
     // This is for the grid-snap option
@@ -301,15 +312,6 @@ export function SetupMainHandlers()
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/playerDoors`]: target.checked });
     };
 
-    // Toggles the Quality mode
-    SMOKEMAIN.qualityOption!.onchange = async (event: Event) =>
-    {
-        if (!event || !event.target) return;
-        const target = event.target as HTMLInputElement;
-
-        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/quality`]: target.value });
-    };
-
     // Resets the map's persistence
     SMOKEMAIN.resetButton!.onclick = async (event: MouseEvent) =>
     {
@@ -337,6 +339,30 @@ export function SetupMainHandlers()
             SMOKEMAIN.debugButton!.value = "Enable Debugging";
         }
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/debug`]: SMOKEMAIN.debugDiv!.style.display === 'grid' ? true : false });
+    };
+
+    SMOKEMAIN.unlockFogButton!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        await OBR.scene.items.updateItems(isVisionLine as ItemFilter<Path>, (paths) =>
+        {
+            for (let path of paths)
+            {
+                path.locked = false;
+            }
+        });
+    };
+
+    SMOKEMAIN.lockFogButton!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        await OBR.scene.items.updateItems(isVisionLine as ItemFilter<Path>, (paths) =>
+        {
+            for (let path of paths)
+            {
+                path.locked = true;
+            }
+        });
     };
 
     // Also have no idea on what this one is.
