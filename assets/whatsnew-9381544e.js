@@ -20,6 +20,8 @@ import{O as n,C as u}from"./constants-418c54cd.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,m=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 4/25</h1>
+        Minor hiccups with the scene not loading before the extension did. Should be resolved. </br>
         <h1>Smoke & Spectre! 4/24</h1>
         'Major' fixes today.
         </br></br> The 'Performance' option was removed. Accurate was no longer needed, and was causing a lot of issues for people who left it on - as the amount of fog shapes that built up over a few hours would bog down processing.
