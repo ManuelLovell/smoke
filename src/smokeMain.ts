@@ -435,22 +435,27 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.3");
+export const SMOKEMAIN = new SmokeMain("2.31");
 OBR.onReady(async () =>
 {
+    // Startup Handler code for delayed Scene Readiness
     const sceneReady = await OBR.scene.isReady();
+
     if (sceneReady === false)
     {
-        setTimeout(async () =>
+        const startup = OBR.scene.onReadyChange(async (ready) =>
         {
-            await StartSmokeAndSpectre();
-        }, 1000);
+            if (ready)
+            {
+                startup(); // Kill startup Handler
+                await StartSmokeAndSpectre();
+            }
+        });
     }
     else
     {
         await StartSmokeAndSpectre();
     }
-
 });
 
 async function StartSmokeAndSpectre(): Promise<void>
