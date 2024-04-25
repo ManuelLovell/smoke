@@ -118,7 +118,7 @@ export class SmokeMain
         this.debugDiv = document.getElementById("debug_div") as HTMLDivElement;
         this.debugButton = document.getElementById("debug_button") as HTMLButtonElement;
         this.backgroundButton = document.getElementById("background_button") as HTMLDivElement;
-        
+
         this.lockFogButton = document.getElementById("lock_button") as HTMLButtonElement;
         this.unlockFogButton = document.getElementById("unlock_button") as HTMLButtonElement;
 
@@ -438,6 +438,23 @@ export class SmokeMain
 export const SMOKEMAIN = new SmokeMain("2.3");
 OBR.onReady(async () =>
 {
+    const sceneReady = await OBR.scene.isReady();
+    if (sceneReady === false)
+    {
+        setTimeout(async () =>
+        {
+            await StartSmokeAndSpectre();
+        }, 1000);
+    }
+    else
+    {
+        await StartSmokeAndSpectre();
+    }
+
+});
+
+async function StartSmokeAndSpectre(): Promise<void>
+{
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings
     const [theme, role] = await Promise.all([
         OBR.theme.getTheme(),
@@ -448,4 +465,4 @@ OBR.onReady(async () =>
     Utilities.SetThemeMode(theme, document);
 
     await SMOKEMAIN.Start(sceneCache.role);
-});
+}
