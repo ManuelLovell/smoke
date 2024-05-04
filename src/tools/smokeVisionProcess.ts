@@ -196,30 +196,28 @@ async function ComputeShadow(eventDetail: Detail)
         for (const polygon of playerPolygons)
         {
             const shape = polygon.fromShape;
-            const cmds = [];
-
-            cmds.push([PathKit.MOVE_VERB, polygon.pointset[0].x, polygon.pointset[0].y]);
-
+            const newPath = PathKit.NewPath();
+            
+            newPath.moveTo(polygon.pointset[0].x, polygon.pointset[0].y);
             for (let j = 1; j < polygon.pointset.length; j++)
             {
-                cmds.push([PathKit.LINE_VERB, polygon.pointset[j].x, polygon.pointset[j].y]);
+                newPath.lineTo(polygon.pointset[j].x, polygon.pointset[j].y);
             }
-            const newPath = PathKit.FromCmds(cmds);
+            newPath.closePath();
 
-            if (shape.style.closed != false)
+            if (shape.style.closed !== false)
             {
-                const shapeCmds = [];
-                shapeCmds.push([PathKit.MOVE_VERB, shape.points[0].x * shape.scale.x + shape.position.x, shape.points[0].y * shape.scale.y + shape.position.y]);
-
+                const shapePath = PathKit.NewPath();
+                shapePath.moveTo(shape.points[0].x * shape.scale.x + shape.position.x, shape.points[0].y * shape.scale.y + shape.position.y);
                 for (let i = 1; i < shape.points.length - 1; i++)
                 {
-                    shapeCmds.push([PathKit.LINE_VERB, shape.points[i].x * shape.scale.x + shape.position.x, shape.points[i].y * shape.scale.y + shape.position.y]);
+                    shapePath.lineTo(shape.points[i].x * shape.scale.x + shape.position.x, shape.points[i].y * shape.scale.y + shape.position.y);
                 }
-
-                const shapePath = PathKit.FromCmds(shapeCmds);
+                shapePath.closePath();
                 newPath.op(shapePath, PathKit.PathOp.DIFFERENCE);
                 shapePath.delete();
             }
+
             pathBuilder.add(newPath, PathKit.PathOp.DIFFERENCE);
             newPath.delete();
         }

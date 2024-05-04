@@ -20,6 +20,16 @@ export function SetupOBROnChangeHandlers()
     //////////////////
     /// SCENE CHANGES
     //////////////////
+
+    // This broadcast channel is solely being used to listen for Persistence Reset calls from the GM(s).
+    const broadcastHandler = OBR.broadcast.onMessage(Constants.RESETID, async (data) =>
+    {
+        if (data.data)
+        {
+            await ResetPersistence();
+        }
+    });
+
     const fogHandler = OBR.scene.fog.onChange(fog =>
     {
         sceneCache.fog = fog;
@@ -57,27 +67,12 @@ export function SetupOBROnChangeHandlers()
     const sceneMetaHandler = OBR.scene.onMetadataChange(async (metadata) =>
     {
         sceneCache.metadata = metadata;
-
-        const lastResetTime = metadata[`${Constants.EXTENSIONID}/triggerReset`] as string;
-        if (lastResetTime !== "" && lastResetTime !== sceneCache.lastReset)
+        if (sceneCache.role === "GM")
         {
-            sceneCache.lastReset = lastResetTime;
-            const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-            await OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
-
-            const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
-            localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
+            await AddBorderIfNoAutoDetect();
+        }
+        if (sceneCache.ready)
             await OnSceneDataChange();
-        }
-        else
-        {
-            if (sceneCache.role === "GM")
-            {
-                await AddBorderIfNoAutoDetect();
-            }
-            if (sceneCache.ready)
-                await OnSceneDataChange();
-        }
     });
 
     const sceneItemsHandler = OBR.scene.items.onChange(async (items) =>
@@ -317,10 +312,7 @@ export function SetupMainHandlers()
     {
         if (!event || !event.target) return;
 
-        // This sends a time snapshot to Reset, which records the last time it was reset.
-        // Reset won't run again if it's the same time snapshot.
-        // This is so you don't have to set the data twice and cause two updates.
-        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/triggerReset`]: new Date().toLocaleTimeString() });
+        OBR.broadcast.sendMessage(Constants.RESETID, true, { destination: "ALL" });
     };
 
     // Turns on debug mode. 
@@ -598,4 +590,14 @@ export function SetupMainHandlers()
         forceAlpha: false,
         el: "#tool_color",
     });
+}
+
+async function ResetPersistence()
+{
+    const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+    await OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
+
+    const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
+    localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
+    await OnSceneDataChange();
 }

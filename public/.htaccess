@@ -55,7 +55,7 @@ RewriteRule . /index.php [L]
 # BEGIN Owlbear
 <IfModule mod_headers.c>
 Header set Access-Control-Allow-Origin "https://www.owlbear.rodeo"
-
+AddType application/wasm wasm
 <FilesMatch "\.(|htm|html)$">
     <IfModule mod_expires.c>
         ExpiresActive Off
@@ -74,3 +74,8 @@ Header set Access-Control-Allow-Origin "https://www.owlbear.rodeo"
 
 </IfModule>
 # END Owlbear
+
+# AddType directive for WebAssembly files
+<IfModule mod_mime.c>
+    AddType application/wasm .wasm
+</IfModule>
