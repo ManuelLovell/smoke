@@ -45,8 +45,8 @@ function GetRectFromPoints(p1: Vector2, r1: number, p2: Vector2, r2: number): Ve
     p1p1 = Math2.add(p1p1, Math2.multiply(direction, r1));
     p1p2 = Math2.add(p1p2, Math2.multiply(direction, r1));
 
-    p2p1 = Math2.add(p2p1, Math2.multiply(direction, 0-r2));
-    p2p2 = Math2.add(p2p2, Math2.multiply(direction, 0-r2));
+    p2p1 = Math2.add(p2p1, Math2.multiply(direction, 0 - r2));
+    p2p2 = Math2.add(p2p2, Math2.multiply(direction, 0 - r2));
 
     return [p1p1, p1p2, p2p2, p2p1];
 }
@@ -82,7 +82,6 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     let polygons: Polygon[][] = [];
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
-    const gmIds = BSCACHE.party.filter(x => x.role === "GM");
 
     const corners = [
         { x: (width + offset[0]) * scale[0], y: offset[1] * scale[1] },
@@ -99,7 +98,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
     // Now witness the firepower of this fully armed and operational battlestation:
     let cullingDebugPath;
-    if (BSCACHE.enableVisionDebug) {
+    if (BSCACHE.enableVisionDebug)
+    {
         cullingDebugPath = PathKit.NewPath();
     }
 
@@ -136,7 +136,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
             visionRange = gridDpi * ((visionRangeMeta) / BSCACHE.gridScale + 0.5);
         }
 
-        const torchBounds:Vector2[][] = [];
+        const torchBounds: Vector2[][] = [];
         if (sceneHasTorches && !isTorch(token))
         {
             for (const torch of tokensWithVision)
@@ -147,7 +147,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
                     // use the token vision range to potentially skip any obstruction lines out of range:
                     let torchVisionRange = 1000 * BSCACHE.gridDpi;
-                    if (torchVisionRangeMeta) {
+                    if (torchVisionRangeMeta)
+                    {
                         torchVisionRange = BSCACHE.gridDpi * ((torchVisionRangeMeta) / BSCACHE.gridScale + .5);
                     }
 
@@ -155,7 +156,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                     const torchBoundingRect = GetRectFromPoints(token.position, visionRange, torch.position, torchVisionRange);
                     torchBounds.push(torchBoundingRect);
 
-                    if (BSCACHE.enableVisionDebug) {
+                    if (BSCACHE.enableVisionDebug)
+                    {
                         let path = PathKit.NewPath();
                         path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
                             .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
@@ -163,7 +165,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                             .lineTo(torchBoundingRect[3].x, torchBoundingRect[3].y)
                             .closePath();
 
-                        const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+                        const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
                         OBR.scene.local.addItems([debugPath]);
                         path.delete();
                     }
@@ -214,8 +216,10 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
 
             // if the token we're calculating is not a torch, then check torch occlusion based on the bounding triangles
-            if (skip && sceneHasTorches && !isTorch(token)) {
-                for (const bounds of torchBounds) {
+            if (skip && sceneHasTorches && !isTorch(token))
+            {
+                for (const bounds of torchBounds)
+                {
                     if (CheckLineOcclusionByPoly([line.startPosition, line.endPosition], bounds))
                     {
                         skip = false;
@@ -226,7 +230,8 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
             if (skip)
             {
-                if (BSCACHE.enableVisionDebug) {
+                if (BSCACHE.enableVisionDebug)
+                {
                     cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
                 }
                 skipCounter++;
@@ -286,7 +291,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
             if (options1.length === 0 || options2.length === 0)
             {
                 continue;
-            } 
+            }
 
             if (options1.length == 1 || squareDistance(options1[0], line.startPosition) < squareDistance(options1[1], line.startPosition))
                 proj1 = options1[0];
@@ -338,7 +343,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     {
         console.log('skip', skipCounter, 'lines', lineCounter);
 
-        const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({[`${Constants.EXTENSIONID}/debug`]: true}).build();
+        const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
         OBR.scene.local.addItems([debugPath]);
 
         cullingDebugPath.delete();

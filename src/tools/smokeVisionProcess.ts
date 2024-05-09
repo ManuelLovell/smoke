@@ -111,7 +111,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     // Check if any values have changed and a re-draw is necessary
     const sVisionShapes = JSON.stringify(visionShapes);
     const sAutohideItems = JSON.stringify(autoHideItems);
-    const sPlayersWithVision = JSON.stringify(ALLVISIONTOKENS);
+    const sPlayersWithVision = JSON.stringify(TOKENSVIEWABLE);
     const sBackgroundImage = JSON.stringify(backgroundImage);
 
     if (BSCACHE.previousMap === sBackgroundImage
@@ -234,7 +234,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     computeTimer.resume();
 
     const shouldComputeVision = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionEnabled`] === true;
-    if (!shouldComputeVision || ALLVISIONTOKENS.length == 0)
+    if (!shouldComputeVision || TOKENSVIEWABLE.length == 0)
     {
         // Clear fog
         const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
@@ -254,7 +254,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
     // Create polygons containing the individual shadows cast by a vision line from the point of view of one player.
     // Array of players, array of cast lines
-    const polygons: Polygon[][] = CreatePolygons(obstructionLines, ALLVISIONTOKENS, width, height, mapOffset as any, mapScale as any);
+    const polygons: Polygon[][] = CreatePolygons(obstructionLines, TOKENSVIEWABLE, width, height, mapOffset as any, mapScale as any);
 
     if (polygons.length == 0)
     {
@@ -282,7 +282,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
     async function ProcessPlayer()
     {
-        const playerToken = ALLVISIONTOKENS[currentProcess];
+        const playerToken = TOKENSVIEWABLE[currentProcess];
 
         let cacheResult = BSCACHE.playerShadowCache.getValue(playerToken.id);
 
@@ -295,7 +295,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             itemsPerPlayer[currentProcess] = cachedPath;
             cacheHits++;
 
-            if (currentProcess === (ALLVISIONTOKENS.length - 1))
+            if (currentProcess === (TOKENSVIEWABLE.length - 1))
             {
                 await CompleteProcess(stages);
                 return;
@@ -375,7 +375,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
                             pPathBuilder.delete();
 
-                            if (currentProcess === (ALLVISIONTOKENS.length - 1))
+                            if (currentProcess === (TOKENSVIEWABLE.length - 1))
                                 await CompleteProcess(stages);
                             else
                             {
@@ -408,13 +408,13 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
          * Then if a player has line of sight to a torch, include it's vision path.
          */
 
-        for (let i = 0; i < ALLVISIONTOKENS.length; i++)
+        for (let i = 0; i < TOKENSVIEWABLE.length; i++)
         {
-            const token = ALLVISIONTOKENS[i];
+            const token = TOKENSVIEWABLE[i];
             const visionRangeMeta = token.metadata[`${Constants.EXTENSIONID}/visionRange`] as number;
-            const myToken = (BSCACHE.playerId === ALLVISIONTOKENS[i].createdUserId);
+            const myToken = (BSCACHE.playerId === TOKENSVIEWABLE[i].createdUserId);
 
-            const tokenOwner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${ALLVISIONTOKENS[i].createdUserId}`] as Player;
+            const tokenOwner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${TOKENSVIEWABLE[i].createdUserId}`] as Player;
             const gmToken = tokenOwner?.role === "GM";
 
             if (isTorch(token))
@@ -559,7 +559,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                     reuseNewFog.add(item, PathKit.PathOp.UNION);
                 } else
                 {
-                    itemsToAdd.push({ cmds: item.toCmds(), visible: false, zIndex: 3, playerId: ALLVISIONTOKENS[key].id, digest: digest });
+                    itemsToAdd.push({ cmds: item.toCmds(), visible: false, zIndex: 3, playerId: TOKENSVIEWABLE[key].id, digest: digest });
                 }
             } else
             {
