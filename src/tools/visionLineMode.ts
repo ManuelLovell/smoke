@@ -1,6 +1,6 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve, buildLabel, buildShape } from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
-import { sceneCache } from "../utilities/globals";
+import { Constants } from "../utilities/bsConstants";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 let interaction: [any, any] | [any] | null = null;
 
@@ -63,9 +63,9 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         const line = buildCurve()
             .tension(0)
             .points([event.pointerPosition, event.pointerPosition])
-            .strokeColor(sceneCache.metadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(sceneCache.metadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(sceneCache.metadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer("DRAWING")
@@ -104,9 +104,9 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     const [update] = interaction;
 
     // Snap to the grid with light sensitivity
-    const snapVar = Math.round(sceneCache.gridDpi / sceneCache.gridSnap);
-    const nearGridX = Math.round(event.pointerPosition.x / sceneCache.gridDpi) * sceneCache.gridDpi;
-    const nearGridY = Math.round(event.pointerPosition.y / sceneCache.gridDpi) * sceneCache.gridDpi;
+    const snapVar = Math.round(BSCACHE.gridDpi / BSCACHE.gridSnap);
+    const nearGridX = Math.round(event.pointerPosition.x / BSCACHE.gridDpi) * BSCACHE.gridDpi;
+    const nearGridY = Math.round(event.pointerPosition.y / BSCACHE.gridDpi) * BSCACHE.gridDpi;
     const absoluteX = Math.abs(nearGridX - event.pointerPosition.x);
     const absoluteY = Math.abs(nearGridY - event.pointerPosition.y);
 
@@ -133,7 +133,7 @@ function onToolMove(_: ToolContext, event: ToolEvent)
 
     update((line: Curve) =>
     {
-        line.points[line.points.length - 1] = sceneCache.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
+        line.points[line.points.length - 1] = BSCACHE.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
     });
 }
 

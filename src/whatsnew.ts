@@ -1,6 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
 import '/src/css/new-style.css'
-import { Constants } from "./utilities/constants";
+import { Constants } from "./utilities/bsConstants";
 
 
 const whatsnew = document.querySelector<HTMLDivElement>('#bs-whatsnew')!;
@@ -28,6 +28,15 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/9</h1>
+        This is the update you were hoping for!
+        </br>
+        </br> I rewrote the cache and processing. You should be seeing a major speed-up with processing (depending on your PC) - but times should at least be cut in half with a potato.
+        </br> With a faster PC, about 90% of the processing time should be shaved off.
+        </br>
+        </br> There might be a few hiccups, but I spent this week writing, re-writing and testing this one so it feels pretty solid. Please give me a ping if you notice something.
+        </br> And if you use this extension a lot, be sure to check the Patreon to show some support (Kind works help, too!)
+        </br>
         <h1>Smoke & Spectre! 5/3</h1>
         Minor update, fixed an issue where Persistence was being reset if the scene metadata was changed by a different extension.
         </br> Also made a few tweaks to squeeze out the fog about 15% faster.
@@ -73,14 +82,6 @@ OBR.onReady(async () =>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
     `;
-    // footer.innerHTML = `
-    // <div id="buttonWrapper">
-    //     <a href="https://www.patreon.com/battlesystem" target="_blank">Patreon!</a>
-    //     <a href="https://discord.gg/ANZKDmWzr6" target="_blank">Discord!</a>
-    //     <a href="https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw" target="_blank">Basic\nTutorial</a>
-    //     <a href="https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP" target="_blank">Advanced\nTutorial</a>
-    // </div>
-    // <div class="close">⤬</div>`;
 
     const closebutton = document.getElementById('closeButton');
     closebutton!.onclick = async () =>

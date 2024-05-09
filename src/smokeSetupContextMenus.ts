@@ -1,5 +1,5 @@
 import OBR, { Item } from "@owlbear-rodeo/sdk";
-import { Constants } from "./utilities/constants";
+import { Constants } from "./utilities/bsConstants";
 import { createLocalDoor, removeLocalDoor } from "./tools/doorTool";
 
 export async function SetupContextMenus(): Promise<void>
@@ -328,7 +328,7 @@ export async function SetupContextMenus(): Promise<void>
     });
 }
 
-export async function setupAutohideMenus(show: boolean): Promise<void>
+export async function SetupAutohideMenus(show: boolean): Promise<void>
 {
     if (show)
     {

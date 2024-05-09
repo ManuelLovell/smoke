@@ -1,7 +1,7 @@
 import OBR, { Command, Image, Curve, ItemFilter, PathCommand, ToolContext, ToolEvent, Vector2, buildCurve, buildPath } from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
-import { sceneCache } from "../utilities/globals";
+import { Constants } from "../utilities/bsConstants";
 import { isBrushSquare } from "../utilities/itemFilters";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 interface PointLine
 {
@@ -62,15 +62,15 @@ async function onDragCancel(_: ToolContext, _event: ToolEvent)
 
 async function GetGridSquare(coords: Vector2)
 {
-    const trueCoords: Vector2 = { x: Math.floor(coords.x / sceneCache.gridDpi), y: Math.floor(coords.y / sceneCache.gridDpi) };
+    const trueCoords: Vector2 = { x: Math.floor(coords.x / BSCACHE.gridDpi), y: Math.floor(coords.y / BSCACHE.gridDpi) };
 
     const inList = currentTrack.some((pos) => pos.x === trueCoords.x && pos.y === trueCoords.y);
     if (!inList)
     {
-        const topLeft: Vector2 = { x: trueCoords.x * sceneCache.gridDpi, y: trueCoords.y * sceneCache.gridDpi };
-        const topRight: Vector2 = { x: (trueCoords.x + 1) * sceneCache.gridDpi, y: trueCoords.y * sceneCache.gridDpi };
-        const bottomLeft: Vector2 = { x: trueCoords.x * sceneCache.gridDpi, y: (trueCoords.y + 1) * sceneCache.gridDpi };
-        const bottomRight: Vector2 = { x: (trueCoords.x + 1) * sceneCache.gridDpi, y: (trueCoords.y + 1) * sceneCache.gridDpi };
+        const topLeft: Vector2 = { x: trueCoords.x * BSCACHE.gridDpi, y: trueCoords.y * BSCACHE.gridDpi };
+        const topRight: Vector2 = { x: (trueCoords.x + 1) * BSCACHE.gridDpi, y: trueCoords.y * BSCACHE.gridDpi };
+        const bottomLeft: Vector2 = { x: trueCoords.x * BSCACHE.gridDpi, y: (trueCoords.y + 1) * BSCACHE.gridDpi };
+        const bottomRight: Vector2 = { x: (trueCoords.x + 1) * BSCACHE.gridDpi, y: (trueCoords.y + 1) * BSCACHE.gridDpi };
 
         const fillSquareCommands: PathCommand[] = [
             [Command.MOVE, topLeft.x, topLeft.y],
@@ -80,7 +80,7 @@ async function GetGridSquare(coords: Vector2)
             [Command.CLOSE]
         ];
 
-        const filledSquare = buildPath().commands(fillSquareCommands).strokeOpacity(0).fillOpacity(.5).fillColor(sceneCache.metadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR).build();
+        const filledSquare = buildPath().commands(fillSquareCommands).strokeOpacity(0).fillOpacity(.5).fillColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR).build();
         filledSquare.metadata[`${Constants.EXTENSIONID}/isBrushSquare`] = true;
         currentTrack.push(trueCoords);
         await OBR.scene.local.addItems([filledSquare]);
@@ -95,10 +95,10 @@ async function GenerateSmallLines()
     {
         const { x, y } = square;
 
-        const topLeft: Vector2 = { x: x * sceneCache.gridDpi, y: y * sceneCache.gridDpi };
-        const topRight: Vector2 = { x: (x + 1) * sceneCache.gridDpi, y: y * sceneCache.gridDpi };
-        const bottomLeft: Vector2 = { x: x * sceneCache.gridDpi, y: (y + 1) * sceneCache.gridDpi };
-        const bottomRight: Vector2 = { x: (x + 1) * sceneCache.gridDpi, y: (y + 1) * sceneCache.gridDpi };
+        const topLeft: Vector2 = { x: x * BSCACHE.gridDpi, y: y * BSCACHE.gridDpi };
+        const topRight: Vector2 = { x: (x + 1) * BSCACHE.gridDpi, y: y * BSCACHE.gridDpi };
+        const bottomLeft: Vector2 = { x: x * BSCACHE.gridDpi, y: (y + 1) * BSCACHE.gridDpi };
+        const bottomRight: Vector2 = { x: (x + 1) * BSCACHE.gridDpi, y: (y + 1) * BSCACHE.gridDpi };
 
         if (!currentTrack.some(sq => sq.x === x && sq.y === y - 1))
         {
@@ -261,9 +261,9 @@ function GetLine(lines: PointLine[]): Curve[]
         const line = buildCurve()
             .tension(0)
             .points([ln.Start, ln.End])
-            .strokeColor(sceneCache.metadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(sceneCache.metadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(sceneCache.metadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer("DRAWING")

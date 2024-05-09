@@ -1,19 +1,19 @@
-import OBR, { Item, Player, isImage } from "@owlbear-rodeo/sdk";
-import { sceneCache } from './utilities/globals';
-import { isTokenWithVisionForUI } from './utilities/itemFilters';
+import OBR, { Item, Image, ItemFilter, isImage } from "@owlbear-rodeo/sdk";
+import { isAnyFog, isTokenWithVisionForUI } from './utilities/itemFilters';
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
-import { Constants } from "./utilities/constants";
+import { Constants } from "./utilities/bsConstants";
 import { SetupSpectreGM } from "./spectreMain";
-import { updateMaps } from "./tools/import";
-import { SetupMainHandlers, SetupOBROnChangeHandlers } from "./smokeHandlers";
+import { SetupInputHandlers } from "./smokeHandlers";
 import { AddUnitVisionUI } from "./smokeVisionUI";
 import { InitializeScene } from "./smokeInitializeScene";
-import { SetupContextMenus, setupAutohideMenus } from "./smokeSetupContextMenus";
+import { SetupContextMenus, SetupAutohideMenus } from "./smokeSetupContextMenus";
 import { SetupTools } from "./smokeSetupTools";
-import * as Utilities from "./utilities/utilities";
+import * as Utilities from "./utilities/bsUtilities";
 import "./css/style.css";
 import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
+import { BSCACHE } from "./utilities/bsSceneCache";
+import { UpdateMaps } from "./tools/import";
 
 export class SmokeMain
 {
@@ -137,7 +137,7 @@ export class SmokeMain
         // Setup Player Owner Context Menu
         const playerContextMenu = document.getElementById("playerListing")!;
         playerContextMenu.appendChild(this.GetEmptyContextItem());
-        for (const player of sceneCache.players)
+        for (const player of BSCACHE.party)
         {
             const listItem = document.createElement("li");
             listItem.id = player.id;
@@ -184,53 +184,38 @@ export class SmokeMain
     public GetEmptyContextItem()
     {
         const listItem = document.createElement("li");
-        listItem.id = sceneCache.userId;
+        listItem.id = BSCACHE.playerId;
         listItem.textContent = "Self";
         return listItem;
     }
 
-    /** Populates PlayerId, Party and SceneReady */
-    private async BuildUserCache()
+
+
+    public async ResetPersistence()
     {
-        const [userId, userName, userColor, players, isSceneReady] = await Promise.all([
-            OBR.player.getId(),
-            OBR.player.getName(),
-            OBR.player.getColor(),
-            OBR.party.getPlayers(),
-            OBR.scene.isReady()
-        ]);
+        const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+        await OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
 
-        sceneCache.userId = userId;
-        sceneCache.userName = userName;
-        sceneCache.userColor = userColor;
-        sceneCache.players = players;
-        sceneCache.ready = isSceneReady;
-
-        await OBR.scene.setMetadata({
-            [`${Constants.EXTENSIONID}/USER-${sceneCache.userId}`]:
-            {
-                role: sceneCache.role,
-                name: sceneCache.userName,
-                color: sceneCache.userColor
-            }
-        });
+        const sceneId = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/sceneId`];
+        localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${BSCACHE.playerId}/${sceneId}`);
+        await OnSceneDataChange();
     }
 
     public async UpdateUI()
     {
-        const playersWithVision = sceneCache.items.filter(item => isTokenWithVisionForUI(item));
+        const playersWithVision = BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item));
         let debug = false;
 
-        if (!Utilities.isObjectEmpty(sceneCache.metadata))
+        if (!Utilities.isObjectEmpty(BSCACHE.sceneMetadata))
         {
-            this.visionCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
-            this.autodetectCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
-            this.persistenceCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
-            this.autodetectCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
-            this.fowCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
-            this.doorCheckbox!.checked = sceneCache.metadata[`${Constants.EXTENSIONID}/playerDoors`] == true;
-            this.fowColor!.value = (sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] ? sceneCache.metadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
-            debug = sceneCache.metadata[`${Constants.EXTENSIONID}/debug`] == true;
+            this.visionCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionEnabled`] == true;
+            this.autodetectCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
+            this.persistenceCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistenceEnabled`] == true;
+            this.autodetectCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autodetectEnabled`] == true;
+            this.fowCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/fowEnabled`] == true;
+            this.doorCheckbox!.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] == true;
+            this.fowColor!.value = (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/fowColor`] ? BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/fowColor`] : "#00000088") as string;
+            debug = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/debug`] == true;
         }
 
         this.debugDiv!.style.display = debug ? 'grid' : 'none';
@@ -238,7 +223,7 @@ export class SmokeMain
         this.boundryOptions!.style.display = this.autodetectCheckbox!.checked ? "none" : "";
         this.message!.style.display = playersWithVision.length > 0 ? "none" : "block";
 
-        const fogBackgrounds = sceneCache.items.filter((item) => item.layer === "FOG" && item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true);
+        const fogBackgrounds = BSCACHE.sceneItems.filter((item) => item.layer === "FOG" && item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true);
         const fogBackgroundEntries = document.querySelectorAll(".fog-background-entry");
 
         for (const background of fogBackgroundEntries)
@@ -314,9 +299,9 @@ export class SmokeMain
         }
     }
 
-    public UpdatePlayerProcessUI(players: Player[])
+    public UpdatePlayerProcessUI()
     {
-        const playersProcessed = players.every(player => player.metadata[`${Constants.EXTENSIONID}/processed`] === true);
+        const playersProcessed = BSCACHE.party.every(player => player.metadata[`${Constants.EXTENSIONID}/processed`] === true);
         if (playersProcessed)
         {
             this.processedIndicator!.style.backgroundColor = "green";
@@ -328,13 +313,14 @@ export class SmokeMain
             this.processedIndicator!.title = "A player is having trouble processing/seeing.";
         }
     }
-    public UpdatePlayerVisionList(items: Item[])
+
+    public UpdatePlayerVisionList()
     {
         const itemListHTML: string[] = [];
 
-        for (const item of items) 
+        for (const item of BSCACHE.sceneItems) 
         {
-            if (isImage(item) && item.createdUserId === sceneCache.userId)
+            if (isImage(item) && item.createdUserId === BSCACHE.playerId)
             {
                 const visionEnabled = item.metadata[`${Constants.EXTENSIONID}/hasVision`] !== undefined;
                 itemListHTML.push(`<li>${item.name}${!visionEnabled ? ': <b>Vision Disabled</b>' : ''}</li>`);
@@ -354,18 +340,21 @@ export class SmokeMain
         }
     }
 
-    public async SoftReset(role: "GM" | "PLAYER")
+    public async SoftReset()
     {
-        if (role === "GM")
+        if (BSCACHE.playerRole === "GM")
         {
             this.SetupGMElements();
-            SetupMainHandlers();
-            this.UpdatePlayerProcessUI(sceneCache.players);
+            SetupInputHandlers();
+            this.UpdatePlayerProcessUI();
+            UpdateMaps(this.mapAlign!);
 
             await Promise.all([
                 SetupContextMenus(),
                 SetupTools(),
                 SetupSpectreGM(),
+                SetupAutohideMenus(false),
+                this.UpdateUI()
             ]);
         }
         else
@@ -373,73 +362,54 @@ export class SmokeMain
             this.SetupPlayerElements();
         }
 
-        if (sceneCache.ready)
+        if (BSCACHE.sceneReady)
         {
             await InitializeScene();
             await OnSceneDataChange();
-            if (role == "GM")
-            {
-                await updateMaps(this.mapAlign!);
-            }
-        }
-        if (role == "GM")
-        {
-            setupAutohideMenus(false);
-            await this.UpdateUI();
         }
     }
 
-    public async Start(role: "GM" | "PLAYER")
+    public async Start()
     {
-        await this.BuildUserCache();
-        if (role === "GM")
+        Utilities.TestEnvironment();
+        if (BSCACHE.playerRole === "GM")
         {
             this.SetupGMElements();
-            SetupMainHandlers();
-            this.UpdatePlayerProcessUI(sceneCache.players);
+            SetupInputHandlers();
+            this.UpdatePlayerProcessUI();
+            UpdateMaps(this.mapAlign!);
 
             await Promise.all([
                 SetupContextMenus(),
                 SetupTools(),
                 SetupSpectreGM(),
+                SetupAutohideMenus(false),
+                this.UpdateUI()
             ]);
-            Utilities.TestEnvironment();
         }
         else
         {
             await this.SetupPlayerElements();
-            Utilities.TestEnvironment();
+            this.UpdatePlayerVisionList();
         }
 
-        if (sceneCache.ready)
-        {
-            await InitializeScene();
-            await OnSceneDataChange();
-            if (role == "GM")
-            {
-                await updateMaps(this.mapAlign!);
-            }
-            else
-            {
-                this.UpdatePlayerVisionList(sceneCache.items);
-            }
-        }
-        else if (role == "GM")
-        {
-            setupAutohideMenus(false);
-            await this.UpdateUI();
-        }
+        await InitializeScene();
+        await OnSceneDataChange();
+
         // This needs to be last to avoid getting blasted by all the Initialization
-        SetupOBROnChangeHandlers();
+        BSCACHE.SetupHandlers();
         this.HighlightWhatsNew();
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.32");
+export const SMOKEMAIN = new SmokeMain("2.33");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness
     const sceneReady = await OBR.scene.isReady();
+
+    const whatsnewpage = document.getElementById('papp');
+    if (whatsnewpage) return;
 
     if (sceneReady === false)
     {
@@ -461,13 +431,6 @@ OBR.onReady(async () =>
 async function StartSmokeAndSpectre(): Promise<void>
 {
     // Set theme accordingly - relies on OBR theme settings and not OS theme settings
-    const [theme, role] = await Promise.all([
-        OBR.theme.getTheme(),
-        OBR.player.getRole()
-    ]);
-    sceneCache.role = role;
-
-    Utilities.SetThemeMode(theme, document);
-
-    await SMOKEMAIN.Start(sceneCache.role);
+    await BSCACHE.InitializeCache();
+    await SMOKEMAIN.Start();
 }

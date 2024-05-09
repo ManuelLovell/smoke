@@ -1,9 +1,9 @@
 import OBR, { buildPath, Vector2, MathM, Math2, Player } from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
-import { sceneCache } from "../utilities/globals";
+import { Constants } from "../utilities/bsConstants";
 import { isTorch } from "../utilities/itemFilters";
 import { comparePosition, squareDistance, isClose, mod } from "../utilities/math";
-import { playerShadowCache, PathKit, enableVisionDebug } from "./smokeVisionProcess";
+import { PathKit } from "./smokeVisionProcess";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 
 function CheckLineOcclusionByPoly(line: Vector2[], poly: Vector2[]): boolean
@@ -82,7 +82,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     let polygons: Polygon[][] = [];
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
-    const gmIds = sceneCache.players.filter(x => x.role === "GM");
+    const gmIds = BSCACHE.party.filter(x => x.role === "GM");
 
     const corners = [
         { x: (width + offset[0]) * scale[0], y: offset[1] * scale[1] },
@@ -92,14 +92,14 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     ];
 
     // Precompute constants
-    const gridDpi = sceneCache.gridDpi;
+    const gridDpi = BSCACHE.gridDpi;
     const extensionId = Constants.EXTENSIONID;
 
     const sceneHasTorches = tokensWithVision.some(isTorch);
 
     // Now witness the firepower of this fully armed and operational battlestation:
     let cullingDebugPath;
-    if (enableVisionDebug) {
+    if (BSCACHE.enableVisionDebug) {
         cullingDebugPath = PathKit.NewPath();
     }
 
@@ -110,17 +110,17 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
     for (const token of tokensWithVision)
     {
-        const myToken = (sceneCache.userId === token.createdUserId);
-        const tokenOwner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+        const myToken = (BSCACHE.playerId === token.createdUserId);
+        const tokenOwner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         const gmToken = tokenOwner?.role === "GM";
 
-        if ((!myToken && sceneCache.role !== "GM") && !gmToken)
+        if ((!myToken && BSCACHE.playerRole !== "GM") && !gmToken)
         {
             continue;
         }
 
         const visionRangeMeta = token.metadata[`${extensionId}/visionRange`];
-        const cacheResult = playerShadowCache.getValue(token.id);
+        const cacheResult = BSCACHE.playerShadowCache.getValue(token.id);
         polygons.push([]);
 
         if (cacheResult !== undefined && comparePosition(cacheResult.player.position, token.position) && cacheResult.player.metadata[`${extensionId}/visionRange`] === visionRangeMeta)
@@ -133,7 +133,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
         if (visionRangeMeta)
         {
-            visionRange = gridDpi * ((visionRangeMeta) / sceneCache.gridScale + 0.5);
+            visionRange = gridDpi * ((visionRangeMeta) / BSCACHE.gridScale + 0.5);
         }
 
         const torchBounds:Vector2[][] = [];
@@ -146,16 +146,16 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                     const torchVisionRangeMeta = torch.metadata[`${Constants.EXTENSIONID}/visionRange`];
 
                     // use the token vision range to potentially skip any obstruction lines out of range:
-                    let torchVisionRange = 1000 * sceneCache.gridDpi;
+                    let torchVisionRange = 1000 * BSCACHE.gridDpi;
                     if (torchVisionRangeMeta) {
-                        torchVisionRange = sceneCache.gridDpi * ((torchVisionRangeMeta) / sceneCache.gridScale + .5);
+                        torchVisionRange = BSCACHE.gridDpi * ((torchVisionRangeMeta) / BSCACHE.gridScale + .5);
                     }
 
                     // Create the bounds of the torch and scale the occlusion radius slightly:
                     const torchBoundingRect = GetRectFromPoints(token.position, visionRange, torch.position, torchVisionRange);
                     torchBounds.push(torchBoundingRect);
 
-                    if (enableVisionDebug) {
+                    if (BSCACHE.enableVisionDebug) {
                         let path = PathKit.NewPath();
                         path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
                             .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
@@ -226,7 +226,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
             if (skip)
             {
-                if (enableVisionDebug) {
+                if (BSCACHE.enableVisionDebug) {
                     cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
                 }
                 skipCounter++;
@@ -334,7 +334,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
         }
     }
 
-    if (enableVisionDebug)
+    if (BSCACHE.enableVisionDebug)
     {
         console.log('skip', skipCounter, 'lines', lineCounter);
 

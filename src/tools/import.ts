@@ -1,14 +1,14 @@
 import OBR, { Image, buildCurve, Vector2 } from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
-import { sceneCache } from '../utilities/globals';
+import { Constants } from "../utilities/bsConstants";
 import { createLocalDoor } from "./doorTool";
 import simplify from "simplify-js";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 type ImportVector2 = Vector2 & { door: boolean };
 
-export async function updateMaps(mapAlign: HTMLSelectElement)
+export function UpdateMaps(mapAlign: HTMLSelectElement)
 {
-    const maps = await OBR.scene.items.getItems((item) => item.layer === "MAP");
+    const maps = BSCACHE.sceneItems.filter((item) => item.layer === "MAP");
     const existingMaps: Record<string, string> = {};
 
     for (let i = 0; i < maps.length; i++)
@@ -47,7 +47,7 @@ export async function importFog(importType: string, importData: any, importDpi: 
         return;
     }
 
-    let dpiRatio = sceneCache.gridDpi / importDpi;
+    let dpiRatio = BSCACHE.gridDpi / importDpi;
     let importMap: Image;
     let offset: number[] = [];
     offset[0] = 0;
@@ -64,7 +64,7 @@ export async function importFog(importType: string, importData: any, importDpi: 
             {
                 importDpi = importMap.grid.dpi;
             }
-            dpiRatio = sceneCache.gridDpi / importDpi;
+            dpiRatio = BSCACHE.gridDpi / importDpi;
             offset[0] = importMap.position.x - (importMap.grid.offset.x * dpiRatio);
             offset[1] = importMap.position.y - (importMap.grid.offset.y * dpiRatio);
         } else

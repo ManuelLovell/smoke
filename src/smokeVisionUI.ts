@@ -1,17 +1,17 @@
-import OBR, { Image, Item, Player, buildShape } from "@owlbear-rodeo/sdk";
-import { Constants } from "./utilities/constants";
-import { sceneCache } from "./utilities/globals";
+import OBR, { Item, Player, buildShape } from "@owlbear-rodeo/sdk";
+import { Constants } from "./utilities/bsConstants";
 import { SMOKEMAIN } from "./smokeMain";
 import { isBackgroundBorder } from "./utilities/itemFilters";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
 export async function AddBorderIfNoAutoDetect()
 {
-    const foundBorder = sceneCache.items.filter(isBackgroundBorder);
-    if (!sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`])
+    const foundBorder = BSCACHE.sceneItems.filter(isBackgroundBorder);
+    if (!BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autodetectEnabled`])
     {
         if (foundBorder.length == 0)
         {
-            let drawing = buildShape().width(sceneCache.gridDpi * 30).height(sceneCache.gridDpi * 30).visible(false).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").strokeOpacity(.5).fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
+            let drawing = buildShape().width(BSCACHE.gridDpi * 30).height(BSCACHE.gridDpi * 30).visible(false).shapeType("RECTANGLE").visible(true).locked(false).strokeColor("pink").strokeOpacity(.5).fillOpacity(0).strokeDash([200, 500]).strokeWidth(50).build() as any;
             drawing.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
             drawing.metadata[`${Constants.EXTENSIONID}/grid`] = true;
             drawing.id = Constants.GRIDID;
@@ -19,7 +19,7 @@ export async function AddBorderIfNoAutoDetect()
         }
     }
 
-    if (sceneCache.metadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autodetectEnabled`] === true
         && foundBorder.length > 0)
     {
         await OBR.scene.items.deleteItems([Constants.GRIDID]);
@@ -67,18 +67,18 @@ export function AddUnitVisionUI(player: Item)
     }
     else
     {
-        const owner = sceneCache.metadata[`${Constants.EXTENSIONID}/USER-${player.createdUserId}`] as Player;
+        const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${player.createdUserId}`] as Player;
         //const owner = sceneCache.players.find(owner => player.createdUserId === owner.id);
         let ownerColor = owner?.color;
         let ownerText = owner?.name ? `This token is owned by ${owner.name}.` : "This token is owned by you.";
 
-        if (!ownerColor && (player.createdUserId !== sceneCache.userId))
+        if (!ownerColor && (player.createdUserId !== BSCACHE.playerId))
         {
             ownerColor = "#aeb0af";
             ownerText = "This tokens owner is not in the room currently.";
         }
 
-        const currentPlayer = sceneCache.items.find(x => x.id === player.id)!;
+        const currentPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
         // Create new item for this token
         const newTr = document.createElement("tr");
         newTr.id = `tr-${currentPlayer.id}`;
@@ -133,7 +133,7 @@ export function AddUnitVisionUI(player: Item)
         {
             if (!event || !event.target) return;
             // Grab from scene to avoid a snapshot of the playerstate
-            const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
 
             const target = event.target as HTMLInputElement;
             const value = parseInt(target.value);
@@ -151,7 +151,7 @@ export function AddUnitVisionUI(player: Item)
         {
             if (!event || !event.target) return;
             // Grab from scene to avoid a snapshot of the playerstate
-            const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
 
             let value = 0;
             const target = event.target as HTMLInputElement;
@@ -175,7 +175,7 @@ export function AddUnitVisionUI(player: Item)
         {
             if (!event || !event.target) return;
             // Grab from scene to avoid a snapshot of the playerstate
-            const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+            const thisPlayer =  BSCACHE.sceneItems.find(x => x.id === player.id)!;
 
             const target = event.target as HTMLInputElement;
             if (target.checked)
@@ -196,7 +196,7 @@ export function AddUnitVisionUI(player: Item)
         {
             if (!event || !event.target) return;
             // Grab from scene to avoid a snapshot of the playerstate
-            const thisPlayer = sceneCache.items.find(x => x.id === player.id)!;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
 
             const target = event.target as HTMLInputElement;
 
@@ -230,7 +230,7 @@ export function AddUnitVisionUI(player: Item)
                 const target = e.target as HTMLUListElement;
 
                 const unitId = contextMenu.getAttribute("currentUnit")!;
-                const newColor = sceneCache.players.find(owner => target.id === owner.id)?.color;
+                const newColor = BSCACHE.party.find(owner => target.id === owner.id)?.color;
                 const tr = document.getElementById(`tr-${unitId}`) as HTMLTableRowElement;
                 const cell = tr.getElementsByClassName("token-name")[0] as HTMLTableCellElement;
                 if (newColor)

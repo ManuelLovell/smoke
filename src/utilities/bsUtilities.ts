@@ -1,5 +1,5 @@
 import { Player, Theme } from "@owlbear-rodeo/sdk";
-import { Constants } from "./constants";
+import { Constants } from "./bsConstants";
 
 export function GetGUID(): string
 {

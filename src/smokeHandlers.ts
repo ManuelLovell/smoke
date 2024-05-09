@@ -1,214 +1,15 @@
-import OBR, { Item, Image, ItemFilter, Player, Metadata, Path } from "@owlbear-rodeo/sdk";
+import OBR, { Item, Image, ItemFilter, Path } from "@owlbear-rodeo/sdk";
 import Coloris from "@melloware/coloris";
-import * as Utilities from "./utilities/utilities";
 import { SMOKEMAIN } from "./smokeMain";
-import { sceneCache } from "./utilities/globals";
-import { Constants } from "./utilities/constants";
-import { isAnyFog, isIndicatorRing, isTrailingFog, isVisionLine } from "./utilities/itemFilters";
-import { importFog, updateMaps } from "./tools/import";
-import { InitializeScene } from "./smokeInitializeScene";
-import { OnSceneDataChange } from './tools/smokeVisionProcess';
-import { toggleDoor } from "./tools/doorTool";
-import { RunSpectre, UpdateSpectreTargets } from "./spectreMain";
+import { Constants } from "./utilities/bsConstants";
+import { isTrailingFog, isVisionLine } from "./utilities/itemFilters";
+import { importFog } from "./tools/import";
 import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
-import { setupAutohideMenus } from "./smokeSetupContextMenus";
-import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "./tools/visionLineMode";
-import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "./tools/visionPolygonMode";
+import { SetupAutohideMenus } from "./smokeSetupContextMenus";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
-export function SetupOBROnChangeHandlers()
-{
-    //////////////////
-    /// SCENE CHANGES
-    //////////////////
 
-    // This broadcast channel is solely being used to listen for Persistence Reset calls from the GM(s).
-    const broadcastHandler = OBR.broadcast.onMessage(Constants.RESETID, async (data) =>
-    {
-        if (data.data)
-        {
-            await ResetPersistence();
-        }
-    });
-
-    const fogHandler = OBR.scene.fog.onChange(fog =>
-    {
-        sceneCache.fog = fog;
-    });
-
-    const readyHandler = OBR.scene.onReadyChange(async (ready) =>
-    {
-        sceneCache.ready = ready;
-        if (ready)
-        {
-            //Turn off all handlers before Initializing a scene to avoid triggering updates with race conditions
-            KillHandlers();
-
-            await InitializeScene();
-            await OnSceneDataChange();
-
-            //Reinstate Handlers
-            SetupOBROnChangeHandlers();
-        }
-        else if (sceneCache.role == "GM")
-        {
-            sceneCache.initialized = false;
-            await SMOKEMAIN.UpdateUI();
-        }
-    });
-
-    const gridHandler = OBR.scene.grid.onChange(async (grid) =>
-    {
-        sceneCache.gridDpi = grid.dpi;
-        sceneCache.gridScale = parseInt(grid.scale);
-        if (sceneCache.ready)
-            await OnSceneDataChange();
-    });
-
-    const sceneMetaHandler = OBR.scene.onMetadataChange(async (metadata) =>
-    {
-        sceneCache.metadata = metadata;
-        if (sceneCache.role === "GM")
-        {
-            await AddBorderIfNoAutoDetect();
-        }
-        if (sceneCache.ready)
-            await OnSceneDataChange();
-    });
-
-    const sceneItemsHandler = OBR.scene.items.onChange(async (items) =>
-    {
-        sceneCache.items = items;
-
-        if (sceneCache.ready)
-        {
-            if (sceneCache.role == "GM")
-            {
-                await SMOKEMAIN.UpdateUI();
-                await updateMaps(SMOKEMAIN.mapAlign!);
-            }
-            else
-            {
-                SMOKEMAIN.UpdatePlayerVisionList(items);
-            }
-            await OnSceneDataChange();
-        }
-    });
-    //////////////////
-    /// PARTY/PLAYER CHANGES
-    //////////////////
-    const playerHandler = OBR.player.onChange(async (player: Player) =>
-    {
-        if (sceneCache.userColor !== player.color) sceneCache.userColor = player.color;
-        if (sceneCache.role !== player.role)
-        {
-            sceneCache.role = player.role;
-            if (sceneCache.role === "GM")
-            {
-                await OBR.action.setHeight(510);
-                await OBR.action.setWidth(420);
-            }
-            // Using this to track offline player role status
-            await OBR.scene.setMetadata({
-                [`${Constants.EXTENSIONID}/USER-${sceneCache.userId}`]:
-                {
-                    role: sceneCache.role,
-                    name: sceneCache.userName,
-                    color: sceneCache.userColor
-                }
-            });
-
-            await SMOKEMAIN.SoftReset(sceneCache.role);
-            if (sceneCache.role === "PLAYER") SMOKEMAIN.UpdatePlayerVisionList(sceneCache.items);
-        }
-
-        const tokens = document.querySelectorAll(".token-table-entry");
-        for (let token of tokens)
-        {
-            let tokenId = token.id.substring(3);
-            if (player.selection !== undefined && player.selection.includes(tokenId))
-            {
-                token.classList.add("token-table-selected");
-            } else
-            {
-                token.classList.remove("token-table-selected");
-            }
-        }
-
-        if (player.selection !== undefined && player.selection.length === 1)
-        {
-            toggleDoor(player.selection[0]);
-        }
-
-        const metadata = player.metadata as Metadata;
-        const lineToolMeta = metadata[`${Constants.EXTENSIONID}/finishLine`] ?? false;
-        if (lineToolMeta === true)
-        {
-            FinishLineDrawing();
-        }
-        const lineToolMetaOther = metadata[`${Constants.EXTENSIONID}/cancelLine`] ?? false;
-        if (lineToolMetaOther === true)
-        {
-            CancelLineDrawing();
-        }
-
-        const polyToolMeta = metadata[`${Constants.EXTENSIONID}/finishPoly`] ?? false;
-        if (polyToolMeta === true)
-        {
-            FinishPolyDrawing();
-        }
-        const polyToolMetaOther = metadata[`${Constants.EXTENSIONID}/cancelPoly`] ?? false;
-        if (polyToolMetaOther === true)
-        {
-            CancelPolyDrawing();
-        }
-
-    });
-
-    const partyHandler = OBR.party.onChange(async (players) =>
-    {
-        sceneCache.players = players;
-        if (sceneCache.role === "PLAYER")
-        {
-            await RunSpectre(players);
-        }
-        else
-        {
-            const playerContextMenu = document.getElementById("playerListing")!;
-            playerContextMenu.innerHTML = "";
-            playerContextMenu.appendChild(SMOKEMAIN.GetEmptyContextItem());
-
-            for (const player of players)
-            {
-                const listItem = document.createElement("li");
-                listItem.id = player.id;
-                listItem.textContent = player.name;
-                listItem.style.color = player.color;
-                playerContextMenu.appendChild(listItem);
-            }
-            UpdateSpectreTargets();
-            SMOKEMAIN.UpdatePlayerProcessUI(players);
-        }
-    });
-
-    const themeHandler = OBR.theme.onChange((theme) =>
-    {
-        Utilities.SetThemeMode(theme, document);
-    });
-
-    function KillHandlers()
-    {
-        themeHandler();
-        partyHandler();
-        playerHandler();
-        sceneItemsHandler();
-        sceneMetaHandler();
-        gridHandler();
-        readyHandler();
-        fogHandler();
-    }
-}
-
-export function SetupMainHandlers()
+export function SetupInputHandlers()
 {
     // Indicator for everyone processing fully
     SMOKEMAIN.processedIndicator!.onclick = async () =>
@@ -225,7 +26,7 @@ export function SetupMainHandlers()
     // The visionCheckbox element is responsible for toggling vision updates
     SMOKEMAIN.visionCheckbox!.onclick = async (event: MouseEvent) =>
     {
-        if (!sceneCache.ready || !event.target)
+        if (!BSCACHE.sceneReady)
         {
             event.preventDefault();
             return;
@@ -241,14 +42,14 @@ export function SetupMainHandlers()
     SMOKEMAIN.snapCheckbox!.checked = true;
     SMOKEMAIN.snapCheckbox!.onclick = async (event: MouseEvent) =>
     {
-        if (!sceneCache.ready || !event.target)
+        if (!BSCACHE.sceneReady)
         {
             event.preventDefault();
             return;
         }
 
         const target = event.target as HTMLInputElement;
-        sceneCache.snap = target.checked;
+        BSCACHE.snap = target.checked;
     };
 
     // Toggles the Settings Window
@@ -294,7 +95,7 @@ export function SetupMainHandlers()
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
-        await setupAutohideMenus(target.checked);
+        await SetupAutohideMenus(target.checked);
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/fowEnabled`]: target.checked });
     };
 
@@ -418,8 +219,7 @@ export function SetupMainHandlers()
 
         if (window.confirm("WARNING: THIS CANNOT BE UNDONE.\n\nThis operation will remove all metadata from the original dynamic fog extension, and will break fog lines and other things if you do not continue using Smoke!.\n\nWARNING: THIS CANNOT BE UNDONE.\n\nAre you REALLY sure?"))
         {
-            const metadata = await OBR.scene.getMetadata();
-            for (const meta in metadata)
+            for (const meta in BSCACHE.sceneMetadata)
             {
                 // Remove the old scene metadata, we dont need any of it
                 if (meta.substring(0, meta.indexOf('/')) == Constants.ARMINDOID)
@@ -428,9 +228,7 @@ export function SetupMainHandlers()
                 }
             }
 
-            const convert_items = await OBR.scene.items.getItems();
-
-            await OBR.scene.items.updateItems(convert_items, items =>
+            await OBR.scene.items.updateItems(BSCACHE.sceneItems, items =>
             {
                 for (const item of items)
                 {
@@ -590,14 +388,4 @@ export function SetupMainHandlers()
         forceAlpha: false,
         el: "#tool_color",
     });
-}
-
-async function ResetPersistence()
-{
-    const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-    await OBR.scene.local.deleteItems(fogItems.map((item) => { return item.id; }));
-
-    const sceneId = sceneCache.metadata[`${Constants.EXTENSIONID}/sceneId`];
-    localStorage.removeItem(`${Constants.EXTENSIONID}/fogCache/${sceneCache.userId}/${sceneId}`);
-    await OnSceneDataChange();
 }

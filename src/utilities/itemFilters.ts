@@ -1,6 +1,6 @@
 import { Item } from "@owlbear-rodeo/sdk";
-import { Constants } from "./constants";
-import { sceneCache } from "./globals";
+import { Constants } from "./bsConstants";
+import { BSCACHE } from "./bsSceneCache";
 
 function isBackgroundImage(item: Item)
 {
@@ -34,20 +34,20 @@ function isActiveVisionLine(item: Item)
 
 function isTokenWithVisionForUI(item: Item)
 {
-    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
+    return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`]);
 }
 
 function isTokenWithVision(item: Item)
 {
-    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT")
+    return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }
 
 function isTokenWithVisionIOwn(item: Item)
 {
-    return (item.layer == "CHARACTER" || item.layer == "ATTACHMENT") && item.createdUserId == sceneCache.userId
+    return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP") && item.createdUserId == BSCACHE.playerId
         && (item.metadata[`${Constants.EXTENSIONID}/hasVision`] || item.metadata[`${Constants.ARMINDOID}/hasVision`])
         && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
 }
@@ -83,7 +83,7 @@ function isTorch(item: Item)
 
 function isAutohide(item: Item)
 {
-    return item.layer == "CHARACTER" && !isTokenWithVisionForUI(item) && item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
+    return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP") && !isTokenWithVisionForUI(item) && item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
 }
 
 export { isBackgroundImage, isVisionFog, isVisionLine, isBrushSquare, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTrailingFog, isAnyFog, isTorch, isAutohide };

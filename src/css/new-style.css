@@ -57,6 +57,18 @@ body {
     overflow: hidden;
 }
 
+#papp {
+    margin-left: 20px;
+    font-weight: bolder;
+    height: 100%;
+    width: 100%;
+    padding: 6px;
+}
+
+#playerVisionList {
+    text-align: left;
+}
+
 #bs-whatsnew {
     background-color: var(--OBR-dark-blue-trans);
     backdrop-filter: blur(10px);

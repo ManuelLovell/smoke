@@ -2,7 +2,7 @@ import OBR from "@owlbear-rodeo/sdk";
 import { lineMode } from "./tools/visionLineMode";
 import { polygonMode } from "./tools/visionPolygonMode";
 import { brushMode } from "./tools/visionBrushMode";
-import { Constants } from "./utilities/constants";
+import { Constants } from "./utilities/bsConstants";
 
 export async function SetupTools(): Promise<void>
 {

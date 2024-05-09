@@ -1,6 +1,6 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve, buildLabel, buildShape } from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
-import { sceneCache } from "../utilities/globals";
+import { Constants } from "../utilities/bsConstants";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 /// There's a bug in here with OBR interaction API, on the player view when
 /// finishing an object it throws an error because the point is supposedly undefined.
@@ -61,9 +61,9 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
         const polygon = buildCurve()
             .tension(0)
             .points([event.pointerPosition, event.pointerPosition])
-            .strokeColor(sceneCache.metadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(sceneCache.metadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(sceneCache.metadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(.5)
             .fillColor("#000000")
             .layer("DRAWING")
@@ -101,9 +101,9 @@ function onToolMove(_: ToolContext, event: ToolEvent)
 
     const [update] = interaction;
     // Snap to the grid with light sensitivity
-    const snapVar = Math.round(sceneCache.gridDpi / sceneCache.gridSnap);
-    const nearGridX = Math.round(event.pointerPosition.x / sceneCache.gridDpi) * sceneCache.gridDpi;
-    const nearGridY = Math.round(event.pointerPosition.y / sceneCache.gridDpi) * sceneCache.gridDpi;
+    const snapVar = Math.round(BSCACHE.gridDpi / BSCACHE.gridSnap);
+    const nearGridX = Math.round(event.pointerPosition.x / BSCACHE.gridDpi) * BSCACHE.gridDpi;
+    const nearGridY = Math.round(event.pointerPosition.y / BSCACHE.gridDpi) * BSCACHE.gridDpi;
     const absoluteX = Math.abs(nearGridX - event.pointerPosition.x);
     const absoluteY = Math.abs(nearGridY - event.pointerPosition.y);
 
@@ -130,7 +130,7 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     update((polygon: Curve) =>
     {
         //polygon.points[polygon.points.length - 1] = event.pointerPosition;
-        polygon.points[polygon.points.length - 1] = sceneCache.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
+        polygon.points[polygon.points.length - 1] = BSCACHE.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
     });
 }
 

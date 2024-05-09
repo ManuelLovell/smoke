@@ -1,6 +1,6 @@
 import OBR, { buildPath, Item, isCurve, Vector2, Math2, MathM, PathCommand } from "@owlbear-rodeo/sdk";
-import { sceneCache } from "../utilities/globals";
-import { Constants } from "../utilities/constants";
+import { Constants } from "../utilities/bsConstants";
+import { BSCACHE } from "../utilities/bsSceneCache";
 
 export async function removeLocalDoor(items: Item[])
 {
@@ -54,7 +54,7 @@ export async function toggleDoor(toggleDoorId: string)
     if (localDoor.length === 1)
     {
         const doorPathId = localDoor[0].metadata[`${Constants.EXTENSIONID}/doorId`];
-        const door = sceneCache.items.filter((item) => item.id === doorPathId);
+        const door = BSCACHE.sceneItems.filter((item) => item.id === doorPathId);
 
         // duplicated code from visionTool button
         await OBR.scene.items.updateItems(door, (items) =>
@@ -78,7 +78,7 @@ export async function toggleDoor(toggleDoorId: string)
 
 export async function initDoors()
 {
-    const doors = await OBR.scene.items.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
+    const doors = BSCACHE.sceneItems.filter((item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
     await createLocalDoor(doors);
 }
 

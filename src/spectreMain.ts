@@ -1,12 +1,12 @@
 import OBR, { Image, Metadata, Player } from "@owlbear-rodeo/sdk";
-import { Constants } from "./utilities/constants";
-import { sceneCache } from './utilities/globals';
+import { Constants } from "./utilities/bsConstants";
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
 export async function RunSpectre(players: Player[]): Promise<void>
 {
-    if (!sceneCache.ready) return;
+    if (!BSCACHE.sceneReady) return;
 
     const localGhosts = await OBR.scene.local.getItems(
         (item): item is Image => item.layer === "CHARACTER");
@@ -27,7 +27,7 @@ export async function RunSpectre(players: Player[]): Promise<void>
                 const metadata = ghost.metadata[`${Constants.SPECTREID}/viewers`] as string[];
                 if (metadata)
                 {
-                    const forMe = metadata.includes(sceneCache.userId);
+                    const forMe = metadata.includes(BSCACHE.playerId);
                     if (forMe)
                     {
                         await OBR.scene.local.addItems([ghost]);
@@ -63,7 +63,7 @@ export function UpdateSpectreTargets(): void
             const tomSelectInstance = tSelect.tomselect as TomSelect;
 
             const newOptions = [];
-            for (const player of sceneCache.players)
+            for (const player of BSCACHE.party)
             {
                 newOptions.push({ value: player.id, text: player.name });
             }
@@ -88,7 +88,7 @@ export function UpdateSpectreTargets(): void
 
 export async function RestoreGhostsGM(): Promise<void>
 {
-    let ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
 
     if (ghostData)
     {
@@ -158,8 +158,8 @@ export async function SetupSpectreGM(): Promise<void>
                     const ghost = item as Image;
                     ghost.metadata[`${Constants.SPECTREID}/spectred`] = undefined;
 
-                    const ghostIndex = sceneCache.ghosts.findIndex(x => x.id === ghost.id);
-                    sceneCache.ghosts.splice(ghostIndex, 1);
+                    const ghostIndex = BSCACHE.ghosts.findIndex(x => x.id === ghost.id);
+                    BSCACHE.ghosts.splice(ghostIndex, 1);
                     const rowElement = document.getElementById(`tr-${ghost.id}`)!;
                     rowElement?.remove();
                     
@@ -174,7 +174,7 @@ export async function SetupSpectreGM(): Promise<void>
 }
 async function RemoveGhost(ghost: Image)
 {
-    const ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+    const ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
     const newData = ghostData.filter(bad => bad.id !== ghost.id);
 
     await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/stored`]: newData });
@@ -183,7 +183,7 @@ async function RemoveGhost(ghost: Image)
 
 async function StoreGhost(ghost: Image)
 {
-    let ghostData: Image[] = sceneCache.metadata[`${Constants.SPECTREID}/stored`] as Image[];
+    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
     if (!ghostData)
     {
         ghostData = [ghost];
@@ -206,7 +206,7 @@ async function SetupTomSelect(ghost: Image)
     await OBR.scene.items.deleteItems([ghost.id]);
     await OBR.scene.local.addItems([ghost]);
     await StoreGhost(ghost);
-    sceneCache.ghosts.push(ghost);
+    BSCACHE.ghosts.push(ghost);
 
     const table = document.getElementById("ghostList")! as HTMLDivElement;
     const newTr = document.createElement("tr");
@@ -220,7 +220,7 @@ async function SetupTomSelect(ghost: Image)
 
     const selectButton = document.getElementById(`select-${ghost.id}`) as HTMLSelectElement;
 
-    for (const player of sceneCache.players)
+    for (const player of BSCACHE.party)
     {
         const option = document.createElement('option');
         option.value = player.id;
@@ -235,7 +235,7 @@ async function SetupTomSelect(ghost: Image)
             }
         },
         allowEmptyOption: true,
-        placeholder: sceneCache.players.length == 0 ? "No Players" : "Choose..",
+        placeholder: BSCACHE.party.length == 0 ? "No Players" : "Choose..",
         maxItems: null,
         create: false,
         onDelete: async function (id: string, element: any) 
@@ -279,8 +279,8 @@ async function SetupTomSelect(ghost: Image)
     const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
     deleteButton.onclick = async () =>
     {
-        const ghostIndex = sceneCache.ghosts.findIndex(x => x.id === ghost.id);
-        sceneCache.ghosts.splice(ghostIndex, 1);
+        const ghostIndex = BSCACHE.ghosts.findIndex(x => x.id === ghost.id);
+        BSCACHE.ghosts.splice(ghostIndex, 1);
         newTr.remove();
         await OBR.scene.local.updateItems([ghost.id], ghosties =>
         {

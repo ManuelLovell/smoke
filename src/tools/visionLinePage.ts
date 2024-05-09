@@ -1,5 +1,5 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/constants";
+import { Constants } from "../utilities/bsConstants";
 import "../css/style.css";
 
 OBR.onReady(async () =>
