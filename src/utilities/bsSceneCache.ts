@@ -11,6 +11,7 @@ import { OnSceneDataChange } from "../tools/smokeVisionProcess";
 import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "../tools/visionLineMode";
 import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "../tools/visionPolygonMode";
 import { ObjectCache } from "./cache";
+import SmokeWorker from "../tools/worker?worker";
 
 class BSCache
 {
@@ -216,7 +217,7 @@ class BSCache
 
         for (let i = 0; i < workerTotal; i++)
         {
-            const worker = new Worker('src/tools/worker.ts', { type: "module" });
+            const worker = new SmokeWorker();
             this.workers.push(worker);
         }
     }
