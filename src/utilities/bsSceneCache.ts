@@ -225,7 +225,6 @@ class BSCache
     public async SaveUserToScene()
     {
         // Safeguard this from loops
-        return;
         await OBR.scene.setMetadata({
             [`${Constants.EXTENSIONID}/USER-${this.playerId}`]:
             {
@@ -296,12 +295,25 @@ class BSCache
             {
                 this.playerHandler = OBR.player.onChange(async (player) =>
                 {
+                    let updateScenePlayerData = false;
+                    if (this.playerName !== player.name
+                        || this.playerColor !== player.color
+                        || this.playerRole !== player.role)
+                    {
+                        updateScenePlayerData = true;
+                    }
+
                     await this.OnPlayerChange(player);
                     this.playerName = player.name;
                     this.playerColor = player.color;
                     this.playerId = player.id;
                     this.playerRole = player.role;
                     this.playerMetadata = player.metadata;
+
+                    if (updateScenePlayerData)
+                    {
+                        await this.SaveUserToScene();
+                    }
                 });
             }
         }
@@ -427,7 +439,6 @@ class BSCache
 
     public async OnPlayerChange(player: Player)
     {
-        await this.SaveUserToScene();
         if (this.playerRole !== player.role)
         {
             if (player.role === "GM")
