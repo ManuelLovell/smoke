@@ -295,6 +295,7 @@ class BSCache
             {
                 this.playerHandler = OBR.player.onChange(async (player) =>
                 {
+                    const oldRole = this.playerRole;
                     let updateScenePlayerData = false;
                     if (this.playerName !== player.name
                         || this.playerColor !== player.color
@@ -303,12 +304,12 @@ class BSCache
                         updateScenePlayerData = true;
                     }
 
-                    await this.OnPlayerChange(player);
                     this.playerName = player.name;
                     this.playerColor = player.color;
                     this.playerId = player.id;
                     this.playerRole = player.role;
                     this.playerMetadata = player.metadata;
+                    await this.OnPlayerChange(player, oldRole);
 
                     if (updateScenePlayerData)
                     {
@@ -437,18 +438,21 @@ class BSCache
         }
     }
 
-    public async OnPlayerChange(player: Player)
+    public async OnPlayerChange(player: Player, oldRole: string)
     {
-        if (this.playerRole !== player.role)
+        if (this.playerRole !== oldRole)
         {
+            await SMOKEMAIN.SoftReset();
             if (player.role === "GM")
             {
                 await OBR.action.setHeight(510);
                 await OBR.action.setWidth(420);
             }
+            else
+            {
+                SMOKEMAIN.UpdatePlayerVisionList();
+            }
 
-            await SMOKEMAIN.SoftReset();
-            if (player.role === "PLAYER") SMOKEMAIN.UpdatePlayerVisionList();
         }
 
         const tokens = document.querySelectorAll(".token-table-entry");

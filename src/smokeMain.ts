@@ -402,7 +402,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.33");
+export const SMOKEMAIN = new SmokeMain("2.40");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness

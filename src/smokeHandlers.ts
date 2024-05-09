@@ -18,7 +18,7 @@ export function SetupInputHandlers()
             id: Constants.PROCESSEDID,
             url: `/pages/processed.html`,
             height: 300,
-            width: 300,
+            width: 320,
             disableClickAway: false
         });
     };
