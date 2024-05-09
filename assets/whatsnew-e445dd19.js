@@ -1,4 +1,4 @@
-import{O as n,C as u}from"./constants-0bc65094.js";/* empty css                  */const h=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
+import{O as n,C as l}from"./bsConstants-5cf717a6.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,6 +18,15 @@ import{O as n,C as u}from"./constants-0bc65094.js";/* empty css                 
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,p=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/9</h1>
+        This is the update you were hoping for!
+        </br>
+        </br> I rewrote the cache and processing. You should be seeing a major speed-up with processing (depending on your PC) - but times should at least be cut in half with a potato.
+        </br> With a faster PC, about 90% of the processing time should be shaved off.
+        </br>
+        </br> There might be a few hiccups, but I spent this week writing, re-writing and testing this one so it feels pretty solid. Please give me a ping if you notice something.
+        </br> And if you use this extension a lot, be sure to check the Patreon to show some support (Kind works help, too!)
+        </br>
         <h1>Smoke & Spectre! 5/3</h1>
         Minor update, fixed an issue where Persistence was being reset if the scene metadata was changed by a different extension.
         </br> Also made a few tweaks to squeeze out the fog about 15% faster.
@@ -41,7 +50,7 @@ import{O as n,C as u}from"./constants-0bc65094.js";/* empty css                 
         </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
         </br>
     </div>
-`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),r=t.get("gethelp"),o=t.get("subscriber")==="true";h.innerHTML=r?w:p,b.innerHTML=`
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?w:p,b.innerHTML=`
     <div id="footButtonContainer">
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
@@ -50,4 +59,4 @@ import{O as n,C as u}from"./constants-0bc65094.js";/* empty css                 
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const i=document.getElementById("closeButton");i.onclick=async()=>{await n.modal.close(u.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const c=document.getElementById("discordButton");c.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const d=document.getElementById("basicTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const l=document.getElementById("advTutorial");l.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(l.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const c=document.getElementById("discordButton");c.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const d=document.getElementById("basicTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const h=document.getElementById("advTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});

@@ -141,4 +141,4 @@
             <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
             <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
             <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-        </div>`}export{Ps as C,Ms as O,Ds as a,xs as b,Ls as c,Kt as d,ws as i};
+        </div>`}export{Ps as C,Ms as O,xs as a,Ds as b,Ls as c,Kt as d,ws as i};
