@@ -157,7 +157,8 @@ export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement
                 .metadata({
                     [`${Constants.EXTENSIONID}/hasVision`]: true,
                     [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
-                    [`${Constants.EXTENSIONID}/visionTorch`]: true
+                    [`${Constants.EXTENSIONID}/visionTorch`]: true,
+                    [`${Constants.EXTENSIONID}/hiddenToken`]: true
                 })
                 .name("Imported Light Source")
                 .build();
