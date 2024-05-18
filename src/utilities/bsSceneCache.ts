@@ -11,7 +11,7 @@ import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing 
 import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "../tools/visionPolygonMode";
 import { ObjectCache } from "./cache";
 import SmokeWorker from "../tools/worker?worker";
-import { UpdateSpectreTargets } from "../spectreMain";
+import { SPECTRE } from "../spectreMain";
 
 class BSCache
 {
@@ -19,6 +19,7 @@ class BSCache
     static PLAYER = "PLAYER";
     static PARTY = "PARTY";
     static SCENEITEMS = "SCENEITEMS";
+    static SCENELOCAL = "SCENELOCAL";
     static SCENEMETA = "SCENEMETADATA";
     static SCENEGRID = "SCENEGRID";
     static SCENEFOG = "SCENEFOG";
@@ -44,6 +45,7 @@ class BSCache
 
     storedMetaItems: Item[];
     sceneItems: Item[];
+    sceneLocal: Item[];
     sceneSelected: string[];
     sceneMetadata: Metadata;
     sceneReady: boolean;
@@ -56,7 +58,6 @@ class BSCache
     caches: string[];
     playerShadowCache: ObjectCache;
 
-    ghosts: Image[];
     localGhosts: Image[];
     snap: boolean;
     torchActive: boolean;
@@ -79,6 +80,7 @@ class BSCache
     //handlers
     sceneMetadataHandler?: () => void;
     sceneItemsHandler?: () => void;
+    sceneLocalHandler?: () => void;
     sceneGridHandler?: () => void;
     sceneReadyHandler?: () => void;
     playerHandler?: () => void;
@@ -101,6 +103,7 @@ class BSCache
         this.fogStroke = 5;
         this.storedMetaItems = [];
         this.sceneItems = [];
+        this.sceneLocal = [];
         this.sceneSelected = [];
         this.sceneMetadata = {};
         this.gridDpi = 0;
@@ -111,7 +114,6 @@ class BSCache
         this.sceneInitialized = false;
         this.theme = "DARK";
         this.roomMetadata = {};
-        this.ghosts = [];
         this.localGhosts = [];
         this.snap = false;
         this.busy = false;
@@ -131,6 +133,70 @@ class BSCache
         this.previousFowColor = "";
         this.workers = [];
         this.workersSetup = false;
+    }
+
+    public async RefreshCache()
+    {
+        if (this.caches.includes(BSCache.PLAYER))
+        {
+            this.playerId = await OBR.player.getId();
+            this.playerName = await OBR.player.getName();
+            this.playerColor = await OBR.player.getColor();
+            this.playerMetadata = await OBR.player.getMetadata();
+            this.playerRole = await OBR.player.getRole();
+        }
+
+        if (this.caches.includes(BSCache.PARTY))
+        {
+            this.party = await OBR.party.getPlayers();
+        }
+
+        if (this.caches.includes(BSCache.SCENEFOG))
+        {
+            if (this.sceneReady)
+            {
+                this.fogColor = await OBR.scene.fog.getColor();
+                this.fogFilled = await OBR.scene.fog.getFilled();
+            }
+        }
+
+        if (this.caches.includes(BSCache.SCENEITEMS))
+        {
+            if (this.sceneReady)
+            {
+                this.sceneItems = await OBR.scene.items.getItems();
+                this.sceneLocal = await OBR.scene.local.getItems();
+            }
+        }
+
+        if (this.caches.includes(BSCache.SCENEMETA))
+        {
+            if (this.sceneReady)
+            {
+                this.sceneMetadata = await OBR.scene.getMetadata();
+                const savedItems = this.sceneMetadata[`${Constants.EXTENSIONID}/stored`];
+                if (savedItems)
+                {
+                    this.storedMetaItems = savedItems as Item[];
+                }
+            }
+        }
+
+        if (this.caches.includes(BSCache.SCENEGRID))
+        {
+            if (this.sceneReady)
+            {
+                this.gridDpi = await OBR.scene.grid.getDpi();
+                const gridScale = await OBR.scene.grid.getScale();
+                this.gridScale = gridScale.parsed?.multiplier ?? 5;
+                this.gridType = gridScale.parsed.unit;
+            }
+        }
+
+        if (this.caches.includes(BSCache.ROOMMETA))
+        {
+            if (this.sceneReady) this.roomMetadata = await OBR.room.getMetadata();
+        }
     }
 
     public async InitializeCache()
@@ -179,6 +245,7 @@ class BSCache
             if (this.sceneReady)
             {
                 this.sceneItems = await OBR.scene.items.getItems();
+                this.sceneLocal = await OBR.scene.local.getItems();
             }
         }
 
@@ -220,7 +287,7 @@ class BSCache
             }
         });
 
-        this.SaveUserToScene();
+        await this.SaveUserToScene();
     }
 
     public CreateWorkers()
@@ -252,6 +319,7 @@ class BSCache
     {
         if (this.caches.includes(BSCache.SCENEMETA) && this.sceneMetadataHandler !== undefined) this.sceneMetadataHandler!();
         if (this.caches.includes(BSCache.SCENEITEMS) && this.sceneItemsHandler !== undefined) this.sceneItemsHandler!();
+        if (this.caches.includes(BSCache.SCENEITEMS) && this.sceneLocalHandler !== undefined) this.sceneLocalHandler!();
         if (this.caches.includes(BSCache.SCENEGRID) && this.sceneGridHandler !== undefined) this.sceneGridHandler!();
         if (this.caches.includes(BSCache.PLAYER) && this.playerHandler !== undefined) this.playerHandler!();
         if (this.caches.includes(BSCache.PARTY) && this.partyHandler !== undefined) this.partyHandler!();
@@ -285,6 +353,13 @@ class BSCache
                     this.sceneItems = items;
                     await this.OnSceneItemsChange(items);
                 });
+
+                // Smoke uses Local A lot
+                this.sceneLocalHandler = OBR.scene.local.onChange(async (localItems) =>
+                {
+                    this.sceneLocal = localItems;
+                    await this.OnSceneLocalChange(localItems);
+                });
             }
         }
 
@@ -297,7 +372,6 @@ class BSCache
                     await this.OnSceneGridChange(grid);
                     this.gridDpi = grid.dpi;
                     this.gridScale = parseInt(grid.scale);
-                    // ADD PROCESS FOG
                 });
             }
         }
@@ -387,15 +461,12 @@ class BSCache
 
                 if (ready)
                 {
-                    this.sceneMetadata = await OBR.scene.getMetadata();
-                    this.gridDpi = await OBR.scene.grid.getDpi();
-                    const gridScale = await OBR.scene.grid.getScale();
-                    this.gridScale = gridScale.parsed?.multiplier ?? 5;
-                    this.gridType = gridScale.parsed.unit;
-                    this.sceneItems = await OBR.scene.items.getItems();
+                    await this.SaveUserToScene();
+                    await this.RefreshCache();
                 }
                 else
                 {
+                    SPECTRE.ClearGhostList();
                     this.KillHandlers();
                     this.sceneItems = [];
                     this.sceneMetadata = {};
@@ -429,6 +500,11 @@ class BSCache
         await OnSceneDataChange();
     }
 
+    public async OnSceneLocalChange(_items: Item[])
+    {
+        SPECTRE.debouncedLocalChanges(BSCACHE.sceneLocal);
+    }
+
     public async OnSceneGridChange(_grid: Grid)
     {
         await OnSceneDataChange();
@@ -440,8 +516,8 @@ class BSCache
         {
             //Turn off all handlers before Initializing a scene to avoid triggering updates with race conditions
             await InitializeScene();
-            await OnSceneDataChange();
             this.SetupHandlers();
+            await OnSceneDataChange();
 
             if (this.playerRole === "GM")
             {
@@ -537,7 +613,7 @@ class BSCache
                 listItem.style.color = player.color;
                 playerContextMenu.appendChild(listItem);
             }
-            UpdateSpectreTargets();
+            SPECTRE.UpdateSpectreTargets();
             SMOKEMAIN.UpdatePlayerProcessUI();
         }
     }

@@ -13,7 +13,7 @@ import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { UpdateMaps } from "./tools/import";
-import { SetupLocalSpecterHandlers, SetupSpectreGM } from "./spectreMain";
+import { SPECTRE } from "./spectreMain";
 
 export class SmokeMain
 {
@@ -376,7 +376,7 @@ export class SmokeMain
             await Promise.all([
                 SetupContextMenus(),
                 SetupTools(),
-                SetupSpectreGM(),
+                SPECTRE.SetupSpectreGM(),
                 SetupAutohideMenus(false),
                 this.UpdateUI()
             ]);
@@ -406,7 +406,7 @@ export class SmokeMain
             await Promise.all([
                 SetupContextMenus(),
                 SetupTools(),
-                SetupSpectreGM(),
+                SPECTRE.SetupSpectreGM(),
                 SetupAutohideMenus(false),
                 this.UpdateUI()
             ]);
@@ -419,7 +419,7 @@ export class SmokeMain
 
         await InitializeScene();
         await OnSceneDataChange();
-        SetupLocalSpecterHandlers();
+        SPECTRE.SetupLocalSpecterHandlers();
 
         // This needs to be last to avoid getting blasted by all the Initialization
         BSCACHE.SetupHandlers();
@@ -427,7 +427,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.50");
+export const SMOKEMAIN = new SmokeMain("2.51");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness

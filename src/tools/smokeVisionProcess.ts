@@ -1,7 +1,7 @@
 import OBR, { buildPath, buildShape, Image, isImage, Item, Shape, ItemFilter, isPath, Path, Player } from "@owlbear-rodeo/sdk";
 import PathKitInit from "pathkit-wasm/bin/pathkit";
 import wasm from "pathkit-wasm/bin/pathkit.wasm?url";
-import { Timer } from "../utilities/debug";
+import { DEBUG, Timer } from "../utilities/debug";
 import { comparePosition } from "../utilities/math";
 import { isVisionFog, isActiveVisionLine, isTokenWithVision, isBackgroundBorder, isIndicatorRing, isTokenWithVisionIOwn, isTrailingFog, isAnyFog, isTokenWithVisionForUI, isTorch, isAutohide } from "../utilities/itemFilters";
 import { Constants } from "../utilities/bsConstants";
@@ -71,12 +71,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         mapScale[1] = 1;
         mapOffset[0] = 0;
         mapOffset[1] = 0;
-        if (autodetectEnabled)
-        {
-            BSCACHE.busy = false;
-            await OBR.action.setBadgeText(undefined);
-            return;
-        }
     }
     else
     {
@@ -158,9 +152,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     BSCACHE.previousPersistenceEnabled = persistenceEnabled;
     computeTimer.pause();
 
-    // remove debug visualisations from any previous pass..
-    await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
-
     const stages: any[] = [];
     for (let i = 0; i <= 6; i++) stages.push(new Timer());
 
@@ -172,6 +163,13 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     {
         // draw a big box around all the maps
         const maps: Image[] = BSCACHE.sceneItems.filter((item) => item.layer === "MAP" && isImage(item)) as Image[];
+
+        if (maps.length === 0)
+        {
+            BSCACHE.busy = false;
+            await OBR.action.setBadgeText(undefined);
+            return;
+        }
 
         let mapbox = [];
         for (let map of maps)
@@ -239,7 +237,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     if (!shouldComputeVision || TOKENSVIEWABLE.length == 0)
     {
         // Clear fog
-        const fogItems = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
+        const fogItems = BSCACHE.sceneLocal.filter(x => isAnyFog(x));
         await OBR.scene.local.deleteItems(fogItems.map(fogItem => fogItem.id));
 
         BSCACHE.busy = false;
@@ -476,6 +474,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
         // Batched OBR calls
         const promisesToExecute = [];
+        let LOCALDELETELIST: string[] = [];
+        let LOCALADDLIST: Item[] = [];
 
         // Settings
 
@@ -485,8 +485,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         // Deduplicate calls when adding items to the scene
         const dedup_digest = {} as any;
 
-        const localItemCache = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
-        const oldRings = await OBR.scene.local.getItems(isIndicatorRing as ItemFilter<Image>);
+        const localItemCache = BSCACHE.sceneLocal.filter(item => isAnyFog(item));
+        const oldRings = BSCACHE.sceneLocal.filter(rItem => isIndicatorRing(rItem));
 
         if (fowEnabled)
         {
@@ -497,7 +497,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         // This... should just work.. the logic seems sound.
         // During testing I ran into issues joining the paths together where it seemed to create overlapping paths with the union that would end up cutting holes in the path instead of filling them.
         // I can no longer replicate it, but I had turned this code path on, got 2 tokens, and just move them around next to eachother after a fog refresh, and it soon glitched.
-        let reuseFog: Image[] = [];
+        let reuseFog: Path[] = [];
         let reuseNewFog: any;
         let oldPath: any = null;
 
@@ -505,7 +505,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         if (persistenceEnabled)
         {
             // Reuse the same localItem and change the path.
-            reuseFog = localItemCache.filter(item => isVisionFog(item));
+            reuseFog = localItemCache.filter(item => isVisionFog(item)) as Path[];
             reuseNewFog = new PathKit.SkOpBuilder();
             dedup_digest["reuse"] = true;
 
@@ -518,8 +518,10 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                 // set our fog zIndex to 3, otherwise it can sometimes draw over the top of manually created fog objects:
                 path.zIndex = 3;
 
-                await OBR.scene.local.addItems([path]);
-                reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+                //await OBR.scene.local.addItems([path]);
+                LOCALADDLIST.push(path);
+                //reuseFog = await OBR.scene.local.getItems(isVisionFog as ItemFilter<Image>);
+                reuseFog = [path];
             }
             else
             {
@@ -548,7 +550,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                 return ([...new Uint8Array(hash)].map(x => x.toString(16).padStart(2, '0')).join(''));
             });
 
-            const dedup: Image[] = localItemCache.filter(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
+            const dedup: Item[] = localItemCache.filter(filter_item => { return isVisionFog(filter_item) && filter_item.metadata[`${Constants.EXTENSIONID}/digest`] === digest });
 
             if (dedup.length === 0)
             {
@@ -567,11 +569,11 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
             if (fowEnabled)
             {
-                // if (BSCACHE.enableVisionDebug)
-                // {
-                //     const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                //     await OBR.scene.local.addItems([debugPath]);
-                // }
+                // remove debug visualisations from any previous pass..
+                const debugItems = BSCACHE.sceneLocal.filter(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true).map(i => i.id);
+                if (debugItems.length > 0) LOCALDELETELIST = LOCALDELETELIST.concat(debugItems);
+
+                await DEBUG.GreenDebugPath(item);
 
                 trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
 
@@ -602,18 +604,16 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
             if (reuseFog.length > 0)
             {
-                await OBR.scene.local.updateItems([reuseFog[0].id], (items) =>
-                {
-                    if (items.length > 0) items[0].commands = commands;
-                });
+                reuseFog[0].commands = commands;
+                LOCALADDLIST = LOCALADDLIST.concat(reuseFog);
             }
-
             try
             {
                 localStorage.setItem(`${Constants.EXTENSIONID}/fogCache/${BSCACHE.playerId}/${sceneId}`, JSON.stringify([{ digest: 'reuse', commands: commands }]));
             }
             catch (error)
             {
+                console.log("Local storage is disabled");
             }
 
             if (oldPath !== null)
@@ -622,7 +622,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             }
             newPath.delete();
             reuseNewFog.delete();
-        } else if (persistenceEnabled)
+        }
+        else if (persistenceEnabled)
         {
             const saveFog = localItemCache.filter(isVisionFog);
             try
@@ -631,6 +632,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             }
             catch (error)
             {
+                console.log("Local storage is disabled");
             }
         }
 
@@ -642,12 +644,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         currentFog.delete();
 
         const oldTrailingFog = localItemCache.filter(isTrailingFog);
-
-        // Performance optimisation: This detects fog items that were already created previously in the scene by earlier iterations of the fog path rendering, and effectively skips their creation/deletion.
-        // Hard to measure the impact, however it appears to cut about 20ms per token that didnt move since we last updated the fog.
-        // This becomes unnecessary if we can get the other code path working to join all the fog items into a single path.
-        //
-        // This has become somewhat irrelevant for two reasons: we're using scene.local which doesnt have this performance hit, and persistenceEnabled bypasses this completely
 
         const oldFog = localItemCache.filter((item) =>
         {
@@ -686,22 +682,25 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                 // If the old item exists in the scene, reuse it, otherwise you get flickering.
                 // Warning: In theory this can use fastUpdate since we only change the path, though it seemed to break with it turned on.
                 // Also worth noting that this seems to fail if we use trailingFogRect directly - does buildPath transform it somehow? possibly by the fill rule?
-                await OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items =>
+
+                promisesToExecute.push(OBR.scene.local.updateItems(isTrailingFog as ItemFilter<Image>, items =>
                 {
                     for (const item of items)
                     {
                         item.commands = trailingFog.commands;
                     }
-                }, false);
+                }, false));
             }
             else
             {
-                promisesToExecute.push(OBR.scene.local.addItems([trailingFog]));
+                //promisesToExecute.push(OBR.scene.local.addItems([trailingFog]));
+                LOCALADDLIST.push(trailingFog);
             }
         } else
         {
             // FOW disabled, remove any existing trailing fog items:
-            promisesToExecute.push(OBR.scene.local.deleteItems(localItemCache.filter(isTrailingFog).map(fogItem => fogItem.id)));
+            //promisesToExecute.push(OBR.scene.local.deleteItems(localItemCache.filter(isTrailingFog).map(fogItem => fogItem.id)));
+            LOCALDELETELIST = LOCALDELETELIST.concat(localItemCache.filter(isTrailingFog).map(fogItem => fogItem.id));
         }
 
         trailingFogRect.delete();
@@ -710,7 +709,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         stages[5].start();
 
         /// Door Check - Check if user has any doors visible.
-        const localDoorItems = await OBR.scene.local.getItems((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+        const localDoorItems = BSCACHE.sceneLocal.filter((item) => item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined) as Path[];
         if (playerDoors || BSCACHE.playerRole == "GM")
         {
             await initDoors();
@@ -720,7 +719,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             // If it's turned off, we want to cleanse the door menace.
             if (localDoorItems.length > 0)
             {
-                await OBR.scene.local.deleteItems(localDoorItems.map(door => door.id));
+                //await OBR.scene.local.deleteItems(localDoorItems.map(door => door.id));
+                LOCALDELETELIST = LOCALDELETELIST.concat(localDoorItems.map(door => door.id))
             }
         }
 
@@ -734,8 +734,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             {
                 // If we found a door, compare the array length to see if it's open or not.
                 // Note: Moved the code for that to constants for easier management and re-usability
-                const localDoorPather = localDoor as Path;
-                const localOpen = localDoorPather.commands.length == Constants.DOOROPEN.length;
+                const localOpen = localDoor.commands.length == Constants.DOOROPEN.length;
                 const open = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] ? true : false;
 
                 // If it's already open we don't want to spam updates
@@ -765,64 +764,37 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         // and for some reason this causes issues with some of the procedural code below IF you remove the await on the Promise.all.
         // However, per the above, if we simply just call them individually and dont await any of them, everything is fine.. and we get a bit more of reponsiveness in the UI
 
-        if (false)
+        await DEBUG.DebugBlobINeverUse();
+
+        //promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
+        LOCALDELETELIST = LOCALDELETELIST.concat(oldRings.map(fogItem => fogItem.id));
+        itemsToAdd.map(item =>
         {
-            await Promise.all(promisesToExecute);
+            const path = buildPath().commands(item.cmds).fillRule("evenodd").locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
+            path.zIndex = item.zIndex;
+            LOCALADDLIST.push(path);
+        });
 
-            await OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id));
-            await OBR.scene.local.addItems(itemsToAdd.map(item =>
-            {
-                const path = buildPath().commands(item.cmds).locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
-                path.zIndex = item.zIndex;
-                return path;
-            }));
-
-            if (!persistenceEnabled)
-            {
-                await OBR.scene.local.deleteItems(oldFog.map((item) => item.id));
-            }
-
-            // Include the rings in the promise, if available
-            if (playerRings.length > 0)
-            {
-                await OBR.scene.local.addItems(playerRings);
-            }
-
-            if (!BSCACHE.fogFilled)
-            {
-                await OBR.scene.fog.setFilled(true);
-            }
-        } else
+        if (!persistenceEnabled)
         {
-            promisesToExecute.push(OBR.scene.local.deleteItems(oldRings.map(fogItem => fogItem.id)));
-            promisesToExecute.push(OBR.scene.local.addItems(itemsToAdd.map(item =>
-            {
-                const path = buildPath().commands(item.cmds).fillRule("evenodd").locked(true).visible(item.visible).fillColor('#000000').strokeColor("#000000").layer("FOG").name("Fog of War").metadata({ [`${Constants.EXTENSIONID}/isVisionFog`]: true, [`${Constants.EXTENSIONID}/digest`]: item.digest }).build();
-                path.zIndex = item.zIndex;
-                return path;
-            }))
-            );
-
-            if (!persistenceEnabled)
-            {
-                promisesToExecute.push(OBR.scene.local.deleteItems(oldFog.map((item) => item.id)));
-            }
-
-            // Include the rings in the promise, if available
-            if (playerRings.length > 0)
-            {
-                promisesToExecute.push(OBR.scene.local.addItems(playerRings));
-            }
-
-            if (!BSCACHE.fogFilled)
-            {
-                promisesToExecute.push(OBR.scene.fog.setFilled(true));
-            }
-
-            // Update all items
-            await Promise.all(promisesToExecute);
+            LOCALDELETELIST = LOCALDELETELIST.concat(oldFog.map((item) => item.id));
         }
 
+        // Include the rings in the promise, if available
+        if (playerRings.length > 0)
+        {
+            LOCALADDLIST = LOCALADDLIST.concat(playerRings);
+        }
+
+        if (!BSCACHE.fogFilled)
+        {
+            await OBR.scene.fog.setFilled(true);
+        }
+
+        // Update all items
+        await Promise.all(promisesToExecute);
+        await OBR.scene.local.deleteItems(LOCALDELETELIST);
+        await OBR.scene.local.addItems(LOCALADDLIST);
 
         // this is mildly expensive, but useful for debugging:
         //let items = await OBR.scene.local.getItems(isAnyFog as ItemFilter<Image>);
@@ -837,7 +809,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
         if (useTokenVisibility)
         {
-            await updateTokenVisibility(currentFogPath);
+            await updateTokenVisibility(currentFogPath, promisesToExecute);
             currentFogPath.delete();
         }
         stages[6].pause();
@@ -865,7 +837,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         await OBR.action.setBadgeText(undefined);
     }
 
-    async function updateTokenVisibility(currentFogPath: any)
+    async function updateTokenVisibility(currentFogPath: any, promiseBatch: Promise<void>[])
     {
         const toggleTokens: Image[] = [];
         const tokens = BSCACHE.sceneItems.filter((item) => isAutohide(item) && isImage(item)) as Image[];
@@ -902,12 +874,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             }
             tempPath.closePath();
 
-            // debug - blue token bounding path
-            // if (BSCACHE.enableVisionDebug)
-            // {
-            //     const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-            //     await OBR.scene.local.addItems([debugPath]);
-            // }
+            await DEBUG.BlueTokenBoundingPath(tempPath);
 
             tPathBuilder.add(tempPath, PathKit.PathOp.UNION);
             tPathBuilder.add(currentFogPath, PathKit.PathOp.INTERSECT);
@@ -921,24 +888,20 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                 toggleTokens.push(token);
             }
 
-            // debug - red intersection path
-            // if (BSCACHE.enableVisionDebug)
-            // {
-            //     const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-            //     await OBR.scene.local.addItems([debugPath]);
-            // }
+            await DEBUG.RedIntersectionPath(intersectPath);
+
             tempPath.delete();
             tPathBuilder.delete();
             intersectPath.delete();
         }
 
-        await OBR.scene.items.updateItems(toggleTokens.map(token => token.id), (items) =>
+        promiseBatch.push(OBR.scene.items.updateItems(toggleTokens.map(token => token.id), (items) =>
         {
             for (let i = 0; i < items.length; i++)
             {
                 items[i].visible = !items[i].visible;
             }
-        });
+        }));
     }
 }
 

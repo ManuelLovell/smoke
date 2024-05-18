@@ -4,7 +4,7 @@ import { isVisionFog, isBackgroundImage } from "./utilities/itemFilters";
 import { SMOKEMAIN } from './smokeMain';
 import { SetupAutohideMenus } from "./smokeSetupContextMenus";
 import { BSCACHE } from "./utilities/bsSceneCache";
-import { LoadSpectreSceneMetadata, RestoreGhostsGM } from "./spectreMain";
+import { SPECTRE } from "./spectreMain";
 
 export async function InitializeScene(): Promise<void>
 {
@@ -72,7 +72,7 @@ export async function InitializeScene(): Promise<void>
 
     if (BSCACHE.playerRole === "GM")
     {
-        await RestoreGhostsGM();
+        await SPECTRE.RestoreGhostsGM();
         await SMOKEMAIN.UpdateUI();
 
         SMOKEMAIN.mapSubmit!.onclick = async () =>
@@ -100,7 +100,7 @@ export async function InitializeScene(): Promise<void>
     }
     else
     {
-        await LoadSpectreSceneMetadata();
+        await SPECTRE.LoadSpectreSceneMetadata();
     }
     
     BSCACHE.snap = true;
