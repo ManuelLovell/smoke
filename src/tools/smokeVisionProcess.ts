@@ -336,7 +336,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                         const { numb, messageData } = e.data;
                         workersCompleted++;
                         workerData[numb] = messageData;
-                        
+
                         if (workersCompleted === BSCACHE.workers.length)
                         {
                             // Reassemble in order
@@ -567,9 +567,11 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
             if (fowEnabled)
             {
-                const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                await OBR.scene.local.addItems([debugPath]);
-
+                // if (BSCACHE.enableVisionDebug)
+                // {
+                //     const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+                //     await OBR.scene.local.addItems([debugPath]);
+                // }
 
                 trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
 
