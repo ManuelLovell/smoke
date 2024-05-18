@@ -106,6 +106,12 @@ export function AddUnitVisionUI(player: Item)
             SMOKEMAIN.table!.appendChild(newTr);
         }
 
+        (newTr.getElementsByClassName("token-name")[0] as HTMLTableCellElement).style.textShadow = `
+        -2px -2px 2px ${ownerColor},
+        2px -2px 2px ${ownerColor},
+        -2px 2px 2px ${ownerColor},
+        2px 2px 2px ${ownerColor}`;
+
         // Register event listeners
         const rangeInput = newTr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
         const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
