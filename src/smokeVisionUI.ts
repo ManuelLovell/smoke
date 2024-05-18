@@ -26,7 +26,6 @@ export async function AddBorderIfNoAutoDetect()
     }
 }
 
-/** Its actually Unit ID, not player.. */
 export function AddUnitVisionUI(player: Item)
 {
     function HideMenu()
@@ -43,6 +42,7 @@ export function AddUnitVisionUI(player: Item)
         const rangeInput = tr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
         const unlimitedCheckbox = tr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
         const blindCheckbox = tr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
+        const hideCheckbox = tr.getElementsByClassName("hidden-token")[0] as HTMLInputElement;
 
         if (name) name.innerText = player.name;
         if (rangeInput)
@@ -60,6 +60,10 @@ export function AddUnitVisionUI(player: Item)
         {
             blindCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean;
         }
+        if (hideCheckbox)
+        {
+            hideCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/hiddenToken`] as boolean;
+        }
         if (unlimitedCheckbox.checked || blindCheckbox.checked)
             rangeInput.setAttribute("disabled", "disabled");
         else
@@ -68,7 +72,7 @@ export function AddUnitVisionUI(player: Item)
     else
     {
         const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${player.createdUserId}`] as Player;
-        //const owner = sceneCache.players.find(owner => player.createdUserId === owner.id);
+
         let ownerColor = owner?.color;
         let ownerText = owner?.name ? `This token is owned by ${owner.name}.` : "This token is owned by you.";
 
@@ -84,26 +88,30 @@ export function AddUnitVisionUI(player: Item)
         newTr.id = `tr-${currentPlayer.id}`;
         newTr.className = "token-table-entry";
         newTr.innerHTML = `<td id="contextLocator" title="${ownerText}" ${ownerColor === "#aeb0af" ? 'style="color:black !important; font-style: italic;" ' : ''}data-color="${ownerColor}" class="token-name">${currentPlayer.name}</td>
-                           <td class="token-vision-container" title="The unit of measurement for your grid"><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">units</span></td>
+                           <td class="token-vision-container" title="The unit of measurement for your grid"><input class="token-vision-range" type="number" value=${Constants.VISIONDEFAULT}><span class="unit">${BSCACHE.gridType}</span></td>
                            <td class="token-vision-container-grid">
                             <div class="vision-container-div">
                                 <label class="cbutton" title="Unlimited vision range"><input type="checkbox" class="unlimited-vision"><span class="emoji">&infin;</span></label>
                                 <label class="cbutton" title="Turn token into a light source"><input type="checkbox" class="torch-vision"><span class="emoji">&#128294;</span></label>
                                 <label class="cbutton" title="Disable vision on this token"><input type="checkbox" class="no-vision"><span class="emoji">&#8856;</span></label>
+                                <label class="cbutton" title="Move to Out-of-Sight List"><input type="checkbox" class="hidden-token"><span class="emoji">&#128065;</span></label>
                             </div>
                            </td>`;
-        SMOKEMAIN.table!.appendChild(newTr);
+        if (player.metadata[`${Constants.EXTENSIONID}/hiddenToken`] === true)
+        {
+            SMOKEMAIN.hiddenTable!.prepend(newTr);
+        }
+        else
+        {
+            SMOKEMAIN.table!.appendChild(newTr);
+        }
 
         // Register event listeners
         const rangeInput = newTr.getElementsByClassName("token-vision-range")[0] as HTMLInputElement;
         const unlimitedCheckbox = newTr.getElementsByClassName("unlimited-vision")[0] as HTMLInputElement;
         const torchCheckbox = newTr.getElementsByClassName("torch-vision")[0] as HTMLInputElement;
         const blindCheckbox = newTr.getElementsByClassName("no-vision")[0] as HTMLInputElement;
-        const nameLabel = (newTr.getElementsByClassName("token-name")[0] as HTMLTableCellElement).style.textShadow = `
-        -2px -2px 2px ${ownerColor},
-        2px -2px 2px ${ownerColor},
-        -2px 2px 2px ${ownerColor},
-        2px 2px 2px ${ownerColor}`;
+        const hideCheckbox = newTr.getElementsByClassName("hidden-token")[0] as HTMLInputElement;
 
         if (rangeInput)
         {
@@ -124,6 +132,11 @@ export function AddUnitVisionUI(player: Item)
         {
             blindCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean;
         }
+        if (hideCheckbox)
+        {
+            hideCheckbox.checked = player.metadata[`${Constants.EXTENSIONID}/hiddenToken`] as boolean;
+        }
+
         if (unlimitedCheckbox.checked || blindCheckbox.checked)
             rangeInput.setAttribute("disabled", "disabled");
         else
@@ -146,6 +159,24 @@ export function AddUnitVisionUI(player: Item)
                 items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = value;
             });
         };
+
+        hideCheckbox.onclick = async (event: MouseEvent) =>
+        {
+            if (!event || !event.target) return;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
+
+            const target = event.target as HTMLInputElement;
+            const thisRow = document.getElementById(`tr-${player.id}`) as HTMLTableRowElement;
+            if (target.checked)
+                SMOKEMAIN.hiddenTable!.prepend(thisRow);
+            else
+                SMOKEMAIN.table!.appendChild(thisRow);
+
+            await OBR.scene.items.updateItems([thisPlayer], items =>
+            {
+                items[0].metadata[`${Constants.EXTENSIONID}/hiddenToken`] = target.checked;
+            });
+        }
 
         unlimitedCheckbox.onclick = async (event: MouseEvent) =>
         {
@@ -175,7 +206,7 @@ export function AddUnitVisionUI(player: Item)
         {
             if (!event || !event.target) return;
             // Grab from scene to avoid a snapshot of the playerstate
-            const thisPlayer =  BSCACHE.sceneItems.find(x => x.id === player.id)!;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === player.id)!;
 
             const target = event.target as HTMLInputElement;
             if (target.checked)

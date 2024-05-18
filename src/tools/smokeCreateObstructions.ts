@@ -98,10 +98,10 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
     // Now witness the firepower of this fully armed and operational battlestation:
     let cullingDebugPath;
-    if (BSCACHE.enableVisionDebug)
-    {
-        cullingDebugPath = PathKit.NewPath();
-    }
+    // if (BSCACHE.enableVisionDebug)
+    // {
+    //     cullingDebugPath = PathKit.NewPath();
+    // }
 
     if (tokensWithVision.length === 0)
     {
@@ -156,19 +156,19 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                     const torchBoundingRect = GetRectFromPoints(token.position, visionRange, torch.position, torchVisionRange);
                     torchBounds.push(torchBoundingRect);
 
-                    if (BSCACHE.enableVisionDebug)
-                    {
-                        let path = PathKit.NewPath();
-                        path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
-                            .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
-                            .lineTo(torchBoundingRect[2].x, torchBoundingRect[2].y)
-                            .lineTo(torchBoundingRect[3].x, torchBoundingRect[3].y)
-                            .closePath();
+                    // if (BSCACHE.enableVisionDebug)
+                    // {
+                    //     let path = PathKit.NewPath();
+                    //     path.moveTo(torchBoundingRect[0].x, torchBoundingRect[0].y)
+                    //         .lineTo(torchBoundingRect[1].x, torchBoundingRect[1].y)
+                    //         .lineTo(torchBoundingRect[2].x, torchBoundingRect[2].y)
+                    //         .lineTo(torchBoundingRect[3].x, torchBoundingRect[3].y)
+                    //         .closePath();
 
-                        const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                        OBR.scene.local.addItems([debugPath]);
-                        path.delete();
-                    }
+                    //     const debugPath = buildPath().fillRule("evenodd").commands(path.toCmds()).locked(true).visible(true).fillColor('#660000').strokeColor("#FF0000").fillOpacity(0.2).layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+                    //     OBR.scene.local.addItems([debugPath]);
+                    //     path.delete();
+                    // }
                 }
             }
         }
@@ -183,15 +183,18 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                     continue;
             }
 
-            // exclude any lines outside of the fog area
-            // can pathkit do this better / faster?
             let lsx = line.startPosition.x, lsy = line.startPosition.y, lex = line.endPosition.x, ley = line.endPosition.y;
-            if ((lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]) || (lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1]))
-            {
-                skipCounter++;
-                continue;
-            }
 
+            if (lsx < offset[0] || lsy < offset[1] || lsx > offset[0] + size[0] || lsy > offset[1] + size[1]
+                || lex < offset[0] || ley < offset[1] || lex > offset[0] + size[0] || ley > offset[1] + size[1])
+            {
+                // Adjust the start position to be within the bounds
+                lsx = Math.max(offset[0], Math.min(lsx, offset[0] + size[0]));
+                lsy = Math.max(offset[1], Math.min(lsy, offset[1] + size[1]));
+                line.startPosition = clipLineToBoundingBox(line, offset, size).startPosition;
+                line.endPosition = clipLineToBoundingBox(line, offset, size).endPosition;
+            }
+            
             // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines. we compensate for this by adjusting the detection by 5% of the vision range.
             const segments: Vector2[] = [line.startPosition, line.endPosition];
             const length = Math2.distance(line.startPosition, line.endPosition);
@@ -230,10 +233,10 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
             if (skip)
             {
-                if (BSCACHE.enableVisionDebug)
-                {
-                    cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
-                }
+                // if (BSCACHE.enableVisionDebug)
+                // {
+                //     cullingDebugPath.moveTo(line.startPosition.x, line.startPosition.y).lineTo(line.endPosition.x, line.endPosition.y);
+                // }
                 skipCounter++;
                 continue;
             }
@@ -250,9 +253,6 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
             var xlim1 = 0, ylim1 = 0, xlim2 = 0, ylim2 = 0;
 
             // Make sure we don't go past the image borders
-            //! This is probably not required if we later compute the intersection
-            //! (using PathKit) of these polygons with a base rectangle the size of
-            //! our background image
             if (v1.x < 0) xlim1 = offset[0] * scale[0];
             else xlim1 = (width + offset[0]) * scale[0];
             if (v1.y < 0) ylim1 = offset[1] * scale[1];
@@ -339,15 +339,83 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
         }
     }
 
-    if (BSCACHE.enableVisionDebug)
-    {
-        console.log('skip', skipCounter, 'lines', lineCounter);
+    // if (BSCACHE.enableVisionDebug)
+    // {
+    //     console.log('skip', skipCounter, 'lines', lineCounter);
 
-        const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-        OBR.scene.local.addItems([debugPath]);
+    //     const debugPath = buildPath().commands(cullingDebugPath.toCmds()).visible(true).locked(true).strokeColor("#00FF00").fillOpacity(0).layer("DRAWING").name("smokedebug").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+    //     OBR.scene.local.addItems([debugPath]);
 
-        cullingDebugPath.delete();
-    }
+    //     cullingDebugPath.delete();
+    // }
 
     return polygons;
+}
+
+function clipLineToBoundingBox(line: any, offset: any, size: any)
+{
+    let { x: lsx, y: lsy } = line.startPosition;
+    let { x: lex, y: ley } = line.endPosition;
+
+    let m = (ley - lsy) / (lex - lsx);
+    let b = lsy - m * lsx;
+
+    let intersections = [];
+
+    // Top side
+    if (lsy < offset[1])
+    {
+        let intersectionX = (offset[1] - b) / m;
+        if (intersectionX >= offset[0] && intersectionX <= offset[0] + size[0])
+        {
+            intersections.push({ x: intersectionX, y: offset[1] });
+        }
+    }
+
+    // Bottom side
+    if (lsy > offset[1] + size[1])
+    {
+        let intersectionX = (offset[1] + size[1] - b) / m;
+        if (intersectionX >= offset[0] && intersectionX <= offset[0] + size[0])
+        {
+            intersections.push({ x: intersectionX, y: offset[1] + size[1] });
+        }
+    }
+
+    // Left side
+    if (lsx < offset[0])
+    {
+        let intersectionY = m * offset[0] + b;
+        if (intersectionY >= offset[1] && intersectionY <= offset[1] + size[1])
+        {
+            intersections.push({ x: offset[0], y: intersectionY });
+        }
+    }
+
+    // Right side
+    if (lsx > offset[0] + size[0])
+    {
+        let intersectionY = m * (offset[0] + size[0]) + b;
+        if (intersectionY >= offset[1] && intersectionY <= offset[1] + size[1])
+        {
+            intersections.push({ x: offset[0] + size[0], y: intersectionY });
+        }
+    }
+
+    intersections.sort((a, b) =>
+    {
+        let distA = Math.sqrt((a.x - lsx) ** 2 + (a.y - lsy) ** 2);
+        let distB = Math.sqrt((b.x - lsx) ** 2 + (b.y - lsy) ** 2);
+        return distA - distB;
+    });
+
+    let newStart = intersections.length > 0 ? intersections[0] : { x: lsx, y: lsy };
+    let newEnd = intersections.length > 0 ? intersections[intersections.length - 1] : { x: lex, y: ley };
+
+    let newLine = {
+        startPosition: newStart,
+        endPosition: newEnd
+    };
+
+    return newLine;
 }

@@ -3,11 +3,53 @@ import Coloris from "@melloware/coloris";
 import { SMOKEMAIN } from "./smokeMain";
 import { Constants } from "./utilities/bsConstants";
 import { isTrailingFog, isVisionLine } from "./utilities/itemFilters";
-import { importFog } from "./tools/import";
+import { importFog, ImportScene } from "./tools/import";
 import { AddBorderIfNoAutoDetect } from "./smokeVisionUI";
 import { SetupAutohideMenus } from "./smokeSetupContextMenus";
 import { BSCACHE } from "./utilities/bsSceneCache";
 
+export function SetupPanelHandlers()
+{
+    SMOKEMAIN.smokeViewToggle!.onclick = (e) =>
+    {
+        e.preventDefault();
+        TogglePanel(SMOKEMAIN.smokeViewToggle!, SMOKEMAIN.smokeViewPanel!);
+    };
+
+    SMOKEMAIN.spectreViewToggle!.onclick = (e) =>
+    {
+        e.preventDefault();
+        TogglePanel(SMOKEMAIN.spectreViewToggle!, SMOKEMAIN.spectreViewPanel!);
+    };
+
+    SMOKEMAIN.settingsViewToggle!.onclick = (e) =>
+    {
+        e.preventDefault();
+        TogglePanel(SMOKEMAIN.settingsViewToggle!, SMOKEMAIN.settingsViewPanel!);
+    };
+
+    SMOKEMAIN.debugViewToggle!.onclick = (e) =>
+    {
+        e.preventDefault();
+        TogglePanel(SMOKEMAIN.debugViewToggle!, SMOKEMAIN.debugViewPanel!);
+    };
+
+    function TogglePanel(button: HTMLButtonElement, panel: HTMLDivElement)
+    {
+        SMOKEMAIN.smokeViewToggle?.classList.remove("selected");
+        SMOKEMAIN.spectreViewToggle?.classList.remove("selected");
+        SMOKEMAIN.settingsViewToggle?.classList.remove("selected");
+        SMOKEMAIN.debugViewToggle?.classList.remove("selected");
+
+        SMOKEMAIN.smokeViewPanel!.style.display = "none";
+        SMOKEMAIN.spectreViewPanel!.style.display = "none";
+        SMOKEMAIN.settingsViewPanel!.style.display = "none";
+        SMOKEMAIN.debugViewPanel!.style.display = "none";
+
+        button.classList.add("selected");
+        panel.style.display = "block";
+    }
+}
 
 export function SetupInputHandlers()
 {
@@ -22,6 +64,20 @@ export function SetupInputHandlers()
             disableClickAway: false
         });
     };
+
+    SMOKEMAIN.hiddenListToggle!.onclick = async (event: MouseEvent) =>
+    {
+        if (SMOKEMAIN.hiddenTable!.style.display === "none")
+        {
+            SMOKEMAIN.hiddenTable!.style.display = "table-row-group";
+            SMOKEMAIN.hiddenListToggle!.value = "Out-of-Sight List: Click to Hide";
+        }
+        else
+        {
+            SMOKEMAIN.hiddenTable!.style.display = "none";
+            SMOKEMAIN.hiddenListToggle!.value = "Out-of-Sight List: Click to Show";
+        }
+    }
 
     // The visionCheckbox element is responsible for toggling vision updates
     SMOKEMAIN.visionCheckbox!.onclick = async (event: MouseEvent) =>
@@ -50,22 +106,6 @@ export function SetupInputHandlers()
 
         const target = event.target as HTMLInputElement;
         BSCACHE.snap = target.checked;
-    };
-
-    // Toggles the Settings Window
-    SMOKEMAIN.settingsButton!.onclick = async (event: MouseEvent) =>
-    {
-        if (!event || !event.target) return;
-
-        if (SMOKEMAIN.settingsUIDiv!.style.display === "block")
-        {
-            SMOKEMAIN.settingsUIDiv!.style.display = "none";
-            SMOKEMAIN.mainUIDiv!.style.display = "block";
-        } else
-        {
-            SMOKEMAIN.settingsUIDiv!.style.display = "block";
-            SMOKEMAIN.mainUIDiv!.style.display = "none";
-        }
     };
 
     // Toggles the persistence mode
@@ -114,24 +154,6 @@ export function SetupInputHandlers()
         if (!event || !event.target) return;
 
         OBR.broadcast.sendMessage(Constants.RESETID, true, { destination: "ALL" });
-    };
-
-    // Turns on debug mode. 
-    SMOKEMAIN.debugButton!.onclick = async (event: MouseEvent) =>
-    {
-        if (!event || !event.target) return;
-
-        if (SMOKEMAIN.debugDiv!.style.display == 'none')
-        {
-            SMOKEMAIN.debugDiv!.style.display = 'grid';
-            SMOKEMAIN.debugButton!.value = "Disable Debugging";
-        }
-        else
-        {
-            SMOKEMAIN.debugDiv!.style.display = 'none';
-            SMOKEMAIN.debugButton!.value = "Enable Debugging";
-        }
-        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/debug`]: SMOKEMAIN.debugDiv!.style.display === 'grid' ? true : false });
     };
 
     SMOKEMAIN.unlockFogButton!.onclick = async (event: MouseEvent) =>
@@ -289,7 +311,9 @@ export function SetupInputHandlers()
                 importObject = JSON.parse(fileContent);
 
                 // do we really need to validate this here? can do it inside the import functions for each vtt
-                if (importObject && ((importObject.walls && importObject.walls.length) || (importObject.line_of_sight && importObject.line_of_sight.length)))
+                if (importObject && ((importObject.walls && importObject.walls.length)
+                    || (importObject.line_of_sight && importObject.line_of_sight.length)
+                    || (importObject.objects_line_of_sight && importObject.objects_line_of_sight.length)))
                 {
                     // Good to go:
                     SMOKEMAIN.importButton!.disabled = false;
@@ -309,9 +333,14 @@ export function SetupInputHandlers()
     SMOKEMAIN.importButton!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
-        const target = event.target as HTMLInputElement;
-
-        importFog(SMOKEMAIN.importFormat!.value, importObject, (SMOKEMAIN.dpiAutodetect!.checked ? 0 : Number.parseInt(SMOKEMAIN.importDpi!.value)), SMOKEMAIN.mapAlign!.value, SMOKEMAIN.importErrors!);
+        if (SMOKEMAIN.importFormat!.value === "scene")
+        {
+            ImportScene(importObject, SMOKEMAIN.importErrors!);
+        }
+        else
+        {
+            importFog(SMOKEMAIN.importFormat!.value, importObject, (SMOKEMAIN.dpiAutodetect!.checked ? 0 : Number.parseInt(SMOKEMAIN.importDpi!.value)), SMOKEMAIN.mapAlign!.value, SMOKEMAIN.importErrors!);
+        }
     };
 
     // Tool Option Handling - Tool Color

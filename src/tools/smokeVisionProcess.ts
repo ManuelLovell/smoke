@@ -22,7 +22,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         PathKit = await PathKitInit({ locateFile: () => wasm });
     }
 
-    if (!BSCACHE.sceneReady)
+    if (!BSCACHE.sceneReady || !BSCACHE.sceneInitialized)
     {
         // If we change scenes we should invalidate the cache
         BSCACHE.playerShadowCache.invalidate();
@@ -31,7 +31,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         return;
     }
 
-    if (BSCACHE.busy || !BSCACHE.sceneInitialized)
+    if (BSCACHE.busy)
     {
         return;
     }
@@ -71,6 +71,12 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         mapScale[1] = 1;
         mapOffset[0] = 0;
         mapOffset[1] = 0;
+        if (autodetectEnabled)
+        {
+            BSCACHE.busy = false;
+            await OBR.action.setBadgeText(undefined);
+            return;
+        }
     }
     else
     {
@@ -152,12 +158,8 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     BSCACHE.previousPersistenceEnabled = persistenceEnabled;
     computeTimer.pause();
 
-
-    if (BSCACHE.enableVisionDebug)
-    {
-        // remove debug visualisations from any previous pass..
-        await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
-    }
+    // remove debug visualisations from any previous pass..
+    await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
 
     const stages: any[] = [];
     for (let i = 0; i <= 6; i++) stages.push(new Timer());
@@ -272,9 +274,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
      * merging all polygons created previously (this can probably be merged into the last step)
      */
 
-    // This could be optimised by using separate fog areas on separate map tiles to avoid having to process so many obstruction lines..
-    // However it might not be what people want in some cases with stiched maps
-
     const itemsPerPlayer: Record<number, any> = {};
     let currentProcess = 0;
 
@@ -337,7 +336,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                         const { numb, messageData } = e.data;
                         workersCompleted++;
                         workerData[numb] = messageData;
-
+                        
                         if (workersCompleted === BSCACHE.workers.length)
                         {
                             // Reassemble in order
@@ -387,7 +386,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                 };
                 // Send message to worker
                 BSCACHE.workers[i].postMessage({ numb: i, polygons: chunk, mapOffset: mapOffset, mapSize: mapSize });
-
                 // Update chunk start for next iteration
                 chunkStart = chunkEnd;
             }
@@ -569,11 +567,9 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
 
             if (fowEnabled)
             {
-                if (BSCACHE.enableVisionDebug)
-                {
-                    const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                    await OBR.scene.local.addItems([debugPath]);
-                }
+                const debugPath = buildPath().commands(item.toCmds()).locked(true).visible(item.visible).fillColor('#555500').fillOpacity(0.3).strokeColor("#00FF00").layer("DRAWING").metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+                await OBR.scene.local.addItems([debugPath]);
+
 
                 trailingFogRect.op(item, PathKit.PathOp.DIFFERENCE);
 
@@ -905,11 +901,11 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             tempPath.closePath();
 
             // debug - blue token bounding path
-            if (BSCACHE.enableVisionDebug)
-            {
-                const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                await OBR.scene.local.addItems([debugPath]);
-            }
+            // if (BSCACHE.enableVisionDebug)
+            // {
+            //     const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+            //     await OBR.scene.local.addItems([debugPath]);
+            // }
 
             tPathBuilder.add(tempPath, PathKit.PathOp.UNION);
             tPathBuilder.add(currentFogPath, PathKit.PathOp.INTERSECT);
@@ -924,11 +920,11 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             }
 
             // debug - red intersection path
-            if (BSCACHE.enableVisionDebug)
-            {
-                const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-                await OBR.scene.local.addItems([debugPath]);
-            }
+            // if (BSCACHE.enableVisionDebug)
+            // {
+            //     const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
+            //     await OBR.scene.local.addItems([debugPath]);
+            // }
             tempPath.delete();
             tPathBuilder.delete();
             intersectPath.delete();

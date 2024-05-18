@@ -1,4 +1,4 @@
-import OBR, { Image, buildCurve, Vector2 } from "@owlbear-rodeo/sdk";
+import OBR, { Image, buildCurve, Vector2, buildImageUpload, buildSceneUpload, Curve, buildImage } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { createLocalDoor } from "./doorTool";
 import simplify from "simplify-js";
@@ -87,7 +87,105 @@ export async function importFog(importType: string, importData: any, importDpi: 
     }
 }
 
-function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: number, offset: number[], errorElement: HTMLDivElement) 
+function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number }>>): Curve[]
+{
+    const DEFAULTCOLOR = "#000000";
+    const DEFAULTWIDTH = 8;
+    const DEFAULTSTROKE: number[] = [];
+
+    const newItems: Curve[] = [];
+    for (const uvttItem of uvttObjects)
+    {
+        const newItemPaths = [];
+        for (const point of uvttItem)
+        {
+            newItemPaths.push({ x: point.x * BSCACHE.gridDpi, y: point.y * BSCACHE.gridDpi });
+        }
+        const line = buildCurve()
+            .tension(0)
+            .points(newItemPaths)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .fillOpacity(0)
+            .fillColor("#000000")
+            .layer("DRAWING")
+            .name("Vision Line (Line)")
+            .closed(false)
+            .locked(true)
+            .visible(false)
+            .metadata({ [`${Constants.EXTENSIONID}/isVisionLine`]: true })
+            .build();
+
+        newItems.push(line);
+    }
+    return newItems;
+}
+
+export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement)
+{
+    // Create Walls
+    let importedObjects: any[] = [];
+    if (importData.objects_line_of_sight.length > 0)
+    {
+        importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.objects_line_of_sight));
+    }
+    if (importData.line_of_sight.length > 0)
+    {
+        importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.line_of_sight));
+    }
+
+    // Create Torches
+    if (importData.lights.length > 0)
+    {
+        const newItems = [];
+        for (const light of importData.lights)
+        {
+            // Dropping as bite-size transparent PNGs because the light-sources
+            // are images baked into the map itself
+            const torch = buildImage(
+                {
+                    height: 150,
+                    width: 150,
+                    url: "https://battle-system.com/blank.png",
+                    mime: "image/png",
+                },
+                { dpi: 300, offset: { x: 150, y: 150 } }
+            )
+                .position({ x: light.position.x * BSCACHE.gridDpi, y: light.position.y * BSCACHE.gridDpi })
+                .layer("CHARACTER")
+                .metadata({
+                    [`${Constants.EXTENSIONID}/hasVision`]: true,
+                    [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
+                    [`${Constants.EXTENSIONID}/visionTorch`]: true
+                })
+                .name("Imported Light Source")
+                .build();
+            newItems.push(torch);
+        }
+        importedObjects = importedObjects.concat(newItems);
+    }
+
+    // Create Map
+    const imageBinary = atob(importData.image);
+    const uint8Array = new Uint8Array(imageBinary.length);
+    for (let i = 0; i < imageBinary.length; i++)
+    {
+        uint8Array[i] = imageBinary.charCodeAt(i);
+    }
+    const blob = new Blob([uint8Array], { type: 'image/png' });
+
+    const image = buildImageUpload(blob).grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } }).build();
+    const scene = buildSceneUpload()
+        .baseMap(image)
+        .name("New UVTT Scene")
+        .items(importedObjects)
+        .build();
+    await OBR.assets.uploadScenes([scene], true);
+    await OBR.notification.show("Toggle Smoke Off then On when opening the new Scene", "DEFAULT");
+}
+
+async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: number, offset: number[], errorElement: HTMLDivElement) 
 {
     let totalImported = 0, totalPoints = 0;
     let currentPoints = 0;
@@ -151,9 +249,9 @@ function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: numb
             if (currentPoints > 512 || lines.length > 64)
             {
                 totalImported += lines.length;
-                OBR.scene.items.addItems(lines);
+                await OBR.scene.items.addItems(lines);
                 const doors = lines.filter((item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
-                createLocalDoor(doors);
+                await createLocalDoor(doors);
 
                 lines.length = 0;
                 currentPoints = 0;
@@ -164,9 +262,9 @@ function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: numb
     if (lines.length > 0)
     {
         totalImported += lines.length;
-        OBR.scene.items.addItems(lines);
+        await OBR.scene.items.addItems(lines);
         const doors = lines.filter((item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
-        createLocalDoor(doors);
+        await createLocalDoor(doors);
     }
 
     errorElement.innerText = 'Finished importing ' + totalImported + ' walls, ' + totalPoints + " points.";
@@ -174,13 +272,6 @@ function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: numb
 
 function importUVTT(importData: any, dpiRatio: number, offset: number[], errorElement: HTMLDivElement)
 {
-
-    if (!importData.line_of_sight || importData.line_of_sight.length === 0)
-    {
-        errorElement.innerText = 'No walls / los found';
-        return;
-    }
-
     if (importData.resolution.map_origin !== undefined)
     {
         offset[0] -= importData.resolution.map_origin.x * importData.resolution.pixels_per_grid;
@@ -198,8 +289,8 @@ function importUVTT(importData: any, dpiRatio: number, offset: number[], errorEl
             importData.line_of_sight.push(door);
         }
     }
-
-    importWalls(importData.line_of_sight, importData.resolution.pixels_per_grid, dpiRatio, offset, errorElement);
+    const wallCluster = importData.line_of_sight.concat(importData.objects_line_of_sight);
+    importWalls(wallCluster, importData.resolution.pixels_per_grid, dpiRatio, offset, errorElement);
 }
 
 function importFoundry(importData: any, dpiRatio: number, offset: number[], errorElement: HTMLDivElement)
