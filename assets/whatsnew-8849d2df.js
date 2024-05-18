@@ -1,4 +1,4 @@
-import{O as n,C as l}from"./bsConstants-5cf717a6.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
+import{O as n,C as c}from"./bsConstants-99533c10.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,6 +18,26 @@ import{O as n,C as l}from"./bsConstants-5cf717a6.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,p=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/17</h1>
+        This is the update you were dreading!
+        </br> I moved everything.
+        </br></br> In my effort to have proper documentation across all extensions, I needed to get this in a space where I wasn't going to facelift it anytime soon. So I needed to facelift it now.
+        </br></br>Other large changes:
+        <li> Smoke will now process your lines whether they are in-boundary or not, based on where they exitted. No more 'stuck' extension because you goofed.
+        <li> The first 'click' of an obstruction tool will now snap to the grid, if you have snap enabled.
+        <li> When using the obstruction tools, if you hold CTRL it will temporarily disable snap.
+        <li> Cleaned up a filter that was allowing you to 'Enable Door' on any ole random line. (Oops.)
+        <li> Added support for the OBR drawing tools, you can now use any of the default OBR drawing tools to create obstructions. You just need to 'Convert to Obstruction' on the line.
+        <li> Added 'UVTT Scene' import option. This one will import entire scenes (the map, lights, walls).
+        <li> Added 'Out-of-Sight' button for vision tokens, which will hide them. Because there's really no reason to see 20 lights at all times.
+        <li> Some random bug fixes for swapping between scenes with different settings.
+        </br></br> Also, I rewrote Spectre.
+        <li> You can now 'Spectre' anything that is an Image based token.
+        <li> Players can now move/change Spectre tokens. This incldues deleting. (This is all still controlled by your Permissions though.)
+        <li> Updated the scene persistence for Spectre'd tokens.
+        </br></br> Things seem pretty stable in my testing, though I have seen a tale of an issue with hot-loading on a scene 100+ times.. which is likely something that only I will run into.
+        </br> So enjoy.
+
         <h1>Smoke & Spectre! 5/9</h1>
         This is the update you were hoping for!
         </br>
@@ -59,4 +79,4 @@ import{O as n,C as l}from"./bsConstants-5cf717a6.js";/* empty css               
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(l.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const c=document.getElementById("discordButton");c.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const d=document.getElementById("basicTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const h=document.getElementById("advTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(c.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
