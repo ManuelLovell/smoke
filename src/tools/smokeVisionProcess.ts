@@ -23,7 +23,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     }
 
     if (!BSCACHE.sceneReady || !BSCACHE.sceneInitialized)
-    if (!BSCACHE.sceneReady || !BSCACHE.sceneInitialized)
     {
         // If we change scenes we should invalidate the cache
         BSCACHE.playerShadowCache.invalidate();
@@ -32,7 +31,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         return;
     }
 
-    if (BSCACHE.busy)
     if (BSCACHE.busy)
     {
         return;
@@ -73,12 +71,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
         mapScale[1] = 1;
         mapOffset[0] = 0;
         mapOffset[1] = 0;
-        if (autodetectEnabled)
-        {
-            BSCACHE.busy = false;
-            await OBR.action.setBadgeText(undefined);
-            return;
-        }
         if (autodetectEnabled)
         {
             BSCACHE.busy = false;
@@ -166,8 +158,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
     BSCACHE.previousPersistenceEnabled = persistenceEnabled;
     computeTimer.pause();
 
-    // remove debug visualisations from any previous pass..
-    await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
     // remove debug visualisations from any previous pass..
     await OBR.scene.local.deleteItems((await OBR.scene.local.getItems(f => f.metadata[`${Constants.EXTENSIONID}/debug`] === true)).map(i => i.id));
 
@@ -346,7 +336,7 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                         const { numb, messageData } = e.data;
                         workersCompleted++;
                         workerData[numb] = messageData;
-                        
+
                         if (workersCompleted === BSCACHE.workers.length)
                         {
                             // Reassemble in order
@@ -918,11 +908,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             //     const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
             //     await OBR.scene.local.addItems([debugPath]);
             // }
-            // if (BSCACHE.enableVisionDebug)
-            // {
-            //     const debugPath = buildPath().strokeColor('#0000ff').locked(true).fillOpacity(1).commands(tempPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-            //     await OBR.scene.local.addItems([debugPath]);
-            // }
 
             tPathBuilder.add(tempPath, PathKit.PathOp.UNION);
             tPathBuilder.add(currentFogPath, PathKit.PathOp.INTERSECT);
@@ -937,11 +922,6 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
             }
 
             // debug - red intersection path
-            // if (BSCACHE.enableVisionDebug)
-            // {
-            //     const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
-            //     await OBR.scene.local.addItems([debugPath]);
-            // }
             // if (BSCACHE.enableVisionDebug)
             // {
             //     const debugPath = buildPath().fillRule("evenodd").locked(true).strokeColor('#ff0000').fillOpacity(0).commands(intersectPath.toCmds()).metadata({ [`${Constants.EXTENSIONID}/debug`]: true }).build();
