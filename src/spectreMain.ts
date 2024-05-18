@@ -154,8 +154,8 @@ export async function LoadSpectreSceneMetadata(): Promise<void>
 {
     // This will be triggered on load, it will pull the sceneMetadata
     // Grab the ghost list and check it's metadata to see if it's for this user
-    let ghosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
-    if (!ghosts)
+    BSCACHE.localGhosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+    if (!BSCACHE.localGhosts)
     {
         BSCACHE.localGhosts = [];
     }
@@ -163,7 +163,7 @@ export async function LoadSpectreSceneMetadata(): Promise<void>
     // Only use this for Players, the GM needs to setup the Controls
     const ghostsToAdd = [];
 
-    for (const ghost of ghosts)
+    for (const ghost of BSCACHE.localGhosts)
     {
         const viewers = ghost.metadata[`${Constants.SPECTREID}/viewers`] as string[];
         if (viewers.includes(BSCACHE.playerId) && BSCACHE.playerRole !== "GM")
@@ -276,16 +276,16 @@ export async function SetupSpectreGM(): Promise<void>
 
 export async function RestoreGhostsGM(): Promise<void>
 {
-    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
-    if (!ghostData)
+    BSCACHE.localGhosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+    if (!BSCACHE.localGhosts)
     {
         BSCACHE.localGhosts = [];
     }
 
-    if (ghostData)
+    if (BSCACHE.localGhosts.length > 0)
     {
-        await OBR.scene.local.addItems(ghostData);
-        ghostData.forEach(ghost =>
+        await OBR.scene.local.addItems(BSCACHE.localGhosts);
+        BSCACHE.localGhosts.forEach(ghost =>
         {
             SetupTomSelect(ghost);
         });
