@@ -57,6 +57,7 @@ class BSCache
     playerShadowCache: ObjectCache;
 
     ghosts: Image[];
+    localGhosts: Image[];
     snap: boolean;
     torchActive: boolean;
 
@@ -111,6 +112,7 @@ class BSCache
         this.theme = "DARK";
         this.roomMetadata = {};
         this.ghosts = [];
+        this.localGhosts = [];
         this.snap = false;
         this.busy = false;
         this.torchActive = false;

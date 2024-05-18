@@ -96,7 +96,7 @@ export function isObjectOver14KB(obj: any, extra?: any): boolean
 export function ImageArraysAreEqual(array1: Image[], array2: Image[]): boolean
 {
     const ignoreKeys = ['lastModified', 'lastModifiedUserId'];
-
+    
     if (array1.length !== array2.length) return false;
 
     for (let i = 0; i < array1.length; i++)
