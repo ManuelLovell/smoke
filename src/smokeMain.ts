@@ -2,8 +2,7 @@ import OBR, { Item, Image, ItemFilter, isImage } from "@owlbear-rodeo/sdk";
 import { isAnyFog, isTokenWithVisionForUI } from './utilities/itemFilters';
 import { OnSceneDataChange } from './tools/smokeVisionProcess';
 import { Constants } from "./utilities/bsConstants";
-import { SetupSpectreGM } from "./spectreMain";
-import { SetupInputHandlers } from "./smokeHandlers";
+import { SetupInputHandlers, SetupPanelHandlers } from "./smokeHandlers";
 import { AddUnitVisionUI } from "./smokeVisionUI";
 import { InitializeScene } from "./smokeInitializeScene";
 import { SetupContextMenus, SetupAutohideMenus } from "./smokeSetupContextMenus";
@@ -14,6 +13,7 @@ import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { UpdateMaps } from "./tools/import";
+import { SetupLocalSpecterHandlers, SetupSpectreGM } from "./spectreMain";
 
 export class SmokeMain
 {
@@ -22,8 +22,10 @@ export class SmokeMain
     public playerListContainer?: HTMLDivElement;
     public settingsUIDiv?: HTMLDivElement;
     public visionCheckbox?: HTMLInputElement;
+    public hiddenListToggle?: HTMLInputElement;
     public snapCheckbox?: HTMLInputElement;
     public table?: HTMLDivElement;
+    public hiddenTable?: HTMLDivElement;
     public message?: HTMLParagraphElement;
     public mapHeight?: HTMLInputElement;
     public mapWidth?: HTMLInputElement;
@@ -31,6 +33,16 @@ export class SmokeMain
     public whatsNewButton?: HTMLDivElement;
     public whatsNewIcon?: HTMLDivElement;
     public processedIndicator?: HTMLButtonElement;
+
+    public smokeViewToggle?: HTMLButtonElement;
+    public spectreViewToggle?: HTMLButtonElement;
+    public settingsViewToggle?: HTMLButtonElement;
+    public debugViewToggle?: HTMLButtonElement;
+
+    public smokeViewPanel?: HTMLDivElement;
+    public spectreViewPanel?: HTMLDivElement;
+    public settingsViewPanel?: HTMLDivElement;
+    public debugViewPanel?: HTMLDivElement;
 
     // Settings
     public persistenceCheckbox?: HTMLInputElement;
@@ -40,10 +52,7 @@ export class SmokeMain
     public fowColor?: HTMLInputElement;
     public resetButton?: HTMLInputElement;
     public convertButton?: HTMLInputElement;
-    public settingsButton?: HTMLInputElement;
     public boundryOptions?: HTMLDivElement;
-    public debugDiv?: HTMLDivElement;
-    public debugButton?: HTMLButtonElement;
     public backgroundButton?: HTMLDivElement;
 
     public lockFogButton?: HTMLButtonElement;
@@ -73,31 +82,51 @@ export class SmokeMain
     public SetupGMElements()
     {
         this.mainWindow!.innerHTML = `
-        <div>
-            <div>
-                <div id="localStorageWarning"></div>
-                <div class="title">
-                <button class="circle-button" id="processedIndicator"></button>
-                    Smoke!
-                    <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">
-                    <div class="tooltip" id="settings_button" title="Settings"><svg class="svgclickable" fill="#fff" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M.63 11.08zm.21.41v-.1zm.23.38L1 11.68zM1 11.68l-.11-.19zm-.21-.29c-.06-.1-.11-.21-.16-.31.05.1.1.21.16.31zm.32.54v-.06z"/><path d="m11.26 12.63 1.83 1.09a7.34 7.34 0 0 0 1-.94 7.48 7.48 0 0 0 1.56-2.86l-1.74-1A5.29 5.29 0 0 0 14 8a5.29 5.29 0 0 0-.08-.9l1.74-1a7.45 7.45 0 0 0-1.33-2.58 7.54 7.54 0 0 0-1.24-1.22l-1.83 1.04a6 6 0 0 0-1.11-.53v-2A8.55 8.55 0 0 0 7.94.53a8.39 8.39 0 0 0-2.26.3v2a7.23 7.23 0 0 0-1.12.54L2.78 2.28A7.46 7.46 0 0 0 .2 6.06l1.72 1a5.29 5.29 0 0 0-.08.9 5.29 5.29 0 0 0 .08.9l-1.73 1a8 8 0 0 0 .43 1.15c.05.1.1.21.16.31v.1l.11.19.12.19v.06a7.69 7.69 0 0 0 1.64 1.78l1.81-1.08a7.23 7.23 0 0 0 1.12.54v2a8.39 8.39 0 0 0 2.26.31 8.56 8.56 0 0 0 2.22-.3v-2a6 6 0 0 0 1.2-.48zm-2.39 1.52a7.57 7.57 0 0 1-.95.06 7.73 7.73 0 0 1-1-.06v-1.69a4.92 4.92 0 0 1-2.53-1.27l-1.54.92a6.22 6.22 0 0 1-1.08-1.61l1.56-.93a4.27 4.27 0 0 1 0-3.17l-1.56-.92a6.11 6.11 0 0 1 1.12-1.62l1.56.93A5 5 0 0 1 7 3.53V1.82a7.73 7.73 0 0 1 1-.06 7.57 7.57 0 0 1 .95.06v1.72a4.9 4.9 0 0 1 2.4 1.26l1.59-.94a6.31 6.31 0 0 1 1.11 1.62l-1.6.94a4.35 4.35 0 0 1 .3 1.58 4.44 4.44 0 0 1-.29 1.55l1.56.93a6.43 6.43 0 0 1-1.11 1.61l-1.58-.93a5 5 0 0 1-2.49 1.28z"/><path d="M7.92 5.49A2.59 2.59 0 0 0 5.25 8a2.59 2.59 0 0 0 2.67 2.51A2.6 2.6 0 0 0 10.6 8a2.6 2.6 0 0 0-2.68-2.51zM8 9.2A1.35 1.35 0 0 1 6.55 8 1.35 1.35 0 0 1 8 6.7 1.35 1.35 0 0 1 9.39 8 1.35 1.35 0 0 1 8 9.2z"/></svg></div>
-                    <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg id="whatsNewIcon" class="svgclickable" fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
+            <div id="localStorageWarning"></div>
+            <div id="tabControls">
+                <div class="controlContainer">
+                    <button class="view-button selected" id="smokeViewToggle">SMOKE</button>
+                    <button class="view-button" id="spectreViewToggle">SPECTRE</button>
+                    <button class="view-button" id="settingsViewToggle">SETTINGS</button>
+                    <button class="view-button" id="debugViewToggle">INFO</button>
+                    <div id="miniButtons">
+                        <button class="circle-button" id="processedIndicator"></button>
+                        <input type="checkbox" id="vision_checkbox" class="large" title="Enable Dynamic Fog">    
+                        <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg id="whatsNewIcon" class="svgclickable" fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
+                    </div>
                 </div>
-                <hr>
-                ${Constants.SETTINGSPAGE}
-                ${Constants.MAINPAGE}
-                ${Constants.DEBUGPAGE}
             </div>
-        </div>
+            <div id="smokeViewPanel" class="panel"></div>
+            <div id="spectreViewPanel" class="panel" style="display: none;"></div>
+            <div id="settingsViewPanel" class="panel" style="display: none;"></div>
+            <div id="debugViewPanel" class="panel" style="display: none;"></div>
         `;
 
         this.mainWindow!.parentElement!.style.placeItems = "start";
 
+        this.smokeViewToggle = document.getElementById("smokeViewToggle") as HTMLButtonElement;
+        this.spectreViewToggle = document.getElementById("spectreViewToggle") as HTMLButtonElement;
+        this.settingsViewToggle = document.getElementById("settingsViewToggle") as HTMLButtonElement;
+        this.debugViewToggle = document.getElementById("debugViewToggle") as HTMLButtonElement;
+
+        this.smokeViewPanel = document.getElementById("smokeViewPanel") as HTMLDivElement;
+        this.spectreViewPanel = document.getElementById("spectreViewPanel") as HTMLDivElement;
+        this.settingsViewPanel = document.getElementById("settingsViewPanel") as HTMLDivElement;
+        this.debugViewPanel = document.getElementById("debugViewPanel") as HTMLDivElement;
+
+        // Setup Panels before hitting Handlers
+        this.smokeViewPanel.innerHTML = Constants.SMOKEHTML;
+        this.spectreViewPanel.innerHTML = Constants.SPECTREHTML;
+        this.settingsViewPanel.innerHTML = Constants.SETTINGSHTML;
+        this.debugViewPanel.innerHTML = Constants.DEBUGHTML;
+
         this.mainUIDiv = document.getElementById("main-ui") as HTMLDivElement;
         this.settingsUIDiv = document.getElementById("settings-ui") as HTMLDivElement;
         this.visionCheckbox = document.getElementById("vision_checkbox") as HTMLInputElement;
+        this.hiddenListToggle = document.getElementById("hideListToggle") as HTMLInputElement;
         this.snapCheckbox = document.getElementById("snap_checkbox") as HTMLInputElement;
         this.table = document.getElementById("token_list") as HTMLDivElement;
+        this.hiddenTable = document.getElementById("hidden_list") as HTMLDivElement;
         this.message = document.getElementById("no_tokens_message") as HTMLParagraphElement;
         this.mapHeight = document.getElementById("mapHeight") as HTMLInputElement;
         this.mapWidth = document.getElementById("mapWidth") as HTMLInputElement;
@@ -113,10 +142,7 @@ export class SmokeMain
         this.fowColor = document.getElementById("fow_color") as HTMLInputElement;
         this.resetButton = document.getElementById("persistence_reset") as HTMLInputElement;
         this.convertButton = document.getElementById("convert_button") as HTMLInputElement;
-        this.settingsButton = document.getElementById("settings_button") as HTMLInputElement;
         this.boundryOptions = document.getElementById("boundry_options") as HTMLDivElement;
-        this.debugDiv = document.getElementById("debug_div") as HTMLDivElement;
-        this.debugButton = document.getElementById("debug_button") as HTMLButtonElement;
         this.backgroundButton = document.getElementById("background_button") as HTMLDivElement;
 
         this.lockFogButton = document.getElementById("lock_button") as HTMLButtonElement;
@@ -147,6 +173,7 @@ export class SmokeMain
         };
 
         Coloris.init();
+        SetupPanelHandlers();
     }
 
     private async SetupPlayerElements()
@@ -218,10 +245,7 @@ export class SmokeMain
             debug = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/debug`] == true;
         }
 
-        this.debugDiv!.style.display = debug ? 'grid' : 'none';
-
         this.boundryOptions!.style.display = this.autodetectCheckbox!.checked ? "none" : "";
-        this.message!.style.display = playersWithVision.length > 0 ? "none" : "block";
 
         const fogBackgrounds = BSCACHE.sceneItems.filter((item) => item.layer === "FOG" && item.metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] === true);
         const fogBackgroundEntries = document.querySelectorAll(".fog-background-entry");
@@ -395,6 +419,7 @@ export class SmokeMain
 
         await InitializeScene();
         await OnSceneDataChange();
+        SetupLocalSpecterHandlers();
 
         // This needs to be last to avoid getting blasted by all the Initialization
         BSCACHE.SetupHandlers();
@@ -402,7 +427,7 @@ export class SmokeMain
     }
 }
 
-export const SMOKEMAIN = new SmokeMain("2.40");
+export const SMOKEMAIN = new SmokeMain("2.50");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness

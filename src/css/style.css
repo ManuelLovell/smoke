@@ -79,12 +79,15 @@
 
 .title {
     font-size: 1.5em;
+    display: flex;
+    justify-content: space-between;
     font-weight: bolder;
 }
 
 .visionTitle {
-    display: inline-block;
-    font-size: 1.3em;
+    display: flex;
+    justify-content: center;
+    font-size: 1em;
     font-weight: 700;
     margin-bottom: 0;
 }
@@ -101,6 +104,7 @@ input[type=button] {
     background-color: var(--OBR-light-blue);
     padding: 2px;
     border: 2px solid black;
+    cursor: pointer;
 }
 
 #import_dpi:disabled {
@@ -133,24 +137,26 @@ input[type=button]:hover {
     background-color: var(--OBR-Purple-Select);
 }
 
-body {
-    margin: 0;
+html {
+    height: 100%;
+    width: 100%;
     display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
+    ;
 }
 
-h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
+body {
+    overflow-y: hidden;
+    margin: .75rem;
+    width: 100%;
 }
+
 
 #app {
-    max-width: 1280px;
-    padding: .75rem;
     text-align: center;
+    height: 100%;
     width: 100%;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 .logo {
@@ -177,7 +183,7 @@ h1 {
 }
 
 button {
-    border-radius: 8px;
+    border-radius: 6px;
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
     font-size: 1em;
@@ -324,7 +330,6 @@ li>p {
 
 .grid-main {
     width: 100%;
-    display: grid;
     grid-template-columns: 10% 50% auto;
 }
 
@@ -364,6 +369,18 @@ li>p {
     transform: scale(1.5);
 }
 
+#token_list_div {
+    scrollbar-width: thin;
+    height: 95%;
+    overflow-y: scroll;
+}
+
+#ghostContainer {
+    height: 95%;
+    overflow-y: scroll;
+    scrollbar-width: thin;
+}
+
 /* SETTINGS TABLE */
 .tableHeader {
     font-weight: bolder;
@@ -375,6 +392,10 @@ li>p {
 #persistence_reset,
 #quality {
     margin-left: 16px;
+}
+
+#hideListToggle {
+    cursor: pointer;
 }
 
 .settingsButton {
@@ -405,11 +426,13 @@ li>p {
 }
 
 .circle-button {
-    margin-top: 6px;
+    margin-top: 2px;
+    margin-right: 6px;
+    margin-left: 6px;
     padding: 0;
     float: left;
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background-color: yellow;
     border: 1px solid var(--light-letters);
@@ -466,4 +489,78 @@ li>p {
 
 .context-menu ul li:hover {
     background: var(--OBR-light-blue);
+}
+
+
+.view-button {
+    width: 50%;
+    height: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: var(--OBR-dark-blue-trans);
+    border-radius: 6px;
+    border: 1px solid var(--OBR-font) !important;
+    color: var(--OBR-font);
+    margin-left: 2px;
+    margin-right: 2px;
+    padding: 0;
+    outline: white;
+    outline-style: solid;
+    outline-width: 1px;
+}
+
+.selected {
+    background-color: var(--OBR-Purple-Select) !important;
+}
+
+.note {
+    cursor: help;
+}
+
+.controlContainer {
+    display: flex;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid white;
+}
+#debugViewToggle
+{
+    padding-left: 4px;
+    padding-right: 4px;
+    width: 90px;
+}
+.panel {
+    height: 90%;
+}
+
+#whatsNewIcon,
+#whatsnewbutton {
+    width: 22px;
+    height: 22px;
+}
+
+#whatsnewbutton {
+    margin-top: -2px;
+    margin-left: 6px;
+}
+
+#miniButtons {
+    display: flex;
+    height: 100%;
+    justify-content: space-between;
+}
+
+#main-ui {
+    overflow-y: hidden;
+    height: 100%;
+}
+
+#debug_div {
+    text-align: center;
+    width: 100%;
+}
+
+.headerButton {
+    width: 20px !important;
+    height: 20px !important;
 }

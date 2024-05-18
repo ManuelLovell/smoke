@@ -5,13 +5,13 @@ import { AddBorderIfNoAutoDetect } from "../smokeVisionUI";
 import { SMOKEMAIN } from "../smokeMain";
 import { UpdateMaps } from "../tools/import";
 import { toggleDoor } from "../tools/doorTool";
-import { RunSpectre, UpdateSpectreTargets } from "../spectreMain";
 import { InitializeScene } from "../smokeInitializeScene";
 import { OnSceneDataChange } from "../tools/smokeVisionProcess";
 import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "../tools/visionLineMode";
 import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "../tools/visionPolygonMode";
 import { ObjectCache } from "./cache";
 import SmokeWorker from "../tools/worker?worker";
+import { UpdateSpectreTargets } from "../spectreMain";
 
 class BSCache
 {
@@ -38,8 +38,9 @@ class BSCache
     fogStroke: number;
 
     gridDpi: number;
-    gridScale: number; // IE; 5ft
+    gridScale: number; // IE; 5   ft
     gridSnap: number;
+    gridType: string; // IE; ft (of 5ft)
 
     storedMetaItems: Item[];
     sceneItems: Item[];
@@ -73,7 +74,6 @@ class BSCache
     busy: boolean;
     workers: Worker[];
     workersSetup: boolean;
-    enableVisionDebug: boolean; // dev setting to enable debug visualisations
 
     //handlers
     sceneMetadataHandler?: () => void;
@@ -105,6 +105,7 @@ class BSCache
         this.gridDpi = 0;
         this.gridScale = 5;
         this.gridSnap = 10;
+        this.gridType = "ft";
         this.sceneReady = false;
         this.sceneInitialized = false;
         this.theme = "DARK";
@@ -126,7 +127,6 @@ class BSCache
         this.previousFowEnabled = false;
         this.previousPersistenceEnabled = false;
         this.previousFowColor = "";
-        this.enableVisionDebug = false;
         this.workers = [];
         this.workersSetup = false;
     }
@@ -134,6 +134,15 @@ class BSCache
     public async InitializeCache()
     {
         // Always Cache
+        if (import.meta.hot)
+        {
+            import.meta.hot.accept();
+            import.meta.hot.dispose(() =>
+            {
+                // Terminate existing workers if we're in a hot relaod
+                this.workers.forEach(worker => worker.terminate());
+            });
+        }
         this.CreateWorkers();
         this.sceneReady = await OBR.scene.isReady();
         this.theme = await OBR.theme.getTheme();
@@ -189,7 +198,9 @@ class BSCache
             if (this.sceneReady)
             {
                 this.gridDpi = await OBR.scene.grid.getDpi();
-                this.gridScale = (await OBR.scene.grid.getScale()).parsed?.multiplier ?? 5;
+                const gridScale = await OBR.scene.grid.getScale();
+                this.gridScale = gridScale.parsed?.multiplier ?? 5;
+                this.gridType = gridScale.parsed.unit;
             }
         }
 
@@ -374,10 +385,18 @@ class BSCache
 
                 if (ready)
                 {
-                    this.sceneItems = await OBR.scene.items.getItems();
                     this.sceneMetadata = await OBR.scene.getMetadata();
                     this.gridDpi = await OBR.scene.grid.getDpi();
-                    this.gridScale = (await OBR.scene.grid.getScale()).parsed?.multiplier ?? 5;
+                    const gridScale = await OBR.scene.grid.getScale();
+                    this.gridScale = gridScale.parsed?.multiplier ?? 5;
+                    this.gridType = gridScale.parsed.unit;
+                    this.sceneItems = await OBR.scene.items.getItems();
+                }
+                else
+                {
+                    this.KillHandlers();
+                    this.sceneItems = [];
+                    this.sceneMetadata = {};
                 }
                 await this.OnSceneReadyChange(ready);
             });
@@ -418,7 +437,6 @@ class BSCache
         if (ready)
         {
             //Turn off all handlers before Initializing a scene to avoid triggering updates with race conditions
-            this.KillHandlers();
             await InitializeScene();
             await OnSceneDataChange();
             this.SetupHandlers();
@@ -501,7 +519,7 @@ class BSCache
     {
         if (this.playerRole === "PLAYER")
         {
-            await RunSpectre(this.party);
+
         }
         else
         {

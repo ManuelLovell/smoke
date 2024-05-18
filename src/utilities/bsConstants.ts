@@ -18,8 +18,9 @@ export class Constants
     static PARENTHESESMATCH = /\((\d*d\d+\s*([+-]\s*\d+)?)\)/g;
     static PLUSMATCH = /\s(\+\d+)\s/g;
     static GRIDID = "d9953ba1-f417-431c-8a39-3c3376e3caf0";
+    static SPECTREBROADCASTID = "SPECTREBROADCAST";
 
-    static DOOROPEN:PathCommand[] = [
+    static DOOROPEN: PathCommand[] = [
         [0, -65.35400390625, -250],
         [1, -65.35400390625, -228.27999877929688],
         [1, -150.29598999023438, -228.27999877929688],
@@ -71,45 +72,45 @@ export class Constants
         [5]
     ];
 
-    static MAINPAGE = `
+    static SMOKEHTML = `
     <div id="contextMenu" class="context-menu" style="display: none">
-    Assign Owner:
+        Assign Owner:
         <ul id="playerListing"></ul>
     </div>
+    <div class="visionTitle grid-3">Tokens with Vision Enabled<div class="note" title='Note: GM-owned tokens give universal vision.'>📝</div></div>
     <div id="main-ui" class="grid-main">
-            <div class="visionTitle grid-3">Vision Radius</div>
-            <div class="grid-3"><i>Note: GM-owned tokens give universal vision.</i></div>
-            <p class="grid-3" id="no_tokens_message">Enable vision on your character tokens.</p>
-            <div id="token_list_div" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-                <table style="margin: auto; padding: 0;">
+        <div id="token_list_div" class="grid-3" padding-bottom: 8px;">
+            <table style="margin: auto; padding: 0;">
                 <tbody id="token_list"></tbody>
-                </table>
-            </div>
-            <div class="visionTitle grid-3">Spectres!</div>
-            <div id="ghostContainer" class="grid-3" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-                <div id="spectreWarning">
-                    Spectre tokens are only visible to specific players.
-                    <br>
-                    Enable vision here after it's been Spectred.
-                    <br>
-                </div>
-                <table style="margin: auto; padding: 0; width: 100%">
-                <colgroup>
-                    <col style="width: 50%;">
-                    <col style="width: 25%;">
-                    <col style="width: 25%;">
-                </colgroup>
-                <tbody id="ghostList">
-                </tbody></table>
-            </div> 
-            <div id="fog_backgrounds" class="grid-3">
-                <div class="visionTitle" style="display: block; padding-top:8px;">Fog Backgrounds</div>
-                <div id="fog_background_list" class="grid-main" style="border-bottom: 1px solid white; padding-bottom: 8px;">
-            </div>
-        </div>`;
+            </table>
+            <table style="margin: auto; padding: 0;">
+                <tbody id="hidden_list" style="display:none;">~ <input type="button" value="Out-of-Sight List: Click to Show" class="settingsButton" style="width: 60% !important;" id="hideListToggle"> ~</tbody>
+            </table>
+        </div>
+    </div>
+    `;
 
-    static SETTINGSPAGE = `
-        <div id="settings-ui" style="display:none;">
+    static SPECTREHTML = `
+    <div class="visionTitle grid-3">Tokens with Spectre Enabled
+        <div class="note" title='Spectre tokens are only visible to specific players. Enable vision here after it has been Spectred.'>📝</div>
+    </div>
+    <div id="main-ui" class="grid-main">
+        <div id="ghostContainer" class="grid-3">
+            <table style="margin: auto; padding: 0; width: 100%">
+            <colgroup>
+                <col style="width: 50%;">
+                <col style="width: 25%;">
+                <col style="width: 25%;">
+            </colgroup>
+            <tbody id="ghostList">
+            </tbody></table>
+            </div> 
+        </div>
+    </div>
+    `;
+
+    static SETTINGSHTML = `
+        <div id="settings-ui">
             <table id="settingsTable">
                 <colgroup>
                     <col style="width: 40%;">
@@ -154,9 +155,8 @@ export class Constants
                         <td colspan="2"><input class="settingsButton" type="button" id="background_button" value="Unlock Fog Backgrounds"></td>
                     </tr>
                     <tr>
-                        <td><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines" title="Unlock all Obstruction Lines on the Scene"></td>
-                        <td><input class="settingsButton" type="button" id="lock_button" value="Lock Lines" title="Lock all Obstruction Lines on the Scene"></td>
-                        <td colspan="2"><input class="settingsButton" type="button" id="debug_button" value="Enable Debugging" title="Show debugging and performance data"></td>
+                        <td colspan="2"><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines" title="Unlock all Obstruction Lines on the Scene"></td>
+                        <td colspan="2"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines" title="Lock all Obstruction Lines on the Scene"></td>
                     </tr>
                     <tr>
                         <td colspan="4" style="text-align: center; font-weight: bold;">Tool Options</td>
@@ -191,7 +191,7 @@ export class Constants
                         <td colspan="4">Import JSON files with fog data from<br><a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a> and other tools.</td>
                     </tr>
                     <tr>
-                        <td colspan="2" >Format</br><select id="import_format"><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
+                        <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
                         <td colspan="2">Alignment</br><select id="map_align" style="width: 120px;"><option selected>Loading..</option></select></td>
                     </tr>
                     <tr>
@@ -208,15 +208,19 @@ export class Constants
             </table>
         </div>`;
 
-    static DEBUGPAGE = `
-    <div id="debug_div" style="display: none;" class="grid-debug">
-            <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
-            <div>Stage 1: Fog Shapes</div><div id="stage1">N/A</div>
-            <div>Stage 2: Player Vision</div><div id="stage2">N/A</div>
-            <div>Stage 3: Vision Ranges</div><div id="stage3">N/A</div>
-            <div>Stage 4: Persistence+Trailing</div><div id="stage4">N/A</div>
-            <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
-            <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
-            <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
-        </div>`;
+    static DEBUGHTML = `
+    <div class="visionTitle" style="display: block; padding-top:8px;">Fog Backgrounds</div>
+        <div id="fog_backgrounds" class="grid-3">
+    <div id="fog_background_list" class="grid-main" style="border-bottom: 1px solid white; padding-bottom: 8px;"></div>
+    </div>
+    <div id="debug_div" class="grid-debug">
+        <div class="visionTitle grid-2" style="text-align: center; margin-top: 16px">Performance Info</div>
+        <div>Stage 1: Fog Shapes</div><div id="stage1">N/A</div>
+        <div>Stage 2: Player Vision</div><div id="stage2">N/A</div>
+        <div>Stage 3: Vision Ranges</div><div id="stage3">N/A</div>
+        <div>Stage 4: Persistence+Trailing</div><div id="stage4">N/A</div>
+        <div>Stage 5: OBR Scene</div><div id="stage5">N/A</div>
+        <div>Stage 6: Autohide</div><div id="stage6">N/A</div>
+        <div>Cache hits/misses</div><div><span id="cache_hits">?</span>/<span id=cache_misses>?</span></div>
+    </div>`;
 }

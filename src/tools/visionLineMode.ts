@@ -1,6 +1,7 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve, buildLabel, buildShape } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
+import { GetSnappedCoordinates } from "./visionToolUtilities";
 
 let interaction: [any, any] | [any] | null = null;
 
@@ -52,17 +53,16 @@ export async function finishDrawing(): Promise<void>
 
 async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
 {
-    if (event.transformer)
-    {
-        return;
-    }
+    if (event.transformer) { return; }
+
     if (!interaction)
     {
-        const toBuild = [];
+        const snapped = GetSnappedCoordinates(event);
+        const newPos = BSCACHE.snap ? snapped : event.pointerPosition;
 
         const line = buildCurve()
             .tension(0)
-            .points([event.pointerPosition, event.pointerPosition])
+            .points([newPos, newPos])
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
@@ -104,36 +104,11 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     const [update] = interaction;
 
     // Snap to the grid with light sensitivity
-    const snapVar = Math.round(BSCACHE.gridDpi / BSCACHE.gridSnap);
-    const nearGridX = Math.round(event.pointerPosition.x / BSCACHE.gridDpi) * BSCACHE.gridDpi;
-    const nearGridY = Math.round(event.pointerPosition.y / BSCACHE.gridDpi) * BSCACHE.gridDpi;
-    const absoluteX = Math.abs(nearGridX - event.pointerPosition.x);
-    const absoluteY = Math.abs(nearGridY - event.pointerPosition.y);
-
-    let snapPositionX: number;
-    let snapPositionY: number;
-
-    if (absoluteX <= snapVar)
-    {
-        snapPositionX = nearGridX;
-    }
-    else
-    {
-        snapPositionX = event.pointerPosition.x;
-    }
-
-    if (absoluteY <= snapVar)
-    {
-        snapPositionY = nearGridY;
-    }
-    else
-    {
-        snapPositionY = event.pointerPosition.y;
-    }
+    const snapped = GetSnappedCoordinates(event);
 
     update((line: Curve) =>
     {
-        line.points[line.points.length - 1] = BSCACHE.snap ? { x: snapPositionX, y: snapPositionY } : event.pointerPosition;
+        line.points[line.points.length - 1] = BSCACHE.snap ? snapped : event.pointerPosition;
     });
 }
 

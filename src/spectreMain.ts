@@ -1,54 +1,178 @@
-import OBR, { Image, Metadata, Player } from "@owlbear-rodeo/sdk";
+import OBR, { Image, Item, Player } from "@owlbear-rodeo/sdk";
+import * as Utilities from "./utilities/bsUtilities";
 import { Constants } from "./utilities/bsConstants";
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
 import { BSCACHE } from "./utilities/bsSceneCache";
 
-export async function RunSpectre(players: Player[]): Promise<void>
+let LOCALGHOSTCACHE: Image[] = [];
+
+/// UPDATE THE DELETE LOGIC, MAKE SURE THE SCENEMETADATA IS CACHED VIA GM UPDATES ALSO, BE SURE TO DOUBLE CHECK VIEWER IDS
+
+export function SetupLocalSpecterHandlers(): void
 {
     if (!BSCACHE.sceneReady) return;
 
-    const localGhosts = await OBR.scene.local.getItems(
-        (item): item is Image => item.layer === "CHARACTER");
-    const localIds = localGhosts?.map(x => x.id);
-    let foundghost = false;
-
-    // This should only trigger on the GM, whomever that is
-    for (const player of players)
+    // We are debouncing these to avoid hitting twice with update/deletes from synching with other players.
+    // There might be an issue with slower connections, but in that case we would need to timestamp to find
+    // Older updates coming later down the pipe..
+    OBR.broadcast.onMessage(Constants.SPECTREBROADCASTID, (data) =>
     {
-        // For the GM, take the package.
-        const ghostPackage = player.metadata[`${Constants.SPECTREID}/metadata_ghosts`] as Image[];
-        if (ghostPackage?.length > 0)
+        debouncedBroadcastChanges(data);
+    });
+
+    OBR.scene.local.onChange((localItems) =>
+    {
+        debouncedLocalChanges(localItems);
+    });
+
+    if (BSCACHE.playerRole === "GM")
+    {
+        OBR.broadcast.onMessage("SPECTREDELETED", async (data) =>
         {
-            foundghost = true;
-            const ghostIds = ghostPackage.map(x => x.id);
-            for (const ghost of ghostPackage)
+            const deletedIds = data.data as string[];
+            if (deletedIds.length > 0)
             {
-                const metadata = ghost.metadata[`${Constants.SPECTREID}/viewers`] as string[];
-                if (metadata)
+                for (const tokenId of deletedIds)
                 {
-                    const forMe = metadata.includes(BSCACHE.playerId);
-                    if (forMe)
-                    {
-                        await OBR.scene.local.addItems([ghost]);
-                    }
-                    else if (localIds.includes(ghost.id))
-                    {
-                        await OBR.scene.local.deleteItems([ghost.id]);
-                    }
+                    const spectreUnitButton = document.getElementById(`tr-${tokenId}`) as HTMLInputElement;
+                    spectreUnitButton.remove();
+                }
+                await OBR.scene.local.deleteItems(deletedIds);
+            }
+        });
+    }
+
+    const debouncedBroadcastChanges = Utilities.Debounce(async (data: { data: any, connectionId: string }) =>
+    {
+        if (!data.data || data.data.length === 0) return;
+
+        // Handle changes from other players updating here
+        // Ghost packs are always going to be Image[]s, not supporting non images currently
+        const ghosts = data.data as Image[];
+        const ghostsForMe = BSCACHE.playerRole === "GM" ? ghosts : ghosts.filter(x => (x.metadata[`${Constants.SPECTREID}/viewers`] as string[]).includes(BSCACHE.playerId));
+
+        const oldGhosts = LOCALGHOSTCACHE.filter((item) => item.metadata[`${Constants.SPECTREID}/spectred`] === true) as Image[];
+        const oldGhostsForMe = oldGhosts.filter(x => (x.metadata[`${Constants.SPECTREID}/viewers`] as string[]).includes(BSCACHE.playerId));
+
+        // Add an analyzer here to compare important properties of LOCALGHOSTCACHE and GHOSTS and array LENGTH
+        const isEqual = Utilities.ImageArraysAreEqual(ghostsForMe, oldGhostsForMe);
+
+        if (!isEqual)
+        {
+            const ghostIds = ghostsForMe.map(x => x.id);
+            const changedGhosts: Image[] = [];
+            const deletedGhosts: Image[] = LOCALGHOSTCACHE.filter(localGhost => !ghostIds.includes(localGhost.id));
+
+            for (const ghost of ghostsForMe)
+            {
+                const foundLocalGhost = LOCALGHOSTCACHE.find(x => x.id === ghost.id);
+                if (foundLocalGhost)
+                {
+                    // If we found a match in our local, see if it's been updated and add as needed
+                    const imagesEqual = Utilities.ImagesAreEqual(ghost, foundLocalGhost);
+                    if (!imagesEqual) changedGhosts.push(ghost);
+                }
+                else
+                {
+                    // If we didn't find a match, we don't have it, we need to add it
+                    changedGhosts.push(ghost);
                 }
             }
-            const oldIds = localIds.filter((ghost) => !ghostIds.includes(ghost));
-            if (oldIds?.length > 0)
+
+            if (changedGhosts.length > 0) await OBR.scene.local.addItems(changedGhosts);
+            if (deletedGhosts.length > 0) await OBR.scene.local.deleteItems(deletedGhosts.map(x => x.id));
+
+            // Ghosts coming from a broadcast is a full updated, telling you to apply the changes
+            // There's no need to adjust it, as it's not a result of you changing something
+            // It's just the current state
+            LOCALGHOSTCACHE = ghosts;
+        }
+    }, 250);
+
+    const debouncedLocalChanges = Utilities.Debounce(async (localItems: Item[]) => 
+    {
+        if (BSCACHE.playerRole === "GM")
+        {
+            const ghostsForMe = localItems.filter((item) => item.metadata[`${Constants.SPECTREID}/spectred`] === true) as Image[];
+
+            if (Utilities.ImageArraysAreEqual(LOCALGHOSTCACHE, ghostsForMe)) return;
+            
+            LOCALGHOSTCACHE = ghostsForMe;
+            if (Utilities.isObjectOver14KB(ghostsForMe))
             {
-                await OBR.scene.local.deleteItems(oldIds);
+                await OBR.notification.show("You currently have too many Spectres in the scene. Unable to update.", "ERROR");
+            }
+            else
+            {
+                await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/current_spectres`]: ghostsForMe });
+                await OBR.broadcast.sendMessage(Constants.SPECTREBROADCASTID, ghostsForMe);
             }
         }
-    }
-    if (!foundghost)
+        else
+        {
+            // Filter down to any Spectre'd Items FOR YOU.
+            const ghostsForMe = localItems.filter((item) => item.metadata[`${Constants.SPECTREID}/spectred`] === true) as Image[];
+            const oldGhosts = LOCALGHOSTCACHE.filter((item) => item.metadata[`${Constants.SPECTREID}/spectred`] === true) as Image[];
+            const oldGhostsForMe = oldGhosts.filter(x => (x.metadata[`${Constants.SPECTREID}/viewers`] as string[]).includes(BSCACHE.playerId));
+
+            if (ghostsForMe.length < oldGhostsForMe.length)
+            {
+                const deletedIds = [];
+                for (const oldGhost of oldGhostsForMe)
+                {
+                    const exists = ghostsForMe.includes(oldGhost);
+                    if (!exists) deletedIds.push(oldGhost.id);
+                }
+                if (deletedIds.length > 0)
+                {
+                    await OBR.broadcast.sendMessage("SPECTREDELETED", deletedIds);
+                }
+            }
+
+            // Only exit if there are no ghosts to update, and there were no ghosts before
+            if (ghostsForMe.length === 0 && oldGhostsForMe.length === 0) return;
+            // Or we can now also exit if this is a delete, as it's handled on a different thread
+            if (ghostsForMe.length < oldGhostsForMe.length)
+            {
+                LOCALGHOSTCACHE = ghostsForMe;
+                return;
+            }
+
+            // Add an analyzer here to compare important properties of LOCALGHOSTCACHE and GHOSTS and array LENGTH
+            const isEqual = Utilities.ImageArraysAreEqual(ghostsForMe, oldGhostsForMe);
+
+            if (!isEqual)
+            {
+                Utilities.ApplyUpdatesToGhostArray(LOCALGHOSTCACHE, ghostsForMe);
+
+                await OBR.broadcast.sendMessage(Constants.SPECTREBROADCASTID, LOCALGHOSTCACHE);
+            }
+        }
+    }, 250);
+}
+
+export async function LoadSpectreSceneMetadata(): Promise<void>
+{
+    // This will be triggered on load, it will pull the sceneMetadata
+    // Grab the ghost list and check it's metadata to see if it's for this user
+    const ghosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+    LOCALGHOSTCACHE = ghosts;
+
+    // Only use this for Players, the GM needs to setup the Controls
+    const ghostsToAdd = [];
+
+    for (const ghost of ghosts)
     {
-        await OBR.scene.local.deleteItems(localIds);
+        const viewers = ghost.metadata[`${Constants.SPECTREID}/viewers`] as string[];
+        if (viewers.includes(BSCACHE.playerId) && BSCACHE.playerRole !== "GM")
+        {
+            ghostsToAdd.push(ghost);
+        }
     }
+
+    if (ghostsToAdd.length > 0)
+        await OBR.scene.local.addItems(ghostsToAdd);
 }
 
 export function UpdateSpectreTargets(): void
@@ -73,7 +197,7 @@ export function UpdateSpectreTargets(): void
 
             if (newOptions.length === 0)
             {
-                tomSelectInstance.settings.placeholder = "No Players";
+                tomSelectInstance.settings.placeholder = "No Players Present";
                 tomSelectInstance.inputState();
             }
             else
@@ -83,37 +207,10 @@ export function UpdateSpectreTargets(): void
             }
         }
     }
-
 }
 
-export async function RestoreGhostsGM(): Promise<void>
-{
-    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
-
-    if (ghostData)
-    {
-        await OBR.scene.local.addItems(ghostData);
-        ghostData.forEach(ghost =>
-        {
-            SetupTomSelect(ghost);
-        });
-    }
-}
-
-// For the GM
 export async function SetupSpectreGM(): Promise<void>
 {
-    OBR.scene.local.onChange(async (localItems) =>
-    {
-        const ghosts = localItems.filter(x => x.layer == "CHARACTER");
-        if (ghosts.length === 0) return;
-
-        const metadataGhostList: Metadata = {};
-
-        metadataGhostList[`${Constants.SPECTREID}/metadata_ghosts`] = ghosts;
-        await OBR.player.setMetadata(metadataGhostList);
-    });
-
     await OBR.contextMenu.create({
         id: `${Constants.SPECTREID}/context-menu`,
         icons: [
@@ -121,14 +218,14 @@ export async function SetupSpectreGM(): Promise<void>
                 icon: "/ghost.svg",
                 label: "Spectre",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" },
+                    every: [{ key: "type", value: "IMAGE" },
                     { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "==", coordinator: "&&" }],
                 },
             }, {
                 icon: "/ghost.svg",
                 label: "Un-Spectre",
                 filter: {
-                    every: [{ key: "layer", value: "CHARACTER" },
+                    every: [{ key: "type", value: "IMAGE" },
                     { key: ["metadata", `${Constants.SPECTREID}/spectred`], value: undefined, operator: "!=", coordinator: "&&" }],
                 },
             }
@@ -141,20 +238,23 @@ export async function SetupSpectreGM(): Promise<void>
 
             if (spectre)
             {
-                //Hide the warning
-                document.getElementById("spectreWarning")!.style.display = "none";
-                for (const item of context.items)
+                if (Utilities.isObjectOver14KB(LOCALGHOSTCACHE, context.items))
                 {
-                    // Do something to this icon to designate it as a 'Ghost'
-                    const ghost = item as Image;
-                    SetupTomSelect(ghost);
+                    await OBR.notification.show("This would exceed the maximum Spectres. Please remove some before adding more.", "INFO");
+                }
+                else
+                {
+                    for (const item of context.items)
+                    {
+                        const ghost = item as Image;
+                        SetupTomSelect(ghost);
+                    }
                 }
             }
             else
             {
                 for (const item of context.items)
                 {
-                    // Do something to this icon to designate it as a 'Ghost'
                     const ghost = item as Image;
                     ghost.metadata[`${Constants.SPECTREID}/spectred`] = undefined;
 
@@ -162,7 +262,7 @@ export async function SetupSpectreGM(): Promise<void>
                     BSCACHE.ghosts.splice(ghostIndex, 1);
                     const rowElement = document.getElementById(`tr-${ghost.id}`)!;
                     rowElement?.remove();
-                    
+
                     await RemoveGhost(ghost);
 
                     ghost.metadata[`${Constants.SPECTREID}/viewers`] = [];
@@ -172,18 +272,25 @@ export async function SetupSpectreGM(): Promise<void>
         }
     });
 }
-async function RemoveGhost(ghost: Image)
-{
-    const ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
-    const newData = ghostData.filter(bad => bad.id !== ghost.id);
 
-    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/stored`]: newData });
-    await OBR.scene.local.deleteItems([ghost.id]);
+export async function RestoreGhostsGM(): Promise<void>
+{
+    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+    LOCALGHOSTCACHE = ghostData;
+
+    if (ghostData)
+    {
+        await OBR.scene.local.addItems(ghostData);
+        ghostData.forEach(ghost =>
+        {
+            SetupTomSelect(ghost);
+        });
+    }
 }
 
 async function StoreGhost(ghost: Image)
 {
-    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
+    let ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
     if (!ghostData)
     {
         ghostData = [ghost];
@@ -194,13 +301,29 @@ async function StoreGhost(ghost: Image)
         if (exists) return;
         ghostData.push(ghost);
     }
-    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/stored`]: ghostData });
+    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/current_spectres`]: ghostData });
+}
+
+async function RemoveGhost(ghost: Image)
+{
+    const ghostData: Image[] = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+    const newData = ghostData.filter(bad => bad.id !== ghost.id);
+
+    await OBR.scene.setMetadata({ [`${Constants.SPECTREID}/current_spectres`]: newData });
+    await OBR.scene.local.deleteItems([ghost.id]);
 }
 
 async function SetupTomSelect(ghost: Image)
 {
     const name = ghost.text?.plainText || ghost.name;
+    const currentViewers = ghost.metadata[`${Constants.SPECTREID}/viewers`] as [];
+
     ghost.metadata[`${Constants.SPECTREID}/spectred`] = true;
+
+    if (currentViewers === undefined)
+    {
+        ghost.metadata[`${Constants.SPECTREID}/viewers`] = [];
+    }
 
     // Recreate as a local item
     await OBR.scene.items.deleteItems([ghost.id]);
@@ -235,7 +358,7 @@ async function SetupTomSelect(ghost: Image)
             }
         },
         allowEmptyOption: true,
-        placeholder: BSCACHE.party.length == 0 ? "No Players" : "Choose..",
+        placeholder: BSCACHE.party.length == 0 ? "No Players Present" : "Choose..",
         maxItems: null,
         create: false,
         onDelete: async function (id: string, element: any) 
@@ -275,6 +398,21 @@ async function SetupTomSelect(ghost: Image)
 
     // Needed
     const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
+    if (currentViewers.length > 0)
+    {
+        for (const playerId of currentViewers)
+        {
+            const playerInRoom = BSCACHE.party.find(x => x.id === playerId);
+            if (!playerInRoom)
+            {
+                const userInfo = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${playerId}`] as Player;
+                const newOptions = [];
+                newOptions.push({ value: playerId, text: userInfo.name });
+                ghostSelect.addOption(newOptions);
+            }
+            ghostSelect.addItem(playerId, true);
+        }
+    }
 
     const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
     deleteButton.onclick = async () =>
@@ -284,7 +422,10 @@ async function SetupTomSelect(ghost: Image)
         newTr.remove();
         await OBR.scene.local.updateItems([ghost.id], ghosties =>
         {
-            ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = [];
+            if (ghosties[0])
+            {
+                ghosties[0].metadata[`${Constants.SPECTREID}/viewers`] = [];
+            }
         });
         await RemoveGhost(ghost);
     };

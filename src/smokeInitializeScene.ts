@@ -1,10 +1,10 @@
 import OBR, { buildPath, Shape, isImage, Image, Path } from "@owlbear-rodeo/sdk";
-import { RestoreGhostsGM } from "./spectreMain";
 import { Constants } from "./utilities/bsConstants";
 import { isVisionFog, isBackgroundImage } from "./utilities/itemFilters";
 import { SMOKEMAIN } from './smokeMain';
 import { SetupAutohideMenus } from "./smokeSetupContextMenus";
 import { BSCACHE } from "./utilities/bsSceneCache";
+import { LoadSpectreSceneMetadata, RestoreGhostsGM } from "./spectreMain";
 
 export async function InitializeScene(): Promise<void>
 {
@@ -97,6 +97,10 @@ export async function InitializeScene(): Promise<void>
                 items[0].metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] = true;
             });
         }
+    }
+    else
+    {
+        await LoadSpectreSceneMetadata();
     }
     
     BSCACHE.snap = true;

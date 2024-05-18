@@ -28,6 +28,26 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/17</h1>
+        This is the update you were dreading!
+        </br> I moved everything.
+        </br></br> In my effort to have proper documentation across all extensions, I needed to get this in a space where I wasn't going to facelift it anytime soon. So I needed to facelift it now.
+        </br></br>Other large changes:
+        <li> Smoke will now process your lines whether they are in-boundary or not, based on where they exitted. No more 'stuck' extension because you goofed.
+        <li> The first 'click' of an obstruction tool will now snap to the grid, if you have snap enabled.
+        <li> When using the obstruction tools, if you hold CTRL it will temporarily disable snap.
+        <li> Cleaned up a filter that was allowing you to 'Enable Door' on any ole random line. (Oops.)
+        <li> Added support for the OBR drawing tools, you can now use any of the default OBR drawing tools to create obstructions. You just need to 'Convert to Obstruction' on the line.
+        <li> Added 'UVTT Scene' import option. This one will import entire scenes (the map, lights, walls).
+        <li> Added 'Out-of-Sight' button for vision tokens, which will hide them. Because there's really no reason to see 20 lights at all times.
+        <li> Some random bug fixes for swapping between scenes with different settings.
+        </br></br> Also, I rewrote Spectre.
+        <li> You can now 'Spectre' anything that is an Image based token.
+        <li> Players can now move/change Spectre tokens. This incldues deleting. (This is all still controlled by your Permissions though.)
+        <li> Updated the scene persistence for Spectre'd tokens.
+        </br></br> Things seem pretty stable in my testing, though I have seen a tale of an issue with hot-loading on a scene 100+ times.. which is likely something that only I will run into.
+        </br> So enjoy.
+
         <h1>Smoke & Spectre! 5/9</h1>
         This is the update you were hoping for!
         </br>

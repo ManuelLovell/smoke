@@ -1,4 +1,4 @@
-import { Player, Theme } from "@owlbear-rodeo/sdk";
+import { Player, Theme, Image } from "@owlbear-rodeo/sdk";
 import { Constants } from "./bsConstants";
 
 export function GetGUID(): string
@@ -13,20 +13,28 @@ export function GetGUID(): string
     return guid;
 }
 
-export function Debounce(func: () => any, delay: number): () => void
+export function Debounce<T extends (...args: any[]) => void>(
+    func: T,
+    delay: number
+): (...args: Parameters<T>) => void
 {
-    let timeoutId: number;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
 
-    return function debounced(): void
+    return function debounced(...args: Parameters<T>): void
     {
-        clearTimeout(timeoutId);
+        if (timeoutId)
+        {
+            clearTimeout(timeoutId);
+        }
 
         timeoutId = setTimeout(() =>
         {
-            func();
+            func(...args);
+            timeoutId = undefined;
         }, delay);
     };
 }
+
 
 export function isObjectEmpty(obj: Record<string, any>): boolean
 {
@@ -38,6 +46,84 @@ export function isObjectEmpty(obj: Record<string, any>): boolean
         }
     }
     return true;
+}
+
+function deepEqual(obj1: any, obj2: any, ignoreKeys: string[] = []): boolean
+{
+    if (obj1 === obj2) return true;
+
+    if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null)
+    {
+        return false;
+    }
+
+    const keys1 = Object.keys(obj1).filter(key => !ignoreKeys.includes(key));
+    const keys2 = Object.keys(obj2).filter(key => !ignoreKeys.includes(key));
+
+    if (keys1.length !== keys2.length) return false;
+
+    for (const key of keys1)
+    {
+        if (!keys2.includes(key)) return false;
+        if (!deepEqual(obj1[key], obj2[key], ignoreKeys)) return false;
+    }
+
+    return true;
+}
+
+export function ImagesAreEqual(image1: Image, image2: Image): boolean
+{
+    const ignoreKeys = ['lastModified', 'lastModifiedUserId'];
+
+    return deepEqual(image1, image2, ignoreKeys);
+}
+
+export function isObjectOver14KB(obj: any, extra?: any): boolean
+{
+    let jsonString = JSON.stringify(obj);
+    if (extra)
+    {
+        const extraString = JSON.stringify(extra);
+        jsonString = jsonString + extraString;
+    }
+
+    const byteLength = new TextEncoder().encode(jsonString).length;
+
+    return byteLength > 14384;
+}
+
+// Function to compare two arrays of Image objects while ignoring specific keys
+export function ImageArraysAreEqual(array1: Image[], array2: Image[]): boolean
+{
+    const ignoreKeys = ['lastModified', 'lastModifiedUserId'];
+
+    if (array1.length !== array2.length) return false;
+
+    for (let i = 0; i < array1.length; i++)
+    {
+        if (!deepEqual(array1[i], array2[i], ignoreKeys)) return false;
+    }
+
+    return true;
+}
+
+export function ApplyUpdatesToGhostArray(mainList: Image[], updates: Image[]): void
+{
+    updates.forEach(update =>
+    {
+        // Find the index of the item in the main list by ID
+        const index = mainList.findIndex(item => item.id === update.id);
+
+        if (index !== -1)
+        {
+            // If the item exists in the main list, update it
+            mainList[index] = update;
+        } else
+        {
+            // If the item doesn't exist in the main list, add it
+            mainList.push(update);
+        }
+    });
 }
 
 export function TestEnvironment()

@@ -1,9 +1,179 @@
-import OBR, { Item } from "@owlbear-rodeo/sdk";
+import OBR, { buildCurve, Curve, Item, Line, Shape } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import { createLocalDoor, removeLocalDoor } from "./tools/doorTool";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
 export async function SetupContextMenus(): Promise<void>
 {
+    //////////////////////////////
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/convert-curve`,
+        icons: [
+            {
+                icon: "/opendoor.svg",
+                label: "Convert to Obstruction",
+                filter: {
+                    every: [{ key: "layer", value: "DRAWING" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                        value: undefined,
+                    }],
+                    roles: ["GM"]
+                },
+            }
+        ],
+        async onClick(ctx)
+        {
+            const DEFAULTCOLOR = "#000000";
+            const DEFAULTWIDTH = 8;
+            const DEFAULTSTROKE: number[] = [];
+            const linesToMake = [];
+            const linesToDelete = [];
+
+            for (const item of ctx.items)
+            {
+                if (item.type === "CURVE")
+                {
+                    // Remember this Que: Lines need to remade because for some reason
+                    // it doesnt work great converting straight over
+                    const baseCurve = item as Curve;
+                    if (baseCurve.points.length > 2)
+                    {
+                        const line = buildCurve()
+                            .tension(0)
+                            .points(baseCurve.points)
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+                            .fillOpacity(0)
+                            .fillColor("#000000")
+                            .layer("DRAWING")
+                            .name("Vision Line (Line)")
+                            .closed(false)
+                            .locked(true)
+                            .visible(false)
+                            .position(baseCurve.position)
+                            .metadata({ [`${Constants.EXTENSIONID}/isVisionLine`]: true })
+                            .build();
+                        if (baseCurve.style.closed)
+                        {
+                            line.points.push(baseCurve.points[0]);
+                        }
+                        linesToMake.push(line);
+                        linesToDelete.push(baseCurve.id);
+                    }
+                }
+                else if (item.type === "LINE")
+                {
+                    const baseLine = item as Line;
+                    const line = buildCurve()
+                        .tension(0)
+                        .points([baseLine.startPosition, baseLine.endPosition])
+                        .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+                        .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                        .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+                        .fillOpacity(0)
+                        .fillColor("#000000")
+                        .layer("DRAWING")
+                        .name("Vision Line (Line)")
+                        .closed(false)
+                        .locked(true)
+                        .visible(false)
+                        .position(baseLine.position)
+                        .metadata({ [`${Constants.EXTENSIONID}/isVisionLine`]: true })
+                        .build();
+
+                    linesToMake.push(line);
+                    linesToDelete.push(baseLine.id);
+                }
+                else if (item.type === "SHAPE")
+                {
+                    const baseShape = item as Shape;
+                    const points = [];
+                    if (baseShape.shapeType === "CIRCLE")
+                    {
+                        const radius = Math.min(baseShape.width, baseShape.height) / 2;
+                        const angleIncrement = (2 * Math.PI) / 20;
+                        for (let i = 0; i < 20; i++)
+                        {
+                            const angle = i * angleIncrement;
+                            const x = radius * Math.cos(angle);
+                            const y = radius * Math.sin(angle);
+                            points.push({ x, y });
+                        }
+                    }
+                    else if (baseShape.shapeType === "RECTANGLE")
+                    {
+                        const x = 0;
+                        const y = 0;
+                        const endX = x + baseShape.width;
+                        const endY = y + baseShape.height;
+
+                        points.push({ x: x, y: y });
+                        points.push({ x: endX, y: y });
+                        points.push({ x: endX, y: endY });
+                        points.push({ x: x, y: endY });
+                    }
+                    else if (baseShape.shapeType === "HEXAGON")
+                    {
+                        const radius = baseShape.width / 2;
+                        const angles = [Math.PI / 2, Math.PI / 6, 11 * Math.PI / 6, 3 * Math.PI / 2, 7 * Math.PI / 6, 5 * Math.PI / 6];
+
+                        // Calculate hexagon vertices based on angles and rotation
+                        for (let i = 0; i < 6; i++)
+                        {
+                            const angle = angles[i];
+                            const x = radius * Math.cos(angle);
+                            const y = radius * Math.sin(angle);
+                            points.push({ x, y });
+                        }
+                    }
+                    else if (baseShape.shapeType === "TRIANGLE")
+                    {
+                        const x = 0;
+                        const y = 0;
+                        points.push({ x: x, y: y });
+                        points.push({ x: x - (baseShape.width / 2), y: y + baseShape.height });
+                        points.push({ x: x + (baseShape.width / 2), y: y + baseShape.height });
+                    }
+
+                    if (points.length > 0)
+                    {
+
+                        const line = buildCurve()
+                            .tension(0)
+                            .points(points)
+                            .position(baseShape.position)
+                            .rotation(baseShape.rotation)
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+                            .fillOpacity(0)
+                            .fillColor("#000000")
+                            .layer("DRAWING")
+                            .name("Vision Line (Line)")
+                            .closed(false)
+                            .locked(true)
+                            .visible(false)
+                            .metadata({ [`${Constants.EXTENSIONID}/isVisionLine`]: true })
+                            .build();
+
+                        line.points.push(points[0]);
+
+                        linesToMake.push(line);
+                        linesToDelete.push(baseShape.id);
+                    }
+                }
+                if (linesToMake.length > 0)
+                {
+                    await OBR.scene.items.addItems(linesToMake);
+                    await OBR.scene.items.deleteItems(linesToDelete);
+                }
+            }
+        }
+    });
+    //////////////////////////////
+
     // This context menu appears on character tokens and determines whether they
     // to render their FoW or not
     await OBR.contextMenu.create({
@@ -266,6 +436,10 @@ export async function SetupContextMenus(): Promise<void>
                 filter: {
                     every: [{ key: "layer", value: "DRAWING" },
                     {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                        value: true,
+                    },
+                    {
                         key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
                         value: undefined
                     },
@@ -285,6 +459,10 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Disable Door",
                 filter: {
                     every: [{ key: "layer", value: "DRAWING" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                        value: true,
+                    },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/doorId`],
                         value: undefined
