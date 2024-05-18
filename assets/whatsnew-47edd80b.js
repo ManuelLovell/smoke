@@ -18,6 +18,14 @@ import{O as n,C as c}from"./bsConstants-99533c10.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,p=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/18</h1>
+        Good ole release hiccups.
+        </br> Pushing out some stability and bugfixes.
+        </br> More pruning on old code to have -less- updates go through for processing fog.  It does feel a little faster, again.
+        </br> The Spectre code had some issues and the storage for that was changed around, and less debounce so it should be snappier.
+        </br> And a variety of bugfixes for swapping scenes.
+        </br> Let me know in Discord if things are still acting up (Though I'll be gone the rest of this night.)
+        </br></br> And you know, be nice about it.
         <h1>Smoke & Spectre! 5/17</h1>
         This is the update you were dreading!
         </br> I moved everything.
