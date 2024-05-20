@@ -1,4 +1,4 @@
-import{O as n,C as c}from"./bsConstants-99533c10.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
+import{O as n,C as d}from"./bsConstants-99533c10.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,6 +18,11 @@ import{O as n,C as c}from"./bsConstants-99533c10.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,p=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/20</h1>
+        Minor fix for the 'DPI AutoDetect' checkbox not working.
+        </br> And some improvements to make unlocking/locking large amounts of fog process.
+        </br> Also some extra busy-detection on the importers.
+        </br>
         <h1>Smoke & Spectre! 5/18</h1>
         Good ole release hiccups.
         </br> Pushing out some stability and bugfixes.
@@ -87,4 +92,4 @@ import{O as n,C as c}from"./bsConstants-99533c10.js";/* empty css               
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(c.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const c=document.getElementById("advTutorial");c.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
