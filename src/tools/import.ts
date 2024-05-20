@@ -6,6 +6,10 @@ import { BSCACHE } from "../utilities/bsSceneCache";
 
 type ImportVector2 = Vector2 & { door: boolean };
 
+const DEFAULTCOLOR = "#000000";
+const DEFAULTWIDTH = 8;
+const DEFAULTSTROKE: number[] = [];
+
 export function UpdateMaps(mapAlign: HTMLSelectElement)
 {
     const maps = BSCACHE.sceneItems.filter((item) => item.layer === "MAP");
@@ -89,10 +93,6 @@ export async function importFog(importType: string, importData: any, importDpi: 
 
 function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number }>>): Curve[]
 {
-    const DEFAULTCOLOR = "#000000";
-    const DEFAULTWIDTH = 8;
-    const DEFAULTSTROKE: number[] = [];
-
     const newItems: Curve[] = [];
     for (const uvttItem of uvttObjects)
     {
@@ -126,17 +126,19 @@ export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement
 {
     // Create Walls
     let importedObjects: any[] = [];
-    if (importData.objects_line_of_sight.length > 0)
+    if (importData.objects_line_of_sight?.length > 0)
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.objects_line_of_sight));
     }
-    if (importData.line_of_sight.length > 0)
+    if (importData.line_of_sight?.length > 0)
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.line_of_sight));
     }
 
+    try 
+    {
     // Create Torches
-    if (importData.lights.length > 0)
+        if (importData.lights?.length > 0)
     {
         const newItems = [];
         for (const light of importData.lights)
@@ -184,6 +186,11 @@ export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement
         .build();
     await OBR.assets.uploadScenes([scene], true);
     await OBR.notification.show("Toggle Smoke Off then On when opening the new Scene", "DEFAULT");
+    }
+    catch (error)
+    {
+        await OBR.notification.show("There was an error: " + error, "ERROR");
+    }
 }
 
 async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: number, offset: number[], errorElement: HTMLDivElement) 
@@ -227,8 +234,11 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
             const line = buildCurve()
                 .tension(0)
                 .points(chunkPoints)
-                .fillColor("#000000")
+                .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+                .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
                 .fillOpacity(0)
+                .fillColor("#000000")
                 .layer("DRAWING")
                 .name("Vision Line (Import)")
                 .closed(false)
@@ -296,7 +306,6 @@ function importUVTT(importData: any, dpiRatio: number, offset: number[], errorEl
 
 function importFoundry(importData: any, dpiRatio: number, offset: number[], errorElement: HTMLDivElement)
 {
-
     if (!importData.walls || importData.walls.length === 0)
     {
         errorElement.innerText = 'No walls found';

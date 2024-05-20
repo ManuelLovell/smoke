@@ -630,6 +630,12 @@ class BSCache
     {
         Utilities.SetThemeMode(theme, document);
     }
+
+    public async ToggleBusy(on: boolean)
+    {
+        await OBR.action.setBadgeText(on ? "⏱️" : undefined);
+        BSCACHE.busy = on;
+    }
 }
 // Set the handlers needed for this Extension
 export const BSCACHE = new BSCache([BSCache.SCENEITEMS, BSCache.SCENEMETA, BSCache.SCENEFOG, BSCache.SCENEGRID, BSCache.PLAYER, BSCache.PARTY]);

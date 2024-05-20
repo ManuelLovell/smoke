@@ -28,6 +28,11 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/20</h1>
+        Minor fix for the 'DPI AutoDetect' checkbox not working.
+        </br> And some improvements to make unlocking/locking large amounts of fog process.
+        </br> Also some extra busy-detection on the importers.
+        </br>
         <h1>Smoke & Spectre! 5/18</h1>
         Good ole release hiccups.
         </br> Pushing out some stability and bugfixes.

@@ -159,25 +159,43 @@ export function SetupInputHandlers()
     SMOKEMAIN.unlockFogButton!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
-        await OBR.scene.items.updateItems(isVisionLine as ItemFilter<Path>, (paths) =>
+        const allFogLines = BSCACHE.sceneItems.filter(x => (isVisionLine(x)));
+
+        await BSCACHE.ToggleBusy(true);
+
+        for (let i = 0; i < allFogLines.length; i += 64)
+        {
+            const batch = allFogLines.slice(i, i + 64);
+            await OBR.scene.items.updateItems(batch, (paths) =>
         {
             for (let path of paths)
             {
                 path.locked = false;
             }
         });
+        }
+        await BSCACHE.ToggleBusy(false);
     };
 
     SMOKEMAIN.lockFogButton!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
-        await OBR.scene.items.updateItems(isVisionLine as ItemFilter<Path>, (paths) =>
+        const allFogLines = BSCACHE.sceneItems.filter(x => (isVisionLine(x)));
+
+        await BSCACHE.ToggleBusy(true);
+
+        for (let i = 0; i < allFogLines.length; i += 64)
+        {
+            const batch = allFogLines.slice(i, i + 64);
+            await OBR.scene.items.updateItems(batch, (paths) =>
         {
             for (let path of paths)
             {
                 path.locked = true;
             }
         });
+        }
+        await BSCACHE.ToggleBusy(false);
     };
 
     // Also have no idea on what this one is.
@@ -329,18 +347,26 @@ export function SetupInputHandlers()
         }
     };
 
+    SMOKEMAIN.dpiAutodetect!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        SMOKEMAIN.importDpi!.disabled = SMOKEMAIN.dpiAutodetect!.checked;
+    };
 
     SMOKEMAIN.importButton!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
+
+        await BSCACHE.ToggleBusy(true);
         if (SMOKEMAIN.importFormat!.value === "scene")
         {
-            ImportScene(importObject, SMOKEMAIN.importErrors!);
+            await ImportScene(importObject, SMOKEMAIN.importErrors!);
         }
         else
         {
-            importFog(SMOKEMAIN.importFormat!.value, importObject, (SMOKEMAIN.dpiAutodetect!.checked ? 0 : Number.parseInt(SMOKEMAIN.importDpi!.value)), SMOKEMAIN.mapAlign!.value, SMOKEMAIN.importErrors!);
+            await importFog(SMOKEMAIN.importFormat!.value, importObject, (SMOKEMAIN.dpiAutodetect!.checked ? 0 : Number.parseInt(SMOKEMAIN.importDpi!.value)), SMOKEMAIN.mapAlign!.value, SMOKEMAIN.importErrors!);
         }
+        await BSCACHE.ToggleBusy(false);
     };
 
     // Tool Option Handling - Tool Color
