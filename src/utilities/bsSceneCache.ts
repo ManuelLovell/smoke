@@ -78,6 +78,8 @@ class BSCache
     workers: Worker[];
     workersSetup: boolean;
 
+    toolStarted: boolean;
+
     //handlers
     sceneMetadataHandler?: () => void;
     sceneItemsHandler?: () => void;
@@ -119,6 +121,7 @@ class BSCache
         this.snap = false;
         this.busy = false;
         this.torchActive = false;
+        this.toolStarted = false;
 
         this.caches = caches;
         this.playerShadowCache = new ObjectCache(false);
@@ -515,11 +518,12 @@ class BSCache
                     SPECTRE.ClearGhostList();
                     this.KillHandlers();
 
+                    this.toolStarted = false;
                     await OBR.tool.setMetadata(`${Constants.EXTENSIONID}/vision-tool`,
                         {
                             [`${Constants.EXTENSIONID}/elevationEditor`]: false
                         });
-                        
+
                     this.sceneItems = [];
                     this.sceneMetadata = {};
                 }

@@ -191,7 +191,7 @@ async function Activate(_: ToolContext)
 {
     const sceneData = await OBR.scene.getMetadata();
     const currentElevationData = sceneData[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
-    
+
     if (currentElevationData && currentElevationData.length > 0)
     {
         const toDraw: Curve[] = [];
@@ -233,7 +233,9 @@ async function Deactivate(_: ToolContext)
             {
                 adjustedPoints = line.points.map(point =>
                 {
-                    return { x: point.x + line.position.x, y: point.y + line.position.y }
+                    const newX = (point.x + line.position.x);
+                    const newY = (point.y + line.position.y);
+                    return { x: newX, y: newY };
                 });
             }
 

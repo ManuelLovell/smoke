@@ -4,6 +4,7 @@ import { polygonMode } from "./tools/visionPolygonMode";
 import { brushMode } from "./tools/visionBrushMode";
 import { Constants } from "./utilities/bsConstants";
 import { elevationMode } from "./tools/elevationMode";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
 export async function SetupTools(): Promise<void>
 {
@@ -22,10 +23,14 @@ export async function SetupTools(): Promise<void>
             await OBR.tool.activateTool(`${Constants.EXTENSIONID}/vision-tool`);
             // Default metadata doesn't change the state per tool click,
             // so forcefully resetting or it'll blank the metadata grab
-            await OBR.tool.setMetadata(`${Constants.EXTENSIONID}/vision-tool`,
-                {
-                    [`${Constants.EXTENSIONID}/elevationEditor`]: false
-                });
+            if (!BSCACHE.toolStarted)
+            {
+                BSCACHE.toolStarted = true;
+                await OBR.tool.setMetadata(`${Constants.EXTENSIONID}/vision-tool`,
+                    {
+                        [`${Constants.EXTENSIONID}/elevationEditor`]: false
+                    });
+            }
         },
     });
 
@@ -184,6 +189,25 @@ export async function SetupTools(): Promise<void>
         onToolDown: (context, event) => { elevationMode.onToolClick(context, event, 5) },
         onToolMove: elevationMode.onToolMove,
         onKeyDown: (context, event) => { elevationMode.onKeyDown(context, event, 5) },
+        preventDrag: { dragging: true }
+    });
+
+    await OBR.tool.createMode({
+        id: `${Constants.EXTENSIONID}/enter-elevation-mode-select`,
+        icons: [
+            {
+                icon: "/mountain-select.svg",
+                label: "Selector",
+                filter: {
+                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
+                },
+            },
+        ],
+        disabled:
+        {
+            metadata: [{ key: [`${Constants.EXTENSIONID}/elevationEditor`], value: false }]
+        },
+        onToolDown: (context, event) => { return true; },
         preventDrag: { dragging: true }
     });
 
