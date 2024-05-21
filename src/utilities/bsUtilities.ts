@@ -1,5 +1,37 @@
-import { Player, Theme, Image } from "@owlbear-rodeo/sdk";
+import { Player, Theme, Image, Vector2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "./bsConstants";
+
+export function isPointInPolygon(point: Vector2, polygon: Vector2[]): boolean
+{
+    let inside = false;
+    const n = polygon.length;
+    let p1 = polygon[0];
+
+    for (let i = 1; i <= n; i++)
+    {
+        const p2 = polygon[i % n];
+        if (point.y > Math.min(p1.y, p2.y))
+        {
+            if (point.y <= Math.max(p1.y, p2.y))
+            {
+                if (point.x <= Math.max(p1.x, p2.x))
+                {
+                    if (p1.y != p2.y)
+                    {
+                        const xinters = (point.y - p1.y) * (p2.x - p1.x) / (p2.y - p1.y) + p1.x;
+                        if (p1.x == p2.x || point.x <= xinters)
+                        {
+                            inside = !inside;
+                        }
+                    }
+                }
+            }
+        }
+        p1 = p2;
+    }
+
+    return inside;
+}
 
 export function GetGUID(): string
 {
@@ -96,7 +128,7 @@ export function isObjectOver14KB(obj: any, extra?: any): boolean
 export function ImageArraysAreEqual(array1: Image[], array2: Image[]): boolean
 {
     const ignoreKeys = ['lastModified', 'lastModifiedUserId'];
-    
+
     if (array1.length !== array2.length) return false;
 
     for (let i = 0; i < array1.length; i++)

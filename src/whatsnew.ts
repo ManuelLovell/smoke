@@ -29,6 +29,28 @@ const needHelpMessage = `
 const whatsNewMessage = `
     <div id="newsContainer">
         <h1>Smoke & Spectre! 5/20</h1>
+        I really need to do something else.
+        </br> Major update today:
+        Elevation v1.0
+        </br></br> <div style="text-align:center;">GM View</div>
+        </br><img class="news-image" src="https://battle-system.com/owlbear/smoke-docs/elevation-gm.png">
+        </br>
+        </br> <div style="text-align:center;">Player View</div>
+        </br><img class="news-image" src="https://battle-system.com/owlbear/smoke-docs/elevation-player.gif">
+        </br>
+        Since this is a first-pass, I've limited things to keep it simple.
+        </br> There are only 5 layers of elevation to mess with.
+        </br> A wall's elevation is determined by where it's STARTING POINT is. (Just in case you have things super close together.)
+        </br> If you have several elevation mappings stacked, whichever one is highest at the point of the token/wall takes priority.
+        </br> Other than that, it should be fairly straight forward.  Turn on the Elevation Mapping editor, make some shapes. It saves after each shape is completed, or when you De-Activate the editor.
+        </br> So you can leave the editor active, manipulate the shapes with the OBR tools and then de-activate the editor to save your work.
+        </br>
+        </br> Some other QoL improvements - added portals/doors to the scene import.
+        </br> Added an 'Undo' button to the obstruction drawing tools. It'll just pop off the last point you did. The hotkey for it is 'Z'. (Not CTRL-Z because that's OBR's undo.)
+        </br> Other-random-things I can't remember.
+        </br> Enjoy!
+        </br>
+        <h1>Smoke & Spectre! 5/20</h1>
         Minor fix for the 'DPI AutoDetect' checkbox not working.
         </br> And some improvements to make unlocking/locking large amounts of fog process.
         </br> Also some extra busy-detection on the importers.

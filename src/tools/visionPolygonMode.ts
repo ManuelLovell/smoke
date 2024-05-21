@@ -53,6 +53,21 @@ export async function finishDrawing()
     await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishPoly`]: false });
 }
 
+export async function undoLastPoint(): Promise<void>
+{
+    if (!interaction)
+        return;
+
+    const [update] = interaction;
+    update((line: Curve) =>
+    {
+        if (line.points.length > 2)
+        {
+            line.points.pop();
+        }
+    });
+}
+
 async function onToolClick(_J: ToolContext, event: ToolEvent)
 {
     if (event.transformer) { return; }
@@ -77,13 +92,26 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
 
         interaction = await OBR.interaction.startItemInteraction(polygon);
 
+        const width = await OBR.viewport.getWidth();
+
         //Create Tooltip
         await OBR.popover.open({
             id: Constants.POLYTOOLID,
             url: `/pages/polygon.html`,
-            height: 70,
-            width: 350,
-            disableClickAway: true
+            height: 75,
+            width: 400,
+            disableClickAway: true,
+            hidePaper: true,
+            anchorPosition: { top: 50, left: width / 2 },
+            anchorReference: "POSITION",
+            anchorOrigin: {
+                vertical: "CENTER",
+                horizontal: "CENTER",
+            },
+            transformOrigin: {
+                vertical: "TOP",
+                horizontal: "CENTER",
+            },
         });
     }
     else
@@ -124,6 +152,10 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
     else if (event.key == "Enter")
     {
         finishDrawing();
+    }
+    else if (event.key === "z")
+    {
+        undoLastPoint();
     }
 }
 

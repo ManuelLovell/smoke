@@ -8,6 +8,7 @@ export class Constants
     static EXTENSIONWHATSNEW = "com.battle-system.smoke-whatsnew";
     static LINETOOLID = "com.battle-system.linetool";
     static POLYTOOLID = "com.battle-system.polytool";
+    static ELEVATIONTOOLID = "com.battle-system.elevationtool";
     static BRUSHTOOLID = "com.battle-system.brushtool";
     static PROCESSEDID = "com.battle-system.processing";
     static ARMINDOID = "com.armindoflores.fogofwar";

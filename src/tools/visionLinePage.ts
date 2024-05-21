@@ -19,7 +19,7 @@ OBR.onReady(async () =>
     buttonFinish.type = "button";
     buttonFinish.onclick = async () =>
     {
-        await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishLine`]: true });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/LINEEVENT`, "FINISH", { destination: "LOCAL" });
     };
 
     const buttonCancel = document.createElement('input');
@@ -32,9 +32,23 @@ OBR.onReady(async () =>
     buttonCancel.type = "button";
     buttonCancel.onclick = async () =>
     {
-        await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/cancelLine`]: true });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/LINEEVENT`, "FINISH", { destination: "LOCAL" });
+    };
+
+    const buttonUndo = document.createElement('input');
+    buttonUndo.id = "undoLine";
+    buttonUndo.classList.add("end-line");
+    buttonUndo.classList.add("mysteryButton");
+    buttonUndo.style.paddingLeft = "6px";
+    buttonUndo.style.paddingRight = "6px";
+    buttonUndo.value = "Undo Point";
+    buttonUndo.type = "button";
+    buttonUndo.onclick = async () =>
+    {
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/LINEEVENT`, "UNDO", { destination: "LOCAL" });
     };
 
     buttonContainer.appendChild(buttonFinish);
     buttonContainer.appendChild(buttonCancel);
+    buttonContainer.appendChild(buttonUndo);
 });

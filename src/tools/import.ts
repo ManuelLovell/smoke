@@ -122,6 +122,40 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
     return newItems;
 }
 
+function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
+{
+    const newItems: Curve[] = [];
+    for (const uvttDoor of uvttDoors)
+    {
+        const newItemPaths = [];
+        for (const point of uvttDoor.bounds)
+        {
+            newItemPaths.push({ x: point.x * BSCACHE.gridDpi, y: point.y * BSCACHE.gridDpi });
+        }
+        const line = buildCurve()
+            .tension(0)
+            .points(newItemPaths)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .fillOpacity(0)
+            .fillColor("#000000")
+            .layer("DRAWING")
+            .name("Vision Line (Door)")
+            .closed(false)
+            .locked(true)
+            .visible(false)
+            .metadata({
+                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                [`${Constants.EXTENSIONID}/isDoor`]: true
+            })
+            .build();
+
+        newItems.push(line);
+    }
+    return newItems;
+}
+
 export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement)
 {
     // Create Walls
@@ -134,58 +168,62 @@ export async function ImportScene(importData: UVTT, errorElement: HTMLDivElement
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.line_of_sight));
     }
+    if (importData.portals?.length > 0)
+    {
+        importedObjects = importedObjects.concat(ConvertDoorItem(importData.portals));
+    }
 
     try 
     {
-    // Create Torches
+        // Create Torches
         if (importData.lights?.length > 0)
-    {
-        const newItems = [];
-        for (const light of importData.lights)
         {
-            // Dropping as bite-size transparent PNGs because the light-sources
-            // are images baked into the map itself
-            const torch = buildImage(
-                {
-                    height: 150,
-                    width: 150,
-                    url: "https://battle-system.com/blank.png",
-                    mime: "image/png",
-                },
-                { dpi: 300, offset: { x: 150, y: 150 } }
-            )
-                .position({ x: light.position.x * BSCACHE.gridDpi, y: light.position.y * BSCACHE.gridDpi })
-                .layer("CHARACTER")
-                .metadata({
-                    [`${Constants.EXTENSIONID}/hasVision`]: true,
-                    [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
-                    [`${Constants.EXTENSIONID}/visionTorch`]: true,
-                    [`${Constants.EXTENSIONID}/hiddenToken`]: true
-                })
-                .name("Imported Light Source")
-                .build();
-            newItems.push(torch);
+            const newItems = [];
+            for (const light of importData.lights)
+            {
+                // Dropping as bite-size transparent PNGs because the light-sources
+                // are images baked into the map itself
+                const torch = buildImage(
+                    {
+                        height: 150,
+                        width: 150,
+                        url: "https://battle-system.com/blank.png",
+                        mime: "image/png",
+                    },
+                    { dpi: 300, offset: { x: 150, y: 150 } }
+                )
+                    .position({ x: light.position.x * BSCACHE.gridDpi, y: light.position.y * BSCACHE.gridDpi })
+                    .layer("CHARACTER")
+                    .metadata({
+                        [`${Constants.EXTENSIONID}/hasVision`]: true,
+                        [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
+                        [`${Constants.EXTENSIONID}/visionTorch`]: true,
+                        [`${Constants.EXTENSIONID}/hiddenToken`]: true
+                    })
+                    .name("Imported Light Source")
+                    .build();
+                newItems.push(torch);
+            }
+            importedObjects = importedObjects.concat(newItems);
         }
-        importedObjects = importedObjects.concat(newItems);
-    }
 
-    // Create Map
-    const imageBinary = atob(importData.image);
-    const uint8Array = new Uint8Array(imageBinary.length);
-    for (let i = 0; i < imageBinary.length; i++)
-    {
-        uint8Array[i] = imageBinary.charCodeAt(i);
-    }
-    const blob = new Blob([uint8Array], { type: 'image/png' });
+        // Create Map
+        const imageBinary = atob(importData.image);
+        const uint8Array = new Uint8Array(imageBinary.length);
+        for (let i = 0; i < imageBinary.length; i++)
+        {
+            uint8Array[i] = imageBinary.charCodeAt(i);
+        }
+        const blob = new Blob([uint8Array], { type: 'image/png' });
 
-    const image = buildImageUpload(blob).grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } }).build();
-    const scene = buildSceneUpload()
-        .baseMap(image)
-        .name("New UVTT Scene")
-        .items(importedObjects)
-        .build();
-    await OBR.assets.uploadScenes([scene], true);
-    await OBR.notification.show("Toggle Smoke Off then On when opening the new Scene", "DEFAULT");
+        const image = buildImageUpload(blob).grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } }).build();
+        const scene = buildSceneUpload()
+            .baseMap(image)
+            .name("New UVTT Scene")
+            .items(importedObjects)
+            .build();
+        await OBR.assets.uploadScenes([scene], true);
+        await OBR.notification.show("Toggle Smoke Off then On when opening the new Scene", "DEFAULT");
     }
     catch (error)
     {

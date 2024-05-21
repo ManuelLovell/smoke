@@ -7,8 +7,9 @@ import { UpdateMaps } from "../tools/import";
 import { toggleDoor } from "../tools/doorTool";
 import { InitializeScene } from "../smokeInitializeScene";
 import { OnSceneDataChange } from "../tools/smokeVisionProcess";
-import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing } from "../tools/visionLineMode";
-import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing } from "../tools/visionPolygonMode";
+import { finishDrawing as FinishLineDrawing, cancelDrawing as CancelLineDrawing, undoLastPoint as UndoLinePoint } from "../tools/visionLineMode";
+import { finishDrawing as FinishPolyDrawing, cancelDrawing as CancelPolyDrawing, undoLastPoint as UndoPolygonPoint } from "../tools/visionPolygonMode";
+import { finishDrawing as FinishElevationDrawing, cancelDrawing as CancelElevationDrawing, undoLastPoint as UndoElevationPoint } from "../tools/elevationMode";
 import { ObjectCache } from "./cache";
 import SmokeWorker from "../tools/worker?worker";
 import { SPECTRE } from "../spectreMain";
@@ -287,6 +288,51 @@ class BSCache
             }
         });
 
+        const elevationHandler = OBR.broadcast.onMessage(`${Constants.EXTENSIONID}/ELEVATIONEVENT`, (data) =>
+        {
+            switch (data.data)
+            {
+                case "CANCEL": CancelElevationDrawing();
+                    break;
+                case "FINISH": FinishElevationDrawing();
+                    break;
+                case "UNDO": UndoElevationPoint();
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        const lineHandler = OBR.broadcast.onMessage(`${Constants.EXTENSIONID}/LINEEVENT`, (data) =>
+        {
+            switch (data.data)
+            {
+                case "CANCEL": CancelLineDrawing();
+                    break;
+                case "FINISH": FinishLineDrawing();
+                    break;
+                case "UNDO": UndoLinePoint();
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        const polyHandler = OBR.broadcast.onMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, (data) =>
+        {
+            switch (data.data)
+            {
+                case "CANCEL": CancelPolyDrawing();
+                    break;
+                case "FINISH": FinishPolyDrawing();
+                    break;
+                case "UNDO": UndoPolygonPoint();
+                    break;
+                default:
+                    break;
+            }
+        });
+
         await this.SaveUserToScene();
     }
 
@@ -468,6 +514,12 @@ class BSCache
                 {
                     SPECTRE.ClearGhostList();
                     this.KillHandlers();
+
+                    await OBR.tool.setMetadata(`${Constants.EXTENSIONID}/vision-tool`,
+                        {
+                            [`${Constants.EXTENSIONID}/elevationEditor`]: false
+                        });
+                        
                     this.sceneItems = [];
                     this.sceneMetadata = {};
                 }

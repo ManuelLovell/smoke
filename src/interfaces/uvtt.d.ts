@@ -19,16 +19,7 @@ interface UVTT
     line_of_sight: Array<Array<{ x: number; y: number }>>; // array of x,y values for line of sight
     objects_line_of_sight: Array<Array<{ x: number; y: number }>>; // array of x,y values per object for line of sight
 
-    portals: Array<{
-        position: {
-            x: number;
-            y: number;
-        };
-        bounds: Array<{ x: number; y: number }>;
-        rotation: number; // radians
-        closed: boolean;
-        freestanding: boolean;
-    }>;
+    portals: UVTTPortal[];
 
     environment: {
         baked_lighting: boolean; // is lighting baked into this image?
@@ -43,4 +34,16 @@ interface UVTT
         shadows: boolean;
     }>;
     image: string; // base64 encoded PNG or WEBP
+}
+
+interface UVTTPortal
+{
+    position: {
+        x: number;
+        y: number;
+    };
+    bounds: Array<{ x: number; y: number }>;
+    rotation: number; // radians
+    closed: boolean;
+    freestanding: boolean;
 }

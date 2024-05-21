@@ -1,6 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
-import { Constants } from "../utilities/bsConstants";
 import "../css/style.css";
+import { Constants } from "../utilities/bsConstants";
 
 OBR.onReady(async () =>
 {
@@ -11,7 +11,7 @@ OBR.onReady(async () =>
 
     const buttonFinish = document.createElement('input');
     buttonFinish.id = "endLine";
-    buttonFinish.classList.add("end-line");
+    buttonFinish.classList.add("ele-line");
     buttonFinish.classList.add("mysteryButton");
     buttonFinish.style.paddingLeft = "6px";
     buttonFinish.style.paddingRight = "6px";
@@ -19,12 +19,12 @@ OBR.onReady(async () =>
     buttonFinish.type = "button";
     buttonFinish.onclick = async () =>
     {
-        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, "FINISH", { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/ELEVATIONEVENT`, "FINISH", { destination: "LOCAL" });
     };
 
     const buttonCancel = document.createElement('input');
     buttonCancel.id = "endLine";
-    buttonCancel.classList.add("end-line");
+    buttonCancel.classList.add("ele-line");
     buttonCancel.classList.add("mysteryButton");
     buttonCancel.style.paddingLeft = "6px";
     buttonCancel.style.paddingRight = "6px";
@@ -32,12 +32,12 @@ OBR.onReady(async () =>
     buttonCancel.type = "button";
     buttonCancel.onclick = async () =>
     {
-        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, "FINISH", { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/ELEVATIONEVENT`, "CANCEL", { destination: "LOCAL" });
     };
 
     const buttonUndo = document.createElement('input');
     buttonUndo.id = "undoLine";
-    buttonUndo.classList.add("end-line");
+    buttonUndo.classList.add("ele-line");
     buttonUndo.classList.add("mysteryButton");
     buttonUndo.style.paddingLeft = "6px";
     buttonUndo.style.paddingRight = "6px";
@@ -45,7 +45,7 @@ OBR.onReady(async () =>
     buttonUndo.type = "button";
     buttonUndo.onclick = async () =>
     {
-        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, "UNDO", { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/ELEVATIONEVENT`, "UNDO", { destination: "LOCAL" });
     };
 
     buttonContainer.appendChild(buttonFinish);

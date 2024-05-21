@@ -126,6 +126,21 @@ a {
     vertical-align: middle;
 }
 
+.ele-line {
+    font-size: small;
+    font-weight: bold;
+    margin: 4px;
+    padding: 8px !important;
+}
+
+.end-line {
+    border: none !important;
+    font-size: medium;
+    font-weight: bold;
+    margin: 4px;
+    padding: 8px !important;
+}
+
 #mapSubmit,
 .mysteryButton {
     height: 35px;
@@ -523,12 +538,13 @@ li>p {
     margin-bottom: 8px;
     border-bottom: 1px solid white;
 }
-#debugViewToggle
-{
+
+#debugViewToggle {
     padding-left: 4px;
     padding-right: 4px;
     width: 90px;
 }
+
 .panel {
     height: 90%;
 }

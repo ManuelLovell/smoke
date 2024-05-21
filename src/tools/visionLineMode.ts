@@ -12,7 +12,6 @@ const DEFAULTSTROKE: number[] = [];
 async function cleanUpPopovers(): Promise<void>
 {
     await OBR.popover.close(Constants.LINETOOLID);
-    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishLine`]: false });
 }
 
 export async function cancelDrawing(): Promise<void>
@@ -24,7 +23,6 @@ export async function cancelDrawing(): Promise<void>
     stop();
     interaction = null;
     await cleanUpPopovers();
-    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/cancelLine`]: false });
 }
 
 export async function finishDrawing(): Promise<void>
@@ -48,7 +46,21 @@ export async function finishDrawing(): Promise<void>
     interaction = null;
 
     await cleanUpPopovers();
-    await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/finishLine`]: false });
+}
+
+export async function undoLastPoint(): Promise<void>
+{
+    if (!interaction)
+        return;
+
+    const [update] = interaction;
+    update((line: Curve) =>
+    {
+        if (line.points.length > 2)
+        {
+            line.points.pop();
+        }
+    });
 }
 
 async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
@@ -76,13 +88,26 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
 
         interaction = await OBR.interaction.startItemInteraction(line);
 
+        const width = await OBR.viewport.getWidth();
+        
         //Create Tooltip
         await OBR.popover.open({
             id: Constants.LINETOOLID,
             url: `/pages/line.html`,
-            height: 70,
+            height: 75,
             width: 350,
-            disableClickAway: true
+            disableClickAway: true,
+            hidePaper: true,
+            anchorPosition: { top: 50, left: width / 2 },
+            anchorReference: "POSITION",
+            anchorOrigin: {
+                vertical: "CENTER",
+                horizontal: "CENTER",
+            },
+            transformOrigin: {
+                vertical: "TOP",
+                horizontal: "CENTER",
+            },
         });
     }
     else
@@ -123,6 +148,10 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
     else if (event.key == "Enter")
     {
         finishDrawing();
+    }
+    else if (event.key === "z")
+    {
+        undoLastPoint();
     }
 }
 

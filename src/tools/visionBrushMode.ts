@@ -29,13 +29,25 @@ async function onDragStart(_: ToolContext, event: ToolEvent)
 
 async function onActivate()
 {
+    const width = await OBR.viewport.getWidth();
+
     //Create Tooltip
     await OBR.popover.open({
         id: Constants.BRUSHTOOLID,
         url: `/pages/brush.html`,
-        height: 70,
+        height: 80,
         width: 350,
-        disableClickAway: true
+        disableClickAway: true,
+        anchorPosition: { top: 60, left: width / 2 },
+        anchorReference: "POSITION",
+        anchorOrigin: {
+            vertical: "CENTER",
+            horizontal: "CENTER",
+        },
+        transformOrigin: {
+            vertical: "TOP",
+            horizontal: "CENTER",
+        },
     });
 }
 
@@ -240,7 +252,8 @@ function mergeLines(lineA: PointLine, lineB: PointLine): PointLine
     };
 }
 
-function mergePrecision(lineA: PointLine, lineB: PointLine): PointLine {
+function mergePrecision(lineA: PointLine, lineB: PointLine): PointLine
+{
     // Determine the lower and higher points for start and end
     const startX = Math.min(lineA.Start.x, lineB.Start.x);
     const startY = Math.min(lineA.Start.y, lineB.Start.y);

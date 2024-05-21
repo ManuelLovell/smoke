@@ -4,6 +4,7 @@ import { isTorch } from "../utilities/itemFilters";
 import { comparePosition, squareDistance, isClose, mod } from "../utilities/math";
 import { PathKit } from "./smokeVisionProcess";
 import { BSCACHE } from "../utilities/bsSceneCache";
+import { isPointInPolygon } from "../utilities/bsUtilities";
 
 
 function CheckLineOcclusionByPoly(line: Vector2[], poly: Vector2[]): boolean
@@ -82,6 +83,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     let polygons: Polygon[][] = [];
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
+    const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
 
     const corners = [
         { x: (width + offset[0]) * scale[0], y: offset[1] * scale[1] },
@@ -113,6 +115,15 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
         const myToken = (BSCACHE.playerId === token.createdUserId);
         const tokenOwner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         const gmToken = tokenOwner?.role === "GM";
+        let tokenDepth = 0;
+        for (const mapping of elevationMappings)
+        {
+            const withinMap = isPointInPolygon(token.position, mapping.Points);
+            if (withinMap)
+            {
+                if (mapping.Depth > tokenDepth) tokenDepth = mapping.Depth;
+            }
+        }
 
         if ((!myToken && BSCACHE.playerRole !== "GM") && !gmToken)
         {
@@ -175,6 +186,17 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
         for (const line of visionLines)
         {
+            let lineDepth = 0;
+            for (const mapping of elevationMappings)
+            {
+                const withinMap = isPointInPolygon(line.startPosition, mapping.Points);
+                if (withinMap)
+                {
+                    if (mapping.Depth > tokenDepth) lineDepth = mapping.Depth;
+                }
+            }
+            if (tokenDepth > lineDepth) continue;
+
             const signedDistance = (token.position.x - line.startPosition.x) * (line.endPosition.y - line.startPosition.y) - (token.position.y - line.startPosition.y) * (line.endPosition.x - line.startPosition.x);
 
             if (line.oneSided !== undefined)
@@ -194,7 +216,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                 line.startPosition = clipLineToBoundingBox(line, offset, size).startPosition;
                 line.endPosition = clipLineToBoundingBox(line, offset, size).endPosition;
             }
-            
+
             // exclude lines based on distance.. this is faster than creating polys around everything, but is less accurate, particularly on long lines. we compensate for this by adjusting the detection by 5% of the vision range.
             const segments: Vector2[] = [line.startPosition, line.endPosition];
             const length = Math2.distance(line.startPosition, line.endPosition);
@@ -335,6 +357,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                 pointset.splice(pointset.length - 2, 0, corners[mod(k, 4)]);
             }
 
+            let depth = 0;
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
     }
