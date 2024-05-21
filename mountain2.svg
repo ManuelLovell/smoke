@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<svg width="24.000000000000004" height="24.000000000000004" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" data-name="Line Color">
+ <g class="layer">
+  <title>Layer 1</title>
+  <path d="m6.76,5.55a0.87,1.41 0 0 1 1.6,0l2.23,7.17l0,0l1.15,-4.22a0.8,1.3 0 0 1 1.44,0l3.35,11.79l-14.36,0l4.59,-14.73z" fill="none" id="primary" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="2px" transform="matrix(1 0 0 1 0 0)"/>
+  <text fill="#fff" font-family="Fantasy" font-size="24" id="svg_1" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" style="cursor: move;" text-anchor="middle" transform="matrix(0.612083 0 0 0.496578 12.4625 2.79725)" x="10.1" xml:space="preserve" y="18.1">2</text>
+ </g>
+</svg>

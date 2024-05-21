@@ -1,4 +1,4 @@
-import{O as n,C as d}from"./bsConstants-99533c10.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),w=`
+import{O as n,C as c}from"./bsConstants-0c7edbdf.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -16,8 +16,30 @@ import{O as n,C as d}from"./bsConstants-99533c10.js";/* empty css               
   <li>If you see 'Vision Disabled' on a token in your list, it means the GM has not enabled vision for that token.
   </br>
   <li>GM-Owned tokens with vision share their vision with all players..
-</div>`,p=`
+</div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/20</h1>
+        I really need to do something else.
+        </br> Major update today:
+        Elevation v1.0
+        </br></br> <div style="text-align:center;">GM View</div>
+        </br><img class="news-image" src="https://battle-system.com/owlbear/smoke-docs/elevation-gm.png">
+        </br>
+        </br> <div style="text-align:center;">Player View</div>
+        </br><img class="news-image" src="https://battle-system.com/owlbear/smoke-docs/elevation-player.gif">
+        </br>
+        Since this is a first-pass, I've limited things to keep it simple.
+        </br> There are only 5 layers of elevation to mess with.
+        </br> A wall's elevation is determined by where it's STARTING POINT is. (Just in case you have things super close together.)
+        </br> If you have several elevation mappings stacked, whichever one is highest at the point of the token/wall takes priority.
+        </br> Other than that, it should be fairly straight forward.  Turn on the Elevation Mapping editor, make some shapes. It saves after each shape is completed, or when you De-Activate the editor.
+        </br> So you can leave the editor active, manipulate the shapes with the OBR tools and then de-activate the editor to save your work.
+        </br>
+        </br> Some other QoL improvements - added portals/doors to the scene import.
+        </br> Added an 'Undo' button to the obstruction drawing tools. It'll just pop off the last point you did. The hotkey for it is 'Z'. (Not CTRL-Z because that's OBR's undo.)
+        </br> Other-random-things I can't remember.
+        </br> Enjoy!
+        </br>
         <h1>Smoke & Spectre! 5/20</h1>
         Minor fix for the 'DPI AutoDetect' checkbox not working.
         </br> And some improvements to make unlocking/locking large amounts of fog process.
@@ -83,7 +105,7 @@ import{O as n,C as d}from"./bsConstants-99533c10.js";/* empty css               
         </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
         </br>
     </div>
-`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?w:p,b.innerHTML=`
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?p:w,b.innerHTML=`
     <div id="footButtonContainer">
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
@@ -92,4 +114,4 @@ import{O as n,C as d}from"./bsConstants-99533c10.js";/* empty css               
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(d.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const c=document.getElementById("advTutorial");c.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await n.modal.close(c.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
