@@ -77,11 +77,6 @@ async function onToolClick(_J: ToolContext, event: ToolEvent, depth: number)
 {
     if (event.transformer) { return; }
 
-    if (event.ctrlKey)
-    {
-        return true;
-    }
-
     if (!interaction)
     {
         const snapped = GetSnappedCoordinates(event);
