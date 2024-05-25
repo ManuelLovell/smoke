@@ -15,6 +15,10 @@ export async function SetupContextMenus(): Promise<void>
                 filter: {
                     every: [{ key: "layer", value: "DRAWING" },
                     {
+                        key: ["metadata", `${Constants.EXTENSIONID}/elevation`],
+                        value: undefined,
+                    },
+                    {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: undefined,
                     }],
