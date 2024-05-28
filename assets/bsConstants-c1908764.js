@@ -69,7 +69,7 @@
                         <td colspan="4"><div id="opacityHolder">
                             <label for="fow_checkbox" title="Trailing fog shows an opaque layer for previously viewed areas that players cannot currently view">Trailing Fog + Autohide</label>
                            - <input type="checkbox" id="fow_checkbox"> -
-                            <input type="text" style="width: 90px;" maxlength="9" id="fow_color" value="#00000088">
+                            <input type="text" style="width: 90px;" maxlength="9" id="fow_color">
                         </div></td>
                     </tr>
                     <tr>
@@ -81,13 +81,16 @@
                         <td colspan="2"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines" title="Lock all Obstruction Lines on the Scene"></td>
                     </tr>
                     <tr>
+                        <td colspan="4" style="text-align:center;">Default Elevation Mapping Layer (0 - 6): <input id="default_mel_depth" type="number" value="0" style="width: 40px;" min="0" max="6" maxlength="1"></td>
+                    </tr>
+                    <tr>
                         <td colspan="4" style="text-align: center; font-weight: bold;">Tool Options</td>
                     </tr>
                     <tr>
                         <td colspan="4">
                             <div id="toolOptions">
                                 Width: <input id="tool_width" type="number" value="8" style="width: 40px;" maxlength="2">
-                                 - Color: <input id="tool_color" type="text" value="#000000" style="width: 74px;" maxlength="7">
+                                 - Color: <input id="tool_color" type="text" style="width: 74px;" maxlength="7">
                                  - Style: <select id="tool_style">
                                     <option value="solid" selected>Solid</option>
                                     <option value="dotted">Dotted</option>
