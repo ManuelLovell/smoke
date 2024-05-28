@@ -28,6 +28,10 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/28</h1>
+        Small patch to hopefully address an issue where some people have seen fog worker errors.
+        </br> Not sure on the cause though, as it could be anything from imported maps to weird scenes - but this should just log the error and keep it moving.
+        </br>
         <h1>Smoke & Spectre! 5/20</h1>
         I really need to do something else.
         </br> Major update today:

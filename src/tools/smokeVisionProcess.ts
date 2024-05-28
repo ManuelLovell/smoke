@@ -340,9 +340,13 @@ export async function OnSceneDataChange(forceUpdate?: boolean)
                             // Reassemble in order
                             for (let j = 0; j < BSCACHE.workers.length; j++)
                             {
-                                const svgPath = PathKit.FromCmds(workerData[j]);
-                                pPathBuilder.add(svgPath, PathKit.PathOp.INTERSECT);
-                                svgPath.delete();
+                                const extractedData = workerData[j];
+                                if (extractedData)
+                                {
+                                    const svgPath = PathKit.FromCmds(extractedData);
+                                    pPathBuilder.add(svgPath, PathKit.PathOp.INTERSECT);
+                                    svgPath.delete();
+                                }
                             }
 
                             // All workers have completed their tasks
