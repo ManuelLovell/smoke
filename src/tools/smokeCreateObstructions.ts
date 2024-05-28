@@ -1,11 +1,9 @@
-import OBR, { buildPath, Vector2, MathM, Math2, Player } from "@owlbear-rodeo/sdk";
+import { Vector2, MathM, Math2, Player } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { isTorch } from "../utilities/itemFilters";
 import { comparePosition, squareDistance, isClose, mod } from "../utilities/math";
-import { PathKit } from "./smokeVisionProcess";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import { isPointInPolygon } from "../utilities/bsUtilities";
-
 
 function CheckLineOcclusionByPoly(line: Vector2[], poly: Vector2[]): boolean
 {
@@ -80,6 +78,7 @@ export function CreateObstructionLines(visionShapes: any): ObstructionLine[]
 
 export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision: any, width: number, height: number, offset: [number, number], scale: [number, number]): Polygon[][]
 {
+    const BASEMELDEPTH = parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultMELDepth`] as string ?? "0");
     let polygons: Polygon[][] = [];
     let lineCounter = 0, skipCounter = 0;
     let size = [width, height];
@@ -99,7 +98,7 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     const sceneHasTorches = tokensWithVision.some(isTorch);
 
     // Now witness the firepower of this fully armed and operational battlestation:
-    let cullingDebugPath;
+    // let cullingDebugPath;
     // if (BSCACHE.enableVisionDebug)
     // {
     //     cullingDebugPath = PathKit.NewPath();
@@ -109,21 +108,27 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
     {
         return polygons;
     }
-
+    
     for (const token of tokensWithVision)
     {
         const myToken = (BSCACHE.playerId === token.createdUserId);
         const tokenOwner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         const gmToken = tokenOwner?.role === "GM";
-        let tokenDepth = 0;
+
+        let tokenDepth;
         for (const mapping of elevationMappings)
         {
             const withinMap = isPointInPolygon(token.position, mapping.Points);
             if (withinMap)
             {
-                if (mapping.Depth > tokenDepth) tokenDepth = mapping.Depth;
+                if (withinMap && (tokenDepth === undefined || mapping.Depth > tokenDepth))
+                {
+                    tokenDepth = mapping.Depth;
+                }
             }
         }
+
+        if (tokenDepth === undefined) tokenDepth = BASEMELDEPTH;
 
         if ((!myToken && BSCACHE.playerRole !== "GM") && !gmToken)
         {
@@ -186,15 +191,21 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
 
         for (const line of visionLines)
         {
-            let lineDepth = 0;
+            let lineDepth;
             for (const mapping of elevationMappings)
             {
                 const withinMap = isPointInPolygon(line.startPosition, mapping.Points);
                 if (withinMap)
                 {
-                    if (mapping.Depth > tokenDepth) lineDepth = mapping.Depth;
+                    if (withinMap && (lineDepth === undefined || mapping.Depth > tokenDepth))
+                    {
+                        lineDepth = mapping.Depth;
+                    }
                 }
             }
+
+            if (lineDepth === undefined) lineDepth = BASEMELDEPTH;
+
             if (tokenDepth > lineDepth) continue;
 
             const signedDistance = (token.position.x - line.startPosition.x) * (line.endPosition.y - line.startPosition.y) - (token.position.y - line.startPosition.y) * (line.endPosition.x - line.startPosition.x);
@@ -357,7 +368,6 @@ export function CreatePolygons(visionLines: ObstructionLine[], tokensWithVision:
                 pointset.splice(pointset.length - 2, 0, corners[mod(k, 4)]);
             }
 
-            let depth = 0;
             polygons[polygons.length - 1].push({ pointset: pointset, fromShape: line.originalShape });
         }
     }

@@ -45,6 +45,9 @@ class BSCache
     gridType: string; // IE; ft (of 5ft)
 
     storedMetaItems: Item[];
+
+    baseMELDepth: number;
+
     sceneItems: Item[];
     sceneLocal: Item[];
     sceneSelected: string[];
@@ -122,6 +125,7 @@ class BSCache
         this.busy = false;
         this.torchActive = false;
         this.toolStarted = false;
+        this.baseMELDepth = 0;
 
         this.caches = caches;
         this.playerShadowCache = new ObjectCache(false);
@@ -532,8 +536,9 @@ class BSCache
         }
     }
 
-    public async OnSceneMetadataChanges(_metadata: Metadata)
+    public async OnSceneMetadataChanges(metadata: Metadata)
     {
+        this.baseMELDepth = metadata[`${Constants.EXTENSIONID}/defaultMELDepth`] as number ?? 0;
         if (this.playerRole === "GM")
         {
             await AddBorderIfNoAutoDetect();

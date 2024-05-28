@@ -28,6 +28,10 @@ const needHelpMessage = `
 
 const whatsNewMessage = `
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 5/28-B</h1>
+        Realized the tools were never loading their settings, despite being saved. Fixed. (Tool Width/Color/etc)
+        Added in a Default Elevation Mapping setting. Previously, the base layer was always assigned a 0. Which is fine for outdoor maps going up, but not necessarily default maps going down.
+        </br> What this would do is allow you to set what the 'default' mapping layer would be for all un-assigned lines.  So if you want everything to start higher and build your way down into a pit, you would set this to 6 and go about your business.
         <h1>Smoke & Spectre! 5/28</h1>
         Small patch to hopefully address an issue where some people have seen fog worker errors.
         </br> Not sure on the cause though, as it could be anything from imported maps to weird scenes - but this should just log the error and keep it moving.

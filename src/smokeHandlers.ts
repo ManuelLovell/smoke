@@ -167,12 +167,12 @@ export function SetupInputHandlers()
         {
             const batch = allFogLines.slice(i, i + 64);
             await OBR.scene.items.updateItems(batch, (paths) =>
-        {
-            for (let path of paths)
             {
-                path.locked = false;
-            }
-        });
+                for (let path of paths)
+                {
+                    path.locked = false;
+                }
+            });
         }
         await BSCACHE.ToggleBusy(false);
     };
@@ -188,12 +188,12 @@ export function SetupInputHandlers()
         {
             const batch = allFogLines.slice(i, i + 64);
             await OBR.scene.items.updateItems(batch, (paths) =>
-        {
-            for (let path of paths)
             {
-                path.locked = true;
-            }
-        });
+                for (let path of paths)
+                {
+                    path.locked = true;
+                }
+            });
         }
         await BSCACHE.ToggleBusy(false);
     };
@@ -392,7 +392,6 @@ export function SetupInputHandlers()
             const hexTest = /#[a-f0-9]{6}/
             if (hexTest.test(target.value))
             {
-
                 await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolColor`]: target.value });
             }
         }, 400);
@@ -419,6 +418,18 @@ export function SetupInputHandlers()
         }, 400);
     };
 
+    SMOKEMAIN.defaultMELDepth!.onchange = (event) =>
+    {
+        const target = event.currentTarget as HTMLInputElement;
+        clearTimeout(debouncer);
+
+        // Debounce this input to avoid hitting OBR rate limit
+        debouncer = setTimeout(async () =>
+        {
+            await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/defaultMELDepth`]: target.value });
+        }, 400);
+    };
+
     SMOKEMAIN.whatsNewButton!.onclick = async function ()
     {
         SMOKEMAIN.whatsNewIcon?.classList.remove("new-shine");
@@ -430,11 +441,17 @@ export function SetupInputHandlers()
         });
     };
 
+    // Need to retrieve the colors and set them on the element before initialization for the Thumbnails to update correctly.
+    const getFowColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/fowColor`] as string ?? "#00000088";
+    const getToolColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? "#000000";
+    SMOKEMAIN.toolColor!.value = getToolColor;
+    SMOKEMAIN.fowColor!.value = getFowColor;
     Coloris({
         themeMode: 'dark',
         alpha: true,
         forceAlpha: true,
         el: "#fow_color",
+        defaultColor: getFowColor
     });
 
     Coloris({
@@ -442,5 +459,6 @@ export function SetupInputHandlers()
         alpha: false,
         forceAlpha: false,
         el: "#tool_color",
+        defaultColor: getToolColor
     });
 }
