@@ -278,12 +278,25 @@ class SpectreMain
     public async RestoreGhostsGM(): Promise<void>
     {
         BSCACHE.localGhosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/current_spectres`] as Image[];
+
         if (!BSCACHE.localGhosts)
         {
             BSCACHE.localGhosts = [];
         }
 
         if (BSCACHE.localGhosts.length > 0)
+        {
+            await OBR.scene.local.addItems(BSCACHE.localGhosts);
+            BSCACHE.localGhosts.forEach(ghost =>
+            {
+                this.SetupTomSelect(ghost);
+            });
+        }
+
+        // Old version support
+        const oldVersionGhosts = BSCACHE.sceneMetadata[`${Constants.SPECTREID}/stored`] as Image[];
+
+        if (oldVersionGhosts?.length > 0)
         {
             await OBR.scene.local.addItems(BSCACHE.localGhosts);
             BSCACHE.localGhosts.forEach(ghost =>

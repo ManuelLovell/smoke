@@ -54,7 +54,7 @@ function isTokenWithVisionIOwn(item: Item)
 
 function isBackgroundBorder(item: Item)
 {
-    return (item.layer === "DRAWING" || item.layer === "MAP")
+    return (item.layer === "DRAWING")
         && (item.metadata[`${Constants.EXTENSIONID}/isBackgroundImage`] || item.metadata[`${Constants.ARMINDOID}/isBackgroundImage`]);
 }
 
