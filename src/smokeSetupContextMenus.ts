@@ -508,6 +508,72 @@ export async function SetupContextMenus(): Promise<void>
             }
         },
     });
+
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-door-lock`,
+        icons: [
+            {
+                icon: "/locked-door.svg",
+                label: "Lock Door",
+                filter: {
+                    every: [{ key: "layer", value: "DRAWING" },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isDoorLocked`],
+                            value: undefined
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
+                            value: true,
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/doorOpen`],
+                            value: undefined,
+                        }],
+                    roles: ["GM"]
+                },
+            },
+            {
+                icon: "/unlocked-door.svg",
+                label: "Unlock Door",
+                filter: {
+                    every: [{key: "layer", value: "DRAWING"},
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                            value: true,
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
+                            value: true
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/doorOpen`],
+                            value: undefined,
+                        }],
+                    roles: ["GM"]
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            const lockDoor = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === undefined);
+
+            await OBR.scene.items.updateItems(ctx.items, items =>
+            {
+                for (const item of items)
+                {
+                    if (!lockDoor)
+                    {
+                        delete item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`];
+                    }
+                    else
+                    {
+                        item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] = true;
+                    }
+                }
+            });
+        },
+    });
 }
 
 export async function SetupAutohideMenus(show: boolean): Promise<void>
