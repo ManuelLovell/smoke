@@ -52,7 +52,6 @@ export async function toggleDoor(toggleDoorId: string)
     const localDoor = await OBR.scene.local.getItems((item) => item.id === toggleDoorId && item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
     if (localDoor.length === 1)
     {
-        const role = await OBR.player.getRole();
         const doorPathId = localDoor[0].metadata[`${Constants.EXTENSIONID}/doorId`];
         const door = BSCACHE.sceneItems.filter((item) => item.id === doorPathId);
 
@@ -60,7 +59,7 @@ export async function toggleDoor(toggleDoorId: string)
         await OBR.scene.items.updateItems(door, (items) =>
         {
             const item = items[0];
-            if (role !== "GM" && item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`]) {
+            if (BSCACHE.playerRole !== "GM" && item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`]) {
                 return;
             }
 
