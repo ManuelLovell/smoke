@@ -1,4 +1,4 @@
-import{O as s,C as c}from"./bsConstants-c1908764.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
+import{O as n,C as c}from"./bsConstants-c1908764.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,6 +18,18 @@ import{O as s,C as c}from"./bsConstants-c1908764.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 6/7-B</h1>
+        Biscuits.
+        </br> I'll get a Readme up for this soon, as the Elevation aspect of things could use some hard documentation.
+        </br> Especially since some things were a -little- off and now hard rules have to be set.
+        </br> Elevation-0; The base layer everything is at when you aren't using Elevation at all (and have not changed the default layer) will act like normal. You can't see past a wall if the Token is on 0, and the Wall is on 0.
+        </br>
+        </br> For Elevation; Any non-0 layer will behave differently. If the token is on the same layer as the wall, it WILL be able to see over it. The main reason for this is to make it easier to draw elevation - this allows you to continue as it was before, with drawing the mapping AROUND the obstructions.
+        </br> Having it the other way around would mean you would need to draw it within the shape, and that gets very confusing once you have close buildings.
+        </br>
+        </br> This change shoudln't effect very many of you. But for those it does, it should still be behaving as it was before. Except any lines on Elevation-0 have 'infinite' height. They basically can't be seen over.  If you need to get around this, just cover the entire map in Layer-1.
+        </br> Sorry for the confusion.
+        </br>
         <h1>Smoke & Spectre! 6/7</h1>
         Fixed a bug with Elevation when being used on a scene that never set the default elevation layer.
         </br> And.. probably some other little ones. Probably.
@@ -116,7 +128,7 @@ import{O as s,C as c}from"./bsConstants-c1908764.js";/* empty css               
         </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
         </br>
     </div>
-`;s.onReady(async()=>{const n=window.location.search,t=new URLSearchParams(n),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?p:w,b.innerHTML=`
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?p:w,b.innerHTML=`
     <div id="footButtonContainer">
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
@@ -125,4 +137,4 @@ import{O as s,C as c}from"./bsConstants-c1908764.js";/* empty css               
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const r=document.getElementById("closeButton");r.onclick=async()=>{await s.modal.close(c.EXTENSIONWHATSNEW)};const a=document.getElementById("patreonButton");a.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(c.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
