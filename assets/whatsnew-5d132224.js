@@ -18,6 +18,9 @@ import{O as s,C as c}from"./bsConstants-c1908764.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 6/7</h1>
+        Fixed a bug with Elevation when being used on a scene that never set the default elevation layer.
+        </br> And.. probably some other little ones. Probably.
         <h1>Smoke & Spectre! 5/28-B</h1>
         Realized the tools were never loading their settings, despite being saved. Fixed. (Tool Width/Color/etc)
         Added in a Default Elevation Mapping setting. Previously, the base layer was always assigned a 0. Which is fine for outdoor maps going up, but not necessarily default maps going down.
