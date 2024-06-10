@@ -1,4 +1,4 @@
-import{O as n,C as u}from"./bsConstants-c1908764.js";/* empty css                  */const c=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
+import{O as n,C as u}from"./bsConstants-1ab61c84.js";/* empty css                  */const c=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>

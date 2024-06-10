@@ -6,10 +6,20 @@
     <div class="visionTitle grid-3">Tokens with Vision Enabled<div class="note" title='Note: GM-owned tokens give universal vision.'>📝</div></div>
     <div id="main-ui" class="grid-main">
         <div id="token_list_div" class="grid-3" padding-bottom: 8px;">
-            <table style="margin: auto; padding: 0;">
+            <table class="smoke_unit_table" style="padding: 0;">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 25%;">
+                    <col style="width: 35%;">
+                </colgroup>
                 <tbody id="token_list"></tbody>
             </table>
-            <table style="margin: auto; padding: 0;">
+            <table class="smoke_unit_table" style="padding: 0;">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 25%;">
+                    <col style="width: 35%;">
+                </colgroup>
                 <tbody id="hidden_list" style="display:none;">~ <input type="button" value="Out-of-Sight List: Click to Show" class="settingsButton" style="width: 60% !important;" id="hideListToggle"> ~</tbody>
             </table>
         </div>
