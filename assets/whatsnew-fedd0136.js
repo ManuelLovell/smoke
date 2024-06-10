@@ -1,4 +1,4 @@
-import{O as n,C as c}from"./bsConstants-c1908764.js";/* empty css                  */const u=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
+import{O as n,C as u}from"./bsConstants-c1908764.js";/* empty css                  */const c=document.querySelector("#bs-whatsnew"),b=document.querySelector("#bs-whatsnew-notes"),p=`
   <div id="newsContainer">
   <div class="title">Smoke & Spectre! Help</div>
   </br>
@@ -18,6 +18,11 @@ import{O as n,C as c}from"./bsConstants-c1908764.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 6/9</h1>
+        Medium update!  I wanted to add some more leverage to NOT using Auto-Detect maps, so now it's default functionality will be to ONLY fog the area within it's borders.
+        </br> So if you ever wanted to fog only a portion of the map and have the rest visible, this is the way to do it. Simply turn off Auto-Detect and use the Boundary Box.
+        </br>
+        </br> Also, it exists in the FOG layer now. So to manually move the box by clicking/dragging, you'll need to go to the Fog Tools.
         <h1>Smoke & Spectre! 6/7-B</h1>
         Biscuits.
         </br> I'll get a Readme up for this soon, as the Elevation aspect of things could use some hard documentation.
@@ -128,7 +133,7 @@ import{O as n,C as c}from"./bsConstants-c1908764.js";/* empty css               
         </br> As always, I don't mind the feedback - but realize this is something released for free, that I work on in my free time. Try not to come off as an entitled twerp when doing so. It's appreciated.
         </br>
     </div>
-`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";u.innerHTML=i?p:w,b.innerHTML=`
+`;n.onReady(async()=>{const s=window.location.search,t=new URLSearchParams(s),i=t.get("gethelp"),o=t.get("subscriber")==="true";c.innerHTML=i?p:w,b.innerHTML=`
     <div id="footButtonContainer">
         <button id="discordButton" type="button" title="Join the Owlbear-Rodeo Discord"><embed class="svg discord" src="/w-discord.svg" /></button>
         <button id="patreonButton" type="button" ${o?'title="Thank you for subscribing!"':'title="Check out the Battle-System Patreon"'}>
@@ -137,4 +142,4 @@ import{O as n,C as c}from"./bsConstants-c1908764.js";/* empty css               
         <button id="advTutorial" type="button" title="Go to the Basic Tutorial, created by the OBR Community Manager Andrew.">Advanced</br>Tutorial</button>
     </div>
     <button id="closeButton" type="button" title="Close this window"><embed class="svg close" src="/w-close.svg" /></button>
-    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(c.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
+    `;const a=document.getElementById("closeButton");a.onclick=async()=>{await n.modal.close(u.EXTENSIONWHATSNEW)};const r=document.getElementById("patreonButton");r.onclick=async e=>{e.preventDefault(),window.open("https://www.patreon.com/battlesystem","_blank")};const l=document.getElementById("discordButton");l.onclick=async e=>{e.preventDefault(),window.open("https://discord.gg/ANZKDmWzr6","_blank")};const h=document.getElementById("basicTutorial");h.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/OHvSwEEQCw","_blank")};const d=document.getElementById("advTutorial");d.onclick=async e=>{e.preventDefault(),window.open("https://www.reddit.com/r/OwlbearRodeo/s/U19IoydcHP","_blank")}});
