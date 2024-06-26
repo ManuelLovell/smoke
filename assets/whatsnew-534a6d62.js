@@ -18,6 +18,9 @@ import{O as n,C as u}from"./bsConstants-966acf43.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 6/25</h1>
+        Small bugfix for narrower screens. The scrollbar was disabled on the Settings Menu, making it so you couldn't scroll down to see the import options.
+        </br>
         <h1>Smoke & Spectre! 6/9</h1>
         Medium update!  I wanted to add some more leverage to NOT using Auto-Detect maps, so now it's default functionality will be to ONLY fog the area within it's borders.
         </br> So if you ever wanted to fog only a portion of the map and have the rest visible, this is the way to do it. Simply turn off Auto-Detect and use the Boundary Box.
