@@ -58,6 +58,10 @@
                         <td><input type="checkbox" id="persistence_checkbox"></td>
                     </tr>
                     <tr>
+                        <td><label for="toggle_ownerlines" title="Show colored rings around to indicate token's vision owner">Owner Highlight</label></td>
+                        <td><input type="checkbox" id="toggle_ownerlines" checked></td>
+                    </tr>
+                    <tr>
                         <td colspan="4">
                             <div id="boundry_options" class="grid-3" style="display:none;">
                                 <span id="map_size">Boundary Size: 
