@@ -18,6 +18,10 @@ import{O as n,C as u}from"./bsConstants-8fa93463.js";/* empty css               
   <li>GM-Owned tokens with vision share their vision with all players..
 </div>`,w=`
     <div id="newsContainer">
+        <h1>Smoke & Spectre! 8/30</h1>
+        Bug fix.
+        </br> Ownership labels weren't updating properly when set outside of the extension. Should be resolved now.
+        </br> No new features coming until the big 3.0 update, which may take some time. But hey - it's free!
         <h1>Smoke & Spectre! 7/15</h1>
         Quick Update.
         </br> A user mentioned with lots of tokens on a map, the visual indicator for the owner of a token (the colored ring) could get quite busy/jarring. And.. well they were right.
