@@ -8,7 +8,7 @@ import { BSCACHE } from './utilities/bsSceneCache.ts';
 import { Constants } from "./utilities/bsConstants.ts";
 import { SetupContextMenus } from "./smokeSetupContextMenus.ts";
 import { isTokenWithVisionForUI } from "./utilities/itemFilters.ts";
-import { SetupWhatsNew } from "./whatsNewSetup.ts";
+//import { SetupWhatsNew } from "./whatsNewSetup.ts";
 import { SetupGMInputHandlers } from "./smokeHandlers.ts";
 import { UpdateMaps } from "./tools/importUVTT.ts";
 import { SetupTools } from "./tools/smokeSetupTools.ts";

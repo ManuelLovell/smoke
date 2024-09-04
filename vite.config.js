@@ -15,12 +15,4 @@ export default {
       }
     }
   },
-  worker: {
-    // Configure worker options
-    format: 'es', // Output format for worker bundle (ES module)
-    // Additional worker options can be specified here, if needed
-    // For example:
-    // plugins: [], // Vite plugins that apply to the worker bundles
-    // rollupOptions: {}, // Rollup options to build worker bundle
-  },
 };
