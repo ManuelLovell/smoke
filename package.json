@@ -1,0 +1,23 @@
+{
+  "name": "experimental",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/showdown": "^2.0.6",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.1"
+  },
+  "dependencies": {
+    "@melloware/coloris": "^0.24.0",
+    "@owlbear-rodeo/sdk": "github:owlbear-rodeo/sdk#beta",
+    "showdown": "^2.1.0",
+    "simplify-js": "^1.2.4",
+    "tom-select": "^2.3.1"
+  }
+}

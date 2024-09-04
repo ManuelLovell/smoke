@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg width="800px" height="800px" viewBox="-8 0 512 512" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Define a mask to create the transparent middle ring -->
+    <mask id="transparent-ring">
+        <rect width="100%" height="100%" fill="#fff"/>
+        <path d="M248 440c-101.69 0-184-82.29-184-184 0-101.69 82.29-184 184-184 101.69 0 184 82.29 184 184 0 101.69-82.29 184-184 184z" fill="#000"/>
+    </mask>
+
+    <path d="M248 8C111.03 8 0 119.03 0 256s111.03 248 248 248 248-111.03 248-248S384.97 8 248 8z" fill="#bb99ff" mask="url(#transparent-ring)"/>
+
+    <path d="M248 328c-35.29 0-64-28.71-64-64s28.71-64 64-64 64 28.71 64 64-28.71 64-64 64z" fill="#fff"/>
+</svg>
