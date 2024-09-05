@@ -1,12 +1,12 @@
 {
-    "name": "Smoke & Spectre!",
-    "description": "Dynamic fog of war for Battlemaps(inherited from Dynamic Fog of War) with Per-Player fog and 'Ghost' tokens.",
-    "version": "2.73",
+    "name": "S&S! Experimental",
+    "description": "Dynamic fog of war with Per-Player fog and 'Ghost' tokens.",
+    "version": "3.0",
     "author": "Battle-System, Doggosaurus & Armindo Flores",
     "icon": "/logo.png",
     "manifest_version": 1,
     "action": {
-        "title": "Smoke & Spectre!",
+        "title": "S&S!X",
         "icon": "/icon.svg",
         "popover": "/",
         "height": 530,

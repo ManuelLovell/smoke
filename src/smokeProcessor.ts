@@ -545,6 +545,7 @@ class SmokeProcessor
             .zIndex(this.GetDepth(depth, false))
             .metadata({ [`${Constants.EXTENSIONID}/isVisionLight`]: token.id })
             .attachedTo(token.id)
+            .disableAttachmentBehavior(["SCALE"])
             .build();
 
         this.lightsToCreate.push(item);
