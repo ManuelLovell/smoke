@@ -504,15 +504,6 @@ class BSCache
 
     public async OnSceneItemsChange(_items: Item[])
     {
-        if (this.playerRole === "GM")
-        {
-            //await SMOKEMAIN.UpdateUI();
-            await SMOKEMAIN.UpdateVisionList();
-        }
-        else
-        {
-            //SMOKEMAIN.UpdatePlayerVisionList();
-        }
         await SMOKEMAIN.OnDataChange();
     }
 

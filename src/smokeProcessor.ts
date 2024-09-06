@@ -1,9 +1,8 @@
-import OBR, { Curve, Item, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildLight, buildPath, buildShape, buildWall } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildPath, buildShape, buildWall } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
-import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor } from "./utilities/itemFilters";
+import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
-import Metadata from '@owlbear-rodeo/sdk';
 
 class SmokeProcessor
 {
@@ -18,6 +17,10 @@ class SmokeProcessor
     ringsToCreate: Item[] = [];
     ringsToUpdate: { id: string, height: number, width: number }[] = [];
     ringsToDelete: string[] = [];
+
+    decalsToCreate: Image[] = [];
+    decalsToUpdate: { id: string, imageUrl: string }[] = [];
+    decalsToDelete: string[] = [];
 
     persistentLights: {
         id: string;
@@ -79,6 +82,12 @@ class SmokeProcessor
             // Using Localstorage to keep persistent data atm
             localStorage.setItem('PersistentFogData', JSON.stringify(this.persistentLights));
         }
+    }
+
+    // This handles the logic for the Local level 'image' that sits above icons with coned vision
+    private async UpdateVisionDecals()
+    {
+
     }
 
     public async ClearDoors()
@@ -354,6 +363,18 @@ class SmokeProcessor
                 }
             }
 
+            // Check to see if we need to overlay a top-level decal to show the token
+            if (sceneToken.layer === "CHARACTER"
+                && (sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== "360"
+                    || sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] !== "360"))
+            {
+                const existingDecal = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isLocalDecal`] === sceneToken.id)
+                if (!existingDecal)
+                {
+                    this.CreateDecalToQueue(sceneToken as Image);
+                }
+            }
+
             // If persistence is enabled;
             // And there is no persistent light at this spot
             // And there is none within 10px
@@ -384,6 +405,25 @@ class SmokeProcessor
             }
         }
 
+        // Decals should be deleted with the owning token, but just in case for local cleanup
+        // Also if the vision is updated back to 360, remove so we don't track it
+        const localDecals = BSCACHE.sceneLocal.filter(x => isLocalDecal(x)) as Image[];
+        for (const localDecal of localDecals)
+        {
+            const exists = sceneVisionTokens.find(x => x.id === localDecal.metadata[`${Constants.EXTENSIONID}/isLocalDecal`]) as Image;
+            if (!exists) this.decalsToDelete.push(localDecal.id);
+            else
+            {
+                if (exists.metadata[`${Constants.EXTENSIONID}/visionInAngle`] === "360"
+                    || exists.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] === "360")
+                    this.decalsToDelete.push(localDecal.id);
+                else if (exists.image.url !== localDecal.image.url)
+                {
+                    this.decalsToUpdate.push({ id: localDecal.id, imageUrl: exists.image.url });
+                }
+            }
+        }
+
         // Add, Update and Delete
         if (this.lightsToCreate.length > 0)
             await OBR.scene.local.addItems(this.lightsToCreate);
@@ -407,9 +447,31 @@ class SmokeProcessor
                 }
             });
 
+        // Add, Update and Delete
+        if (this.decalsToCreate.length > 0)
+            await OBR.scene.local.addItems(this.decalsToCreate);
+        if (this.decalsToDelete.length > 0)
+            await OBR.scene.local.deleteItems(this.decalsToDelete);
+        if (this.decalsToUpdate.length > 0)
+            await OBR.scene.local.updateItems(localDecals.filter(x => !this.decalsToDelete.includes(x.id)), (decals) =>
+            {
+                for (let decal of decals)
+                {
+                    const mine = this.decalsToUpdate.find(x => x.id === decal.id)
+                    if (mine)
+                    {
+                        decal.image.url = mine.imageUrl;
+                    }
+                }
+            });
+
         this.lightsToCreate = [];
         this.lightsToUpdate = [];
         this.lightsToDelete = [];
+
+        this.decalsToCreate = [];
+        this.decalsToDelete = [];
+        this.decalsToUpdate = [];
     }
 
     private async UpdateWalls()
@@ -551,6 +613,29 @@ class SmokeProcessor
         this.lightsToCreate.push(item);
 
         if (lightType === "PRIMARY") this.CreateOwnerHighlight(token);
+    }
+
+    private CreateDecalToQueue(token: Image)
+    {
+        const item = buildImage(
+            {
+                height: token.image.height,
+                width: token.image.width,
+                url: token.image.url,
+                mime: token.image.mime,
+            },
+            {
+                dpi: token.grid.dpi,
+                offset: token.grid.offset
+            })
+            .position(token.position)
+            .attachedTo(token.id)
+            .layer("POINTER")
+            .metadata({ [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id })
+            .disableHit(true)
+            .build();
+
+        this.decalsToCreate.push(item);
     }
 
     private UpdateWallToQueue(scenelLine: Curve, localWall: Wall, depth: number)

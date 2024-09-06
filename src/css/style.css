@@ -138,11 +138,12 @@ a {
 }
 
 .end-line {
-    border: none !important;
-    font-size: medium;
-    font-weight: bold;
-    margin: 4px;
+    height: 36px !important;
     padding: 8px !important;
+    font-weight: 700;
+    font-size: medium;
+    background-color: var(--OBR-light-blue) !important;
+    border: none !important;
 }
 
 #mapSubmit,
@@ -767,4 +768,43 @@ button {
 .slide-row.slide-out.slide-in td {
     transform: translateX(0);
     opacity: 1;
+}
+
+#titleHolder {
+    font-size: large;
+    font-weight: bold;
+    font-variant-caps: small-caps;
+    margin-bottom: 4px;
+}
+
+.player-token-name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+    text-align: left;
+    cursor: default;
+    width: 150px;
+    max-width: 150px;
+}
+
+.scrollable-table {
+    height: 250px;
+    overflow-y: auto;
+    display: block;
+    border-radius: 6px;
+    border: 1px solid var(--OBR-font);
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-gutter: stable;
+}
+
+.scrollable-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.scrollable-table th,
+.scrollable-table td {
+    padding-left: 4px !important;
 }

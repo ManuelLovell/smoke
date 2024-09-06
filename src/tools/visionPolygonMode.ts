@@ -139,9 +139,7 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     const snapped = GetSnappedCoordinates(event);
     update((polygon: Curve) =>
     {
-        //polygon.points[polygon.points.length - 1] = event.pointerPosition;
         polygon.points[polygon.points.length - 1] = BSCACHE.snap ? snapped : event.pointerPosition;
-        polygon.name = "Test";
     });
 }
 

@@ -325,6 +325,32 @@ export async function SetupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/switch-obstructing-side`,
+        icons: [
+            {
+                icon: "/flip.svg",
+                label: "Swap Obstructing Side",
+                filter: {
+                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    { key: "type", value: "CURVE", coordinator: "&&"},
+                    { key: ["metadata", `${Constants.EXTENSIONID}/doubleSided`], value: undefined }]
+                },
+            }
+        ],
+        async onClick(ctx)
+        {
+            await OBR.scene.items.updateItems(ctx.items, items =>
+            {
+                for (const item of items)
+                {
+                    const swappedPoints = item.points.reverse();
+                    item.points = swappedPoints;
+                }
+            });
+        }
+    });
+
+    await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/switch-blockage`,
         icons: [
             {

@@ -3,12 +3,12 @@ import "./css/style.css";
 import "@melloware/coloris/dist/coloris.css";
 import Coloris from "@melloware/coloris";
 import * as showdown from 'showdown';
-import OBR, { Item, Player } from '@owlbear-rodeo/sdk';
+import OBR, { Item, Image, Player } from '@owlbear-rodeo/sdk';
 import { BSCACHE } from './utilities/bsSceneCache.ts';
 import { Constants } from "./utilities/bsConstants.ts";
 import { SetupContextMenus } from "./smokeSetupContextMenus.ts";
-import { isTokenWithVisionForUI } from "./utilities/itemFilters.ts";
-//import { SetupWhatsNew } from "./whatsNewSetup.ts";
+import { isTokenWithVisionForUI, isTokenWithVisionIOwn } from "./utilities/itemFilters.ts";
+import { SetupWhatsNew } from "./whatsNewSetup.ts";
 import { SetupGMInputHandlers } from "./smokeHandlers.ts";
 import { UpdateMaps } from "./tools/importUVTT.ts";
 import { SetupTools } from "./tools/smokeSetupTools.ts";
@@ -128,17 +128,84 @@ export class SmokeMain
         else
         {
             // player view logic
-            await OBR.action.setHeight(100);
+            await OBR.action.setHeight(300);
             await OBR.action.setWidth(300);
             this.mainWindow!.innerHTML = `
-                <div id="stopScreen">
-                    Something ™️
+                <div id="titleHolder" style="display: flex; width: 100%;">
+                    <div style="width:60%;">Tokens You Own</div>
+                    <div style="width:30%;">Vision</div>
+                    <div style="width:10%;" id="miniButtons">
+                        <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg id="whatsNewIcon" class="svgclickable" fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
+                    </div>
+                </div>
+                <div id="playerView" class="scrollable-table">
+                    <table id="playerViewTable">
+                    <thead>
+                        <tr id="playerViewTableHeader">
+                            <th style="width: 70%;"></th>
+                            <th style="width: 20%;"></th>
+                            <th style="width: 10%;"></th>
+                        </tr>
+                    </thead>
+                        <tbody id="playerViewTableBody">
+                        </tbody>
+                    </table>
                 </div>
             `;
+            this.UpdatePlayerView();
+            this.whatsNewButton = document.getElementById("whatsnewbutton") as HTMLDivElement;
+            this.whatsNewIcon = document.getElementById("whatsNewIcon") as HTMLDivElement;
         }
-        //SetupWhatsNew(); Add back after player ui addition
-        //SPECTRE.SetupLocalSpecterHandlers();
         await this.InitializeScene();
+        SetupWhatsNew();
+    }
+
+    private UpdatePlayerView()
+    {
+        const tokensIOwn = BSCACHE.sceneItems.filter(x => isTokenWithVisionIOwn(x)) as Image[];
+        const tokenTableEntries = document.getElementsByClassName("token-table-entry") as HTMLCollectionOf<HTMLTableRowElement>;
+
+        this.CleanVisionList(tokensIOwn, tokenTableEntries);
+
+        const playerTable = document.getElementById('playerViewTable') as HTMLTableElement;
+        for (const token of tokensIOwn)
+        {
+            const existingRow = document.getElementById(`pl-${token.id}`) as HTMLTableRowElement;
+            if (existingRow)
+            {
+                const name = existingRow.getElementsByClassName("token-name")[0] as HTMLTableRowElement;
+                const visionRange = existingRow.getElementsByClassName("token-aradius")[0] as HTMLInputElement;
+                const distanceType = existingRow.getElementsByClassName("token-distancetype")[0] as HTMLInputElement;
+                if (name) name.textContent = token.text?.plainText || token.name;
+                if (visionRange) visionRange.textContent = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
+                    ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
+                    : Constants.ATTENUATIONDEFAULT;
+                if (distanceType) distanceType.textContent = BSCACHE.gridType;
+            }
+            else
+            {
+                const tokenRow = document.createElement('tr');
+                tokenRow.id = `pl-${token.id}`;
+                tokenRow.classList.add("token-table-entry");
+
+                const nameCell = document.createElement('td');
+                nameCell.textContent = token.text?.plainText || token.name;
+                nameCell.classList.add("player-token-name");
+                tokenRow.appendChild(nameCell);
+
+                const distanceCell = document.createElement('td');
+                distanceCell.textContent = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
+                    ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
+                    : Constants.ATTENUATIONDEFAULT;
+                tokenRow.appendChild(distanceCell);
+
+                const distanceTypeCell = document.createElement('td');
+                distanceTypeCell.textContent = BSCACHE.gridType;
+                tokenRow.appendChild(distanceTypeCell);
+
+                playerTable.appendChild(tokenRow);
+            }
+        }
     }
 
     public GetEmptyContextItem()
@@ -202,6 +269,10 @@ export class SmokeMain
         {
             this.UpdateVisionList();
             UpdateMaps();
+        }
+        else
+        {
+            this.UpdatePlayerView();
         }
     }
 
@@ -324,6 +395,7 @@ export class SmokeMain
             : Constants.ATTENUATIONDEFAULT;
         aRadiusInput.classList.add("token-aradius");
         aRadiusInput.classList.add("vision-panel-main-input");
+        aRadiusInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
 
         aRadiusInput.onchange = async (event: Event) =>
         {
@@ -352,6 +424,7 @@ export class SmokeMain
             : Constants.SOURCEDEFAULT;
         sRadiusInput.classList.add("token-sradius");
         sRadiusInput.classList.add("vision-panel-sub-input");
+        sRadiusInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
 
         sRadiusInput.onchange = async (event: Event) =>
         {
@@ -384,6 +457,7 @@ export class SmokeMain
             : Constants.FALLOFFDEFAULT;
         falloffInput.classList.add("token-falloff");
         falloffInput.classList.add("vision-panel-main-input");
+        falloffInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
 
         falloffInput.onchange = async (event: Event) =>
         {
@@ -412,6 +486,7 @@ export class SmokeMain
             : Constants.INANGLEDEFAULT;
         innerAngInput.classList.add("token-innerang");
         innerAngInput.classList.add("vision-panel-sub-input");
+        innerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
 
         innerAngInput.onchange = async (event: Event) =>
         {
@@ -443,6 +518,7 @@ export class SmokeMain
             : false;
         blindUnitInput.classList.add("token-blind");
         blindUnitInput.classList.add("vision-panel-main-input");
+        blindUnitInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
         blindUnitInput.onchange = async (event: Event) =>
         {
             if (!event || !event.target) return;
@@ -463,6 +539,7 @@ export class SmokeMain
             : Constants.OUTANGLEDEFAULT;
         outerAngInput.classList.add("token-outerang");
         outerAngInput.classList.add("vision-panel-sub-input");
+        outerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
 
         outerAngInput.onchange = async (event: Event) =>
         {

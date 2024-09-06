@@ -6,31 +6,26 @@ import { Constants } from "./utilities/bsConstants";
 const whatsnew = document.querySelector<HTMLDivElement>('#bs-whatsnew')!;
 const footer = document.querySelector<HTMLElement>('#bs-whatsnew-notes')!;
 
-const needHelpMessage = `
-    <div id="newsContainer">
-        <div class="title">Smoke & Spectre! Help</div>
-    </div>`;
-
 const whatsNewMessage = `
     <div id="newsContainer">
-        <h1>Smoke & Spectre 3.0! 8/30</h1>
-        It's here.
+        <h1>Smoke & Spectre 3.0! 10/1</h1>
+        Large thank you to the OBR Devs for all of the development that let these changes be possible.
         </br>
+        Scenes should all be backwards compatible, with the exception of tweak on torches.
+        </br> - Old torches should still give vision, just they will be recognized as 'characters' instead of 'props'.
         </br>
+        </br> Brief Summary of Changes:
+        </br> - Tokens now have Vision Radius, Vision Fall Off (Blur at the edge of a token), Wall Collision Distance (How close they can be before being stopped by a wall) as well as Inner/Outer Angles (for setting a cone on vision).
+        </br> - Vision/Collision checks are done realtime, so you'll see it as you move the token around.
+        </br> - Walls can be set to have collision, so a unit cannot pass through.
+        </br> - Spectre was rewritten (again) for efficiency. Most/all past limitations should be gone.
+        </br> - Trailing Fog, Auto-Hide and Background-Image Fog are currently removed.
         </br>
+        </br> Known Issues:
+        </br> - Persistent vision from a token can trigger the vision of a torch.
+        </br> - A token with 'conal' vision can only interact with the token on the viewable part.
         </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
-        </br>
+        </br> The rest of the changelog will be posted to the Patreon. Link is on the below on the bottom-left of this popup.
     </div>
 `;
 
@@ -38,10 +33,9 @@ OBR.onReady(async () =>
 {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    const help = urlParams.get('gethelp')!;
     const subscriberId = urlParams.get('subscriber')!;
     const subscriber = subscriberId === "true";
-    whatsnew.innerHTML = help ? needHelpMessage : whatsNewMessage;
+    whatsnew.innerHTML = whatsNewMessage;
 
     footer.innerHTML = `
     <div id="footButtonContainer">
