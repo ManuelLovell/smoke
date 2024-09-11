@@ -56,8 +56,7 @@ class BSCache
     torchActive: boolean;
 
     busy: boolean;
-    workers: Worker[];
-    workersSetup: boolean;
+    USER_REGISTERED: boolean;
 
     toolStarted: boolean;
 
@@ -102,9 +101,8 @@ class BSCache
         this.torchActive = false;
         this.toolStarted = false;
 
+        this.USER_REGISTERED = false;
         this.caches = caches;
-        this.workers = [];
-        this.workersSetup = false;
     }
 
     public async RefreshCache()
@@ -169,6 +167,7 @@ class BSCache
         {
             if (this.sceneReady) this.roomMetadata = await OBR.room.getMetadata();
         }
+        await this.CheckRegistration();
     }
 
     public async InitializeCache()
@@ -647,6 +646,49 @@ class BSCache
         await OBR.action.setBadgeText(on ? "⏱️" : undefined);
         BSCACHE.busy = on;
     }
+
+    public async CheckRegistration()
+    {
+        try
+        {
+            const debug = window.location.origin.includes("localhost") ? "eternaldream" : "";
+            const userid = {
+                owlbearid: BSCACHE.playerId
+            };
+
+            const requestOptions = {
+                method: "POST",
+                headers: new Headers({
+                    "Content-Type": "application/json",
+                    "Authorization": Constants.ANONAUTH,
+                    "x-manuel": debug
+                }),
+                body: JSON.stringify(userid),
+            };
+            const response = await fetch(Constants.CHECKREGISTRATION, requestOptions);
+
+            if (!response.ok)
+            {
+                const errorData = await response.json();
+                // Handle error data
+                console.error("Error:", errorData);
+                return;
+            }
+            const data = await response.json();
+            if (data.Data === "OK")
+            {
+                this.USER_REGISTERED = true;
+                console.log("Connected");
+            }
+            else console.log("Not Registered");
+        }
+        catch (error)
+        {
+            // Handle errors
+            console.error("Error:", error);
+        }
+    }
+
 }
 // Set the handlers needed for this Extension
 export const BSCACHE = new BSCache([BSCache.SCENEITEMS, BSCache.SCENEMETA, BSCache.SCENEFOG, BSCache.SCENEGRID, BSCache.PLAYER, BSCache.PARTY]);

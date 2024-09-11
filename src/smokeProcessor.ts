@@ -84,12 +84,6 @@ class SmokeProcessor
         }
     }
 
-    // This handles the logic for the Local level 'image' that sits above icons with coned vision
-    private async UpdateVisionDecals()
-    {
-
-    }
-
     public async ClearDoors()
     {
         if (BSCACHE.playerRole !== "PLAYER") return;

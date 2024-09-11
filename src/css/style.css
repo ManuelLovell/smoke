@@ -808,3 +808,20 @@ button {
 .scrollable-table td {
     padding-left: 4px !important;
 }
+
+#patreonContainer {
+    border: 1px solid var(--OBR-offset-fore);
+    border-radius: 6px;
+    text-align: center;
+}
+
+.patreon-clickable {
+    cursor: pointer;
+    filter: var(--invert);
+    background-color: transparent !important;
+    border-style: none !important;
+    height: 20px;
+    width: 20px;
+    padding: 4px;
+    vertical-align: middle;
+}

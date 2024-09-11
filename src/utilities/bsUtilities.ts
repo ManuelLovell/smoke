@@ -1,6 +1,23 @@
 import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 
+export function GetPatreonButton()
+{
+    const newImgElement = document.createElement('img');
+    newImgElement.id = "PatreonButton";
+    newImgElement.setAttribute('class', 'icon');
+    newImgElement.classList.add('patreon-clickable');
+    newImgElement.setAttribute('title', BSCACHE.USER_REGISTERED ? 'Thanks for subscribing!' : 'Get the news on updates on the Battle-System Patreon');
+    newImgElement.setAttribute('src', BSCACHE.USER_REGISTERED ? '/w-thankyou.svg' : '/w-patreon-2.png');
+    newImgElement.onclick = async function (e)
+    {
+        e.preventDefault();
+        window.open("https://www.patreon.com/battlesystem", "_blank");
+    }
+
+    return newImgElement;
+}
+
 export function TranslateVisionRange(distance: string)
 {
     const distanceNumber = parseInt(distance) ?? 5;

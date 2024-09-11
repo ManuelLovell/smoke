@@ -332,7 +332,7 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Swap Obstructing Side",
                 filter: {
                     every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
-                    { key: "type", value: "CURVE", coordinator: "&&"},
+                    { key: "type", value: "CURVE", coordinator: "&&" },
                     { key: ["metadata", `${Constants.EXTENSIONID}/doubleSided`], value: undefined }]
                 },
             }
@@ -388,58 +388,52 @@ export async function SetupContextMenus(): Promise<void>
             });
         }
     });
-    // await OBR.contextMenu.create({
-    //     id: `${Constants.EXTENSIONID}/toggle-fog-background`,
-    //     icons: [
-    //         {
-    //             icon: "/fog-background.svg",
-    //             label: "Convert To Fog Background",
-    //             filter: {
-    //                 every: [{ key: "layer", value: "MAP" }],
-    //             },
-    //         },
-    //     ],
-    //     async onClick(ctx)
-    //     {
-    //         if (ctx.items.length > 0)
-    //         {
 
-    //             await OBR.scene.items.updateItems(ctx.items, (items: Item[]) =>
-    //             {
-    //                 for (let i = 0; i < items.length; i++)
-    //                 {
-    //                     items[i].zIndex = 1;
-    //                     items[i].layer = "FOG";
-    //                     items[i].disableHit = true;
-    //                     items[i].locked = false;
-    //                     items[i].visible = false;
-    //                     items[i].metadata[`${Constants.EXTENSIONID}/isBackgroundMap`] = true;
-    //                 }
-    //             });
-    //         }
-    //     },
-    // });
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-fog-background`,
+        icons: [
+            {
+                icon: "/fog-background.svg",
+                label: "Convert To Fog Background",
+                filter: {
+                    every: [{ key: "layer", value: "MAP" },
+                    { key: ["metadata", `${Constants.EXTENSIONID}/isFogMap`], value: undefined }]
+                },
+            },
+            {
+                icon: "/fog-background.svg",
+                label: "Convert To Normal Background",
+                filter: {
+                    every: [{ key: "layer", value: "FOG" },
+                    { key: ["metadata", `${Constants.EXTENSIONID}/isFogMap`], value: true }]
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            const turnToFogMaps = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/isFogMap`] === undefined);
 
-    // await OBR.contextMenu.create({
-    //     id: `${Constants.EXTENSIONID}/bounding-grid`,
-    //     icons: [
-    //         {
-    //             icon: "/icon.svg",
-    //             label: "Smoke Bounding Grid",
-    //             filter: {
-    //                 every: [
-    //                     {
-    //                         key: ["metadata", `${Constants.EXTENSIONID}/grid`],
-    //                         value: true
-    //                     }],
-    //             },
-    //         },
-    //     ],
-    //     async onClick(_ctx)
-    //     {
-    //         await OBR.notification.show("This is the Smoke&Spectre Bounding Grid. It contains the area your fog can be drawn in. To remove this and have fog contained dynamically by the size of your map(s), turn on AutoDetect Maps in Settings.", "INFO");
-    //     },
-    // });
+            await OBR.scene.items.updateItems(ctx.items, items =>
+            {
+                for (const item of items)
+                {
+                    if (!turnToFogMaps)
+                    {
+                        item.layer = "MAP";
+                        item.zIndex = -1;
+                        delete item.metadata[`${Constants.EXTENSIONID}/isFogMap`];
+                    }
+                    else
+                    {
+                        item.layer = "FOG";
+                        item.zIndex = -1;
+                        item.metadata[`${Constants.EXTENSIONID}/isFogMap`] = true;
+                    }
+                }
+            });
+        },
+    });
 
     await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/create-door`,

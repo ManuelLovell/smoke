@@ -1,4 +1,4 @@
-import { PathCommand } from "@owlbear-rodeo/sdk";
+import { Command, PathCommand } from "@owlbear-rodeo/sdk";
 
 export class Constants
 {
@@ -21,6 +21,29 @@ export class Constants
     static FALLOFFDEFAULT = "0";
     static INANGLEDEFAULT = "360";
     static OUTANGLEDEFAULT = "360";
+    static CHECKREGISTRATION = 'https://vrwtdtmnbyhaehtitrlb.supabase.co/functions/v1/patreon-check';
+    static ANONAUTH = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+
+    static TRAILINGCOLLAR: PathCommand[] = [
+        [Command.MOVE, 250, 250],
+        [Command.LINE, 250, 220],
+        [Command.LINE, 320, 220],
+        [Command.LINE, 320, 280],
+        [Command.LINE, 280, 280],
+        [Command.LINE, 280, 200],
+        [Command.LINE, 220, 200],
+        [Command.LINE, 220, 300],
+        [Command.LINE, 380, 280],
+        [Command.LINE, 380, 230],
+        [Command.LINE, 380, 180],
+        [Command.CLOSE],
+        [Command.MOVE, 250, 270],
+        [Command.CUBIC, 300, 270, 350, 260, 350, 250],
+        [Command.CUBIC, 350, 240, 300, 230, 250, 230],
+        [Command.CUBIC, 200, 230, 150, 240, 150, 250],
+        [Command.CUBIC, 150, 260, 200, 270, 250, 270],
+        [Command.CLOSE]
+    ];
 
     static DOOROPEN: PathCommand[] = [
         [0, -65.35400390625, -250],

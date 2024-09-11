@@ -8,12 +8,12 @@ import { BSCACHE } from './utilities/bsSceneCache.ts';
 import { Constants } from "./utilities/bsConstants.ts";
 import { SetupContextMenus } from "./smokeSetupContextMenus.ts";
 import { isTokenWithVisionForUI, isTokenWithVisionIOwn } from "./utilities/itemFilters.ts";
-import { SetupWhatsNew } from "./whatsNewSetup.ts";
 import { SetupGMInputHandlers } from "./smokeHandlers.ts";
 import { UpdateMaps } from "./tools/importUVTT.ts";
 import { SetupTools } from "./tools/smokeSetupTools.ts";
 import { SMOKEMACHINE } from "./smokeProcessor.ts";
 import { SPECTREMACHINE } from "./SpectreTwo.ts";
+import * as Utilities from "./utilities/bsUtilities.ts";
 
 export class SmokeMain
 {
@@ -29,8 +29,7 @@ export class SmokeMain
     public settingsViewPanel?: HTMLDivElement;
     public helpViewPanel?: HTMLDivElement;
 
-    public whatsNewButton?: HTMLDivElement;
-    public whatsNewIcon?: HTMLDivElement;
+    public patreonContainer?: HTMLDivElement;
 
     public onVisionPanelMain = true;
     public visionPanelMain?: HTMLTableRowElement;
@@ -72,9 +71,7 @@ export class SmokeMain
                     <button class="view-button" id="spectreViewToggle">Spectre</button>
                     <button class="view-button" id="helpViewToggle">Help</button>
                     <button class="view-button" id="settingsViewToggle">Settings</button>
-                    <div id="miniButtons">
-                        <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg id="whatsNewIcon" class="svgclickable" fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
-                    </div>
+                    <div id="patreonContainer"></div>
                 </div>
             </div>
             <div id="smokeViewPanel" class="panel"></div>
@@ -95,8 +92,7 @@ export class SmokeMain
             this.settingsViewPanel = document.getElementById("settingsViewPanel") as HTMLDivElement;
             this.helpViewPanel = document.getElementById("helpViewPanel") as HTMLDivElement;
 
-            this.whatsNewButton = document.getElementById("whatsnewbutton") as HTMLDivElement;
-            this.whatsNewIcon = document.getElementById("whatsNewIcon") as HTMLDivElement;
+            this.patreonContainer = document.getElementById("patreonContainer") as HTMLDivElement;
 
             // Setup Panels before hitting Handlers
             this.smokeViewPanel.innerHTML = Constants.SMOKEHTML;
@@ -134,9 +130,7 @@ export class SmokeMain
                 <div id="titleHolder" style="display: flex; width: 100%;">
                     <div style="width:60%;">Tokens You Own</div>
                     <div style="width:30%;">Vision</div>
-                    <div style="width:10%;" id="miniButtons">
-                        <div class="tooltip" id="whatsnewbutton" title="Whats New"><svg id="whatsNewIcon" class="svgclickable" fill="#fff" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 3a7 7 0 100 14 7 7 0 000-14zm-9 7a9 9 0 1118 0 9 9 0 01-18 0zm8-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1zm.01 8a1 1 0 102 0V9a1 1 0 10-2 0v5z"/></svg></div>
-                    </div>
+                    <div style="width:10%;" id="patreonContainer"></div>
                 </div>
                 <div id="playerView" class="scrollable-table">
                     <table id="playerViewTable">
@@ -153,11 +147,10 @@ export class SmokeMain
                 </div>
             `;
             this.UpdatePlayerView();
-            this.whatsNewButton = document.getElementById("whatsnewbutton") as HTMLDivElement;
-            this.whatsNewIcon = document.getElementById("whatsNewIcon") as HTMLDivElement;
+            this.patreonContainer = document.getElementById("patreonContainer") as HTMLDivElement;
         }
         await this.InitializeScene();
-        SetupWhatsNew();
+        this.patreonContainer?.appendChild(Utilities.GetPatreonButton());
     }
 
     private UpdatePlayerView()
