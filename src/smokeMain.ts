@@ -333,7 +333,7 @@ export class SmokeMain
     private AddTokenToVisionList(token: Item)
     {
         // Set Ownership Stylings
-        const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+        let owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         let ownerColor = owner?.color;
         let ownerText = owner?.name ? `This token is owned by ${owner.name}.` : "This token is owned by you.";
 
@@ -662,10 +662,10 @@ export class SmokeMain
                 const tr = document.getElementById(`tr-${unitId}`) as HTMLTableRowElement;
                 const cell = tr.getElementsByClassName("token-name")[0] as HTMLTableCellElement;
 
-                const newOwner = fullGroup.find(owner => target.id === owner.id);
+                const newOwner = fullGroup.find(newplayer => target.id === newplayer.id); 
                 if (newOwner)
                 {
-                    const updatedText = newOwner.name !== BSCACHE.playerName ? `This token is owned by ${owner.name}.` : "This token is owned by you.";
+                    const updatedText = newOwner.name !== BSCACHE.playerName ? `This token is owned by ${newOwner.name}.` : "This token is owned by you.";
                     cell.title = updatedText;
                     cell.setAttribute("data-color", ownerColor);
                     cell.style.textShadow = `

@@ -562,12 +562,15 @@ class SmokeProcessor
 
     private AddPersistentLightToQueue(token: Item, depth: number)
     {
-        // We do not need to persist secondary lights, because the existing Primary Lights will re-trigger a secondary
+        // We do not need to persist secondary lights currently.
+        // Auxillary lights won't re-trigger a secondary
+        // Torch-lights does not persist.
         const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         if (lightType === "SECONDARY") return;
 
         const persistenceItem = buildLight()
             .position(token.position)
+            .lightType("AUXILIARY")
             .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT))
             .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT))
             .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT))
