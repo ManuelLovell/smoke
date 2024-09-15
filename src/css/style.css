@@ -825,3 +825,8 @@ button {
     padding: 4px;
     vertical-align: middle;
 }
+
+#elevationWarning {
+    color: var(--OBR-font);
+    text-align: center;
+}

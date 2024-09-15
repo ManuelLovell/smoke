@@ -11,10 +11,7 @@ OBR.onReady(async () =>
 
     const buttonFinish = document.createElement('input');
     buttonFinish.id = "endLine";
-    buttonFinish.classList.add("ele-line");
-    buttonFinish.classList.add("mysteryButton");
-    buttonFinish.style.paddingLeft = "6px";
-    buttonFinish.style.paddingRight = "6px";
+    buttonFinish.classList.add("end-line");
     buttonFinish.value = "Finish Polygon";
     buttonFinish.type = "button";
     buttonFinish.onclick = async () =>
@@ -24,10 +21,7 @@ OBR.onReady(async () =>
 
     const buttonCancel = document.createElement('input');
     buttonCancel.id = "endLine";
-    buttonCancel.classList.add("ele-line");
-    buttonCancel.classList.add("mysteryButton");
-    buttonCancel.style.paddingLeft = "6px";
-    buttonCancel.style.paddingRight = "6px";
+    buttonCancel.classList.add("end-line");
     buttonCancel.value = "Cancel Polygon";
     buttonCancel.type = "button";
     buttonCancel.onclick = async () =>
@@ -37,10 +31,7 @@ OBR.onReady(async () =>
 
     const buttonUndo = document.createElement('input');
     buttonUndo.id = "undoLine";
-    buttonUndo.classList.add("ele-line");
-    buttonUndo.classList.add("mysteryButton");
-    buttonUndo.style.paddingLeft = "6px";
-    buttonUndo.style.paddingRight = "6px";
+    buttonUndo.classList.add("end-line");
     buttonUndo.value = "Undo Point";
     buttonUndo.type = "button";
     buttonUndo.onclick = async () =>

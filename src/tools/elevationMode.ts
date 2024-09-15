@@ -90,7 +90,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent, depth: number)
             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(.5)
             .fillColor(GetFillColor(depth))
-            .layer("DRAWING")
+            .layer(Constants.LINELAYER)
             .metadata({ [`${Constants.EXTENSIONID}/elevation`]: depth })
             .name(`Elevation-${depth} Area`)
             .zIndex(depth)
@@ -105,9 +105,10 @@ async function onToolClick(_J: ToolContext, event: ToolEvent, depth: number)
         await OBR.popover.open({
             id: Constants.ELEVATIONTOOLID,
             url: `/pages/elevation.html`,
-            height: 110,
-            width: 360,
+            height: 75,
+            width: 400,
             disableClickAway: true,
+            hidePaper: true,
             anchorPosition: { top: 60, left: width / 2 },
             anchorReference: "POSITION",
             anchorOrigin: {
@@ -174,10 +175,31 @@ async function enterEditMode(context: ToolContext)
         });
     if (visionOn)
     {
+        await OBR.popover.close(Constants.ELEVATIONWARNID);
         await Deactivate(context);
     }
     else
     {
+        const width = await OBR.viewport.getWidth();
+
+        //Create Warning
+        await OBR.popover.open({
+            id: Constants.ELEVATIONWARNID,
+            url: `/pages/ewarning.html`,
+            height: 45,
+            width: 400,
+            disableClickAway: true,
+            anchorPosition: { top: 120, left: width / 2 },
+            anchorReference: "POSITION",
+            anchorOrigin: {
+                vertical: "CENTER",
+                horizontal: "CENTER",
+            },
+            transformOrigin: {
+                vertical: "TOP",
+                horizontal: "CENTER",
+            },
+        });
         await Activate(context);
     }
 }
@@ -200,7 +222,7 @@ async function Activate(_: ToolContext)
                 .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
                 .fillOpacity(.5)
                 .fillColor(GetFillColor(map.Depth))
-                .layer("DRAWING")
+                .layer(Constants.LINELAYER)
                 .name(`Elevation-${1} Area`)
                 .locked(true)
                 .visible(false)

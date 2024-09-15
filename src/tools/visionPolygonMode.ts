@@ -88,7 +88,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(.5)
             .fillColor("#000000")
-            .layer("POINTER")
+            .layer(Constants.LINELAYER)
             .name("Vision Line (Polygon)")
             .locked(true)
             .build();

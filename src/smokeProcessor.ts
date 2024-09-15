@@ -242,7 +242,7 @@ class SmokeProcessor
                 .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
                 .attachedTo(token.id)
                 .locked(true)
-                .layer("POINTER")
+                .layer(Constants.LINELAYER)
                 .zIndex(1)
                 .build();
             this.ringsToCreate.push(playerRing);
@@ -562,9 +562,11 @@ class SmokeProcessor
 
     private AddPersistentLightToQueue(token: Item, depth: number)
     {
-        // We do not need to persist secondary lights currently.
-        // Auxillary lights won't re-trigger a secondary
-        // Torch-lights does not persist.
+        // The trade off issue is, PRIMARY Persistent lights will re-trigger Secondary.
+        // AUXILIARY Persisent lights will not re-trigger.
+        // If a torch is in a CLOSED room, and the player walks by the door and leaves - a PRIMARY persistent light will trigger the torch when the door is open. (When the player is not there.)
+        // If a torch is in an OPEN room, and the walks by the door - the AUXILIARY persistent light will trigger, but when they leave, the vision will be lost.
+        // Both types have their issues and there is no current path to having a properly cut light persist in the right way.
         const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         if (lightType === "SECONDARY") return;
 
@@ -627,7 +629,7 @@ class SmokeProcessor
             })
             .position(token.position)
             .attachedTo(token.id)
-            .layer("POINTER")
+            .layer(Constants.LINELAYER)
             .metadata({ [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id })
             .disableHit(true)
             .build();

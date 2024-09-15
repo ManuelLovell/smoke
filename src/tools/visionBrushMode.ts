@@ -280,7 +280,7 @@ function GetLine(lines: PointLine[]): Curve[]
             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
-            .layer("DRAWING")
+            .layer(Constants.LINELAYER)
             .name("Vision Line (Brushed)")
             .closed(false)
             .locked(true)

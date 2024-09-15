@@ -83,7 +83,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
-            .layer("POINTER")
+            .layer(Constants.LINELAYER)
             .name("Vision Line (Line)")
             .closed(false)
             .locked(true)

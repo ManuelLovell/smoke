@@ -1,4 +1,4 @@
-import { Command, PathCommand } from "@owlbear-rodeo/sdk";
+import { Command, Layer, PathCommand } from "@owlbear-rodeo/sdk";
 
 export class Constants
 {
@@ -9,12 +9,15 @@ export class Constants
     static LINETOOLID = "com.battle-system.linetool";
     static POLYTOOLID = "com.battle-system.polytool";
     static ELEVATIONTOOLID = "com.battle-system.elevationtool";
+    static ELEVATIONWARNID = "com.battle-system.elevationwarn";
     static BRUSHTOOLID = "com.battle-system.brushtool";
     static PROCESSEDID = "com.battle-system.processing";
     static LABELSID = "com.battle-system.labels";
     static GRIDID = "d9953ba1-f417-431c-8a39-3c3376e3caf0";
     static SPECTREBROADCASTID = "SPECTREBROADCAST";
     static RESETPERSISTID = "RESETPERSISTID";
+
+    static LINELAYER: Layer = "POINTER";
 
     static ATTENUATIONDEFAULT = "30";
     static SOURCEDEFAULT = "3";
