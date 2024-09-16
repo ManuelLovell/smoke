@@ -616,6 +616,7 @@ class SmokeProcessor
 
     private CreateDecalToQueue(token: Image)
     {
+        // Fog layer/visible allows for a perfect fog cutout to select the token beneath
         const item = buildImage(
             {
                 height: token.image.height,
@@ -629,7 +630,8 @@ class SmokeProcessor
             })
             .position(token.position)
             .attachedTo(token.id)
-            .layer(Constants.LINELAYER)
+            .layer("FOG")
+            .visible(false)
             .metadata({ [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id })
             .disableHit(true)
             .build();
