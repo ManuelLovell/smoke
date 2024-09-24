@@ -35,7 +35,7 @@ export async function finishDrawing(): Promise<void>
     const line = update((line: Curve) =>
     {
         line.visible = false;
-        line.layer = "DRAWING";
+        line.layer = Constants.LINELAYER;
         line.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = true;
         line.metadata[`${Constants.EXTENSIONID}/blocking`] = true;
         line.metadata[`${Constants.EXTENSIONID}/doubleSided`] = true;

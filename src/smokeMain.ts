@@ -14,6 +14,8 @@ import { SetupTools } from "./tools/smokeSetupTools.ts";
 import { SMOKEMACHINE } from "./smokeProcessor.ts";
 import { SPECTREMACHINE } from "./SpectreTwo.ts";
 import * as Utilities from "./utilities/bsUtilities.ts";
+import 'tippy.js/dist/border.css';
+import { CreateTooltips } from "./utilities/bsTooltips.ts";
 
 export class SmokeMain
 {
@@ -119,6 +121,7 @@ export class SmokeMain
             SetupGMInputHandlers();
             UpdateMaps();
             SetupTools();
+            CreateTooltips();
             await SPECTREMACHINE.Initialize();
         }
         else
@@ -402,6 +405,8 @@ export class SmokeMain
                 target.value = "0";
             if (value > 999)
                 target.value = "999";
+            if (isNaN(value))
+                target.value = Constants.ATTENUATIONDEFAULT;
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = target.value;
@@ -431,6 +436,9 @@ export class SmokeMain
                 target.value = "0";
             if (value > 999)
                 target.value = "999";
+            if (isNaN(value))
+                target.value = Constants.SOURCEDEFAULT;
+
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = target.value;
@@ -464,6 +472,9 @@ export class SmokeMain
                 target.value = "0";
             if (value > 10)
                 target.value = "10";
+            if (isNaN(value))
+                target.value = Constants.FALLOFFDEFAULT;
+
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionFallOff`] = target.value;
@@ -493,6 +504,8 @@ export class SmokeMain
                 target.value = "0";
             if (value > 360)
                 target.value = "360";
+            if (isNaN(value))
+                target.value = Constants.INANGLEDEFAULT;
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionInAngle`] = target.value;
@@ -546,6 +559,8 @@ export class SmokeMain
                 target.value = "0";
             if (value > 360)
                 target.value = "360";
+            if (isNaN(value))
+                target.value = Constants.OUTANGLEDEFAULT;
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = target.value;
@@ -555,7 +570,7 @@ export class SmokeMain
         cellThree.appendChild(blindUnitInput);
         cellThree.appendChild(outerAngInput);
 
-        // CELL FOUR - Vision Hidden List
+        // CELL FOUR - Vision Hidden List / DarkVision
         const cellFour = document.createElement('td');
         const hideUnitInput = document.createElement('input');
         hideUnitInput.type = 'image';
@@ -564,6 +579,8 @@ export class SmokeMain
             ? token.metadata[`${Constants.EXTENSIONID}/hiddenToken`] as boolean
             : false;
         hideUnitInput.classList.add("token-hide");
+        hideUnitInput.classList.add("vision-panel-main-input");
+        hideUnitInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
         hideUnitInput.onclick = async (event: Event) =>
         {
             if (!event || !event.target) return;
@@ -614,7 +631,27 @@ export class SmokeMain
                 }, 250);
             }
         };
+
+        const darkVisionInput = document.createElement('input');
+        darkVisionInput.type = 'checkbox';
+        darkVisionInput.checked = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
+            ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as boolean
+            : false;
+        darkVisionInput.classList.add("token-darkvision");
+        darkVisionInput.classList.add("vision-panel-sub-input");
+        darkVisionInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
+        darkVisionInput.onchange = async (event: Event) =>
+        {
+            if (!event || !event.target) return;
+            const target = event.target as HTMLInputElement;
+            const thisPlayer = BSCACHE.sceneItems.find(x => x.id === token.id)!;
+            await OBR.scene.items.updateItems([thisPlayer], items =>
+            {
+                items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.checked;
+            });
+        };
         cellFour.appendChild(hideUnitInput);
+        cellFour.appendChild(darkVisionInput);
 
         // Append all cells to the row
         newTableRow.appendChild(nameCell);
@@ -662,7 +699,7 @@ export class SmokeMain
                 const tr = document.getElementById(`tr-${unitId}`) as HTMLTableRowElement;
                 const cell = tr.getElementsByClassName("token-name")[0] as HTMLTableCellElement;
 
-                const newOwner = fullGroup.find(newplayer => target.id === newplayer.id); 
+                const newOwner = fullGroup.find(newplayer => target.id === newplayer.id);
                 if (newOwner)
                 {
                     const updatedText = newOwner.name !== BSCACHE.playerName ? `This token is owned by ${newOwner.name}.` : "This token is owned by you.";
@@ -763,6 +800,7 @@ export class SmokeMain
         const innerAngInput = tableRow.getElementsByClassName("token-innerang")[0] as HTMLInputElement;
         const outerAngInput = tableRow.getElementsByClassName("token-outerang")[0] as HTMLInputElement;
         const blindInput = tableRow.getElementsByClassName("token-blind")[0] as HTMLInputElement;
+        const darkvisionInput = tableRow.getElementsByClassName("token-darkvision")[0] as HTMLInputElement;
 
         if (name) 
         {
@@ -817,6 +855,12 @@ export class SmokeMain
         {
             blindInput.checked = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean
+                : false;
+        }
+        if (darkvisionInput)
+        {
+            darkvisionInput.checked = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
+                ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as boolean
                 : false;
         }
     }

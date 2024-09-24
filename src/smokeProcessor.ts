@@ -1,7 +1,7 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildPath, buildShape, buildWall } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildPath, buildShape, buildWall, Effect, Uniform, buildEffect } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
-import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal } from "./utilities/itemFilters";
+import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
 
 class SmokeProcessor
@@ -21,6 +21,10 @@ class SmokeProcessor
     decalsToCreate: Image[] = [];
     decalsToUpdate: { id: string, imageUrl: string }[] = [];
     decalsToDelete: string[] = [];
+
+    darkVisionToCreate: Effect[] = [];
+    darkVisionToUpdate: { id: string, size: number }[] = [];
+    darkVisionToDelete: string[] = [];
 
     persistentLights: {
         id: string;
@@ -249,6 +253,21 @@ class SmokeProcessor
         }
     }
 
+    private UpdateDarkVision(token: Item)
+    {
+        const darkVisionSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+        const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
+
+        if (thisDarkVision)
+        {
+            const update = {
+                id: thisDarkVision.id,
+                size: darkVisionSize,
+            };
+            this.darkVisionToUpdate.push(update);
+        }
+    }
+
     private UpdateOwnerHightlight(token: Item)
     {
         if (BSCACHE.playerRole !== "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
@@ -355,6 +374,21 @@ class SmokeProcessor
                 {
                     this.UpdateLightToQueue(sceneToken, existingLight, sceneTokenDepth);
                 }
+
+                const existingDarkVision = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === sceneToken.id && x.attachedTo === sceneToken.id) as Effect;
+                if (existingDarkVision)
+                {
+                    const equalRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
+                        === existingDarkVision.width;
+                    if (!equalRange)
+                    {
+                        this.UpdateDarkVision(sceneToken);
+                    }
+                }
+                else
+                {
+                    this.CreateDarkVisionToQueue(sceneToken);
+                }
             }
 
             // Check to see if we need to overlay a top-level decal to show the token
@@ -418,6 +452,19 @@ class SmokeProcessor
             }
         }
 
+        // DarkVision should be deleted with the owning token, but just in case for local cleanup
+        const localDarkVisions = BSCACHE.sceneLocal.filter(x => isDarkVision(x)) as Image[];
+        for (const darkvision of localDarkVisions)
+        {
+            const exists = sceneVisionTokens.find(x => x.id === darkvision.metadata[`${Constants.EXTENSIONID}/isDarkVision`]) as Image;
+            if (!exists) this.decalsToDelete.push(darkvision.id);
+            else
+            {
+                if (exists.metadata[`${Constants.EXTENSIONID}/visionDark`] !== true)
+                    this.decalsToDelete.push(darkvision.id);
+            }
+        }
+
         // Add, Update and Delete
         if (this.lightsToCreate.length > 0)
             await OBR.scene.local.addItems(this.lightsToCreate);
@@ -459,6 +506,25 @@ class SmokeProcessor
                 }
             });
 
+        // Add, Update and Delete
+        if (this.darkVisionToCreate.length > 0)
+            await OBR.scene.local.addItems(this.darkVisionToCreate);
+        if (this.darkVisionToDelete.length > 0)
+            await OBR.scene.local.deleteItems(this.darkVisionToDelete);
+        if (this.darkVisionToUpdate.length > 0)
+            await OBR.scene.local.updateItems(localDarkVisions.filter(x => !this.darkVisionToDelete.includes(x.id)), (darkvisions) =>
+            {
+                for (let dark of darkvisions)
+                {
+                    const mine = this.darkVisionToUpdate.find(x => x.id === dark.id)
+                    if (mine)
+                    {
+                        dark.width = mine.size;
+                        dark.height = mine.size;
+                    }
+                }
+            });
+
         this.lightsToCreate = [];
         this.lightsToUpdate = [];
         this.lightsToDelete = [];
@@ -466,6 +532,10 @@ class SmokeProcessor
         this.decalsToCreate = [];
         this.decalsToDelete = [];
         this.decalsToUpdate = [];
+
+        this.darkVisionToCreate = [];
+        this.darkVisionToUpdate = [];
+        this.darkVisionToDelete = [];
     }
 
     private async UpdateWalls()
@@ -611,7 +681,38 @@ class SmokeProcessor
 
         this.lightsToCreate.push(item);
 
-        if (lightType === "PRIMARY") this.CreateOwnerHighlight(token);
+        if (lightType === "PRIMARY")
+        {
+            this.CreateDarkVisionToQueue(token);
+            this.CreateOwnerHighlight(token);
+        }
+    }
+
+    private CreateDarkVisionToQueue(token: Item)
+    {
+        if (token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== true) return;
+
+        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT) * 2;
+
+        const darkVision = buildEffect()
+            .position({ x: token.position.x - (visionDistance / 2), y: token.position.y - (visionDistance / 2) })
+            .attachedTo(token.id)
+            .width(visionDistance)
+            .height(visionDistance)
+            .blendMode("SATURATION")
+            .effectType("STANDALONE")
+            //.layer("POST_PROCESS") - This seems to cause the square to render black, unsure how to use yet.
+            .attachedTo(token.id)
+            .sksl(Constants.DARKVISIONSHADER)
+            .metadata({ [`${Constants.EXTENSIONID}/isDarkVision`]: true })
+            .disableHit(true)
+            .uniforms([
+                { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
+                { name: "radius", value: .5 }, // Radius of the circle in normalized units
+            ])
+            .build();
+
+        this.darkVisionToCreate.push(darkVision);
     }
 
     private CreateDecalToQueue(token: Image)
@@ -632,7 +733,9 @@ class SmokeProcessor
             .attachedTo(token.id)
             .layer("FOG")
             .visible(false)
-            .metadata({ [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id })
+            .metadata({
+                [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id
+            })
             .disableHit(true)
             .build();
 

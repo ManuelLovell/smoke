@@ -80,6 +80,11 @@
     fill: var(--OBR-offset-fore) !important;
 }
 
+#toolOptions {
+    display: flex;
+    justify-content: space-evenly;
+}
+
 #settingsViewToggle {
     width: 100px;
 }
@@ -654,11 +659,11 @@ input[type="checkbox"]:checked::after {
 
 /* Optional: Add transition for a smooth effect */
 input[type="checkbox"] {
-    transition: border-color 0.2s ease;
+    transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 input[type="checkbox"]::after {
-    transition: background-color 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.3s ease-in-out, background-color 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 .custom-file-input label,
@@ -829,4 +834,32 @@ button {
 #elevationWarning {
     color: var(--OBR-font);
     text-align: center;
+}
+
+.tippy-box[data-theme~='battlesystem'] {
+    font-style: italic;
+    background: var(--OBR-dark-blue);
+    color: var(--OBR-font);
+    border: 1px solid var(--OBR-Purple-Select);
+}
+
+.tippy-box[data-theme~='battlesystem'][data-placement^='top']>.tippy-arrow::before {
+    border-top-color: var(--OBR-dark-blue);
+}
+
+.tippy-box[data-theme~='battlesystem'][data-placement^='bottom']>.tippy-arrow::before {
+    border-bottom-color: var(--OBR-dark-blue);
+}
+
+.tippy-box[data-theme~='battlesystem'][data-placement^='left']>.tippy-arrow::before {
+    border-left-color: var(--OBR-dark-blue);
+}
+
+.tippy-box[data-theme~='battlesystem'][data-placement^='right']>.tippy-arrow::before {
+    border-right-color: var(--OBR-dark-blue);
+}
+
+.clr-field {
+    border: 1px solid grey;
+    border-radius: 6px;
 }

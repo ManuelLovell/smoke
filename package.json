@@ -18,6 +18,7 @@
     "@owlbear-rodeo/sdk": "github:owlbear-rodeo/sdk#beta",
     "showdown": "^2.1.0",
     "simplify-js": "^1.2.4",
+    "tippy.js": "^6.3.7",
     "tom-select": "^2.3.1"
   }
 }

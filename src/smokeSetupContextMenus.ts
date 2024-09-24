@@ -442,7 +442,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/opendoor.svg",
                 label: "Enable Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: true,
@@ -466,7 +466,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/closedoor.svg",
                 label: "Disable Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: true,
@@ -511,7 +511,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/opendoor.svg",
                 label: "Open Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: true,
@@ -534,7 +534,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/closedoor.svg",
                 label: "Close Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: true,
@@ -582,7 +582,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/locked-door.svg",
                 label: "Lock Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isDoorLocked`],
                         value: undefined
@@ -602,7 +602,7 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/unlocked-door.svg",
                 label: "Unlock Door",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
+                    every: [{ key: "layer", value: Constants.LINELAYER },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                         value: true,

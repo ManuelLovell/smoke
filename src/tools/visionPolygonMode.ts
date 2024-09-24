@@ -39,7 +39,7 @@ export async function finishDrawing()
     const polygon = update((polygon: Curve) =>
     {
         polygon.visible = false;
-        polygon.layer = "DRAWING";
+        polygon.layer = Constants.LINELAYER;
         polygon.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = true;
         polygon.metadata[`${Constants.EXTENSIONID}/blocking`] = true;
         polygon.metadata[`${Constants.EXTENSIONID}/doubleSided`] = true;

@@ -47,6 +47,11 @@ function isLocalDecal(item: Item)
     return item.metadata[`${Constants.EXTENSIONID}/isLocalDecal`];
 }
 
+function isDarkVision(item: Item)
+{
+    return item.metadata[`${Constants.EXTENSIONID}/isDarkVision`];
+}
+
 function isTorch(item: Item)
 {
     return item.metadata[`${Constants.EXTENSIONID}/isTorch`];
@@ -87,4 +92,4 @@ function isAutohide(item: Item)
     return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP") && !isTokenWithVisionForUI(item) && item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === true;
 }
 
-export { isDoor, isLocalDecal, isLocalSpectre, isVisionLine, isLocalPersistentLight, isVisionLineAndEnabled, isLocalVisionWall, isLocalVisionLight, isBrushSquare, isActiveVisionLine, isTokenWithVision, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTorch, isAutohide };
+export { isDoor, isLocalDecal, isDarkVision, isLocalSpectre, isVisionLine, isLocalPersistentLight, isVisionLineAndEnabled, isLocalVisionWall, isLocalVisionLight, isBrushSquare, isActiveVisionLine, isTokenWithVision, isIndicatorRing, isTokenWithVisionIOwn, isTokenWithVisionForUI, isTorch, isAutohide };

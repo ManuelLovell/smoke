@@ -100,12 +100,28 @@ export class Constants
         [5]
     ];
 
+    static DARKVISIONSHADER = `
+        uniform vec2 size;
+        uniform vec2 center;
+        uniform float radius;
+
+        half4 main(float2 coord) {
+            vec2 normalizedCoord = coord / size;
+            float dist = distance(normalizedCoord, center);
+            if (dist < radius) {
+                return half4(0.5, 0.5, 0.5, 1.0);
+            } else {
+                return half4(0.0, 0.0, 0.0, 0.0); // Transparent
+            }
+        }
+    `;
+
     static SMOKEHTML = `
     <div id="contextMenu" class="context-menu" style="display: none">
         Assign Owner:
         <ul id="playerListing"></ul>
     </div>
-    <div class="visionTitle grid-3">Tokens with Vision Enabled<div class="note" title='Note: GM-owned tokens give universal vision.'>📝</div>
+    <div class="visionTitle grid-3">Tokens with Vision Enabled<div id="tip_gmtokens" class="note">📝</div>
         <div id="visionPanelToggleContainer"></div>
     </div>
     <div id="main-ui" class="grid-main">
@@ -121,17 +137,17 @@ export class Constants
                 <thead>
                     <tr id="visionPanelMain">
                         <th>Name</th>
-                        <th id="visionRangeHeader" class="clickable-header" title="Vision Range"><img class="menu_svg" src="./visionRange.svg"></th>
-                        <th id="visionFalloffHeader" class="clickable-header" title="Vision Edge Fade"><img class="menu_svg" src="./visionFalloff.svg"></th>
-                        <th id="visionBlindHeader" class="clickable-header" title="Disable Vision for a Token"><img class="menu_svg" src="./blind.svg"></th>
-                        <th id="visionHideHeader" class="clickable-header" title="Move token to the 'Out-of-Sight' list"><img class="menu_svg" src="./eyeclosed.svg"></th>
+                        <th id="visionRangeHeader" class="clickable-header"><img class="menu_svg" src="./visionRange.svg"></th>
+                        <th id="visionFalloffHeader" class="clickable-header"><img class="menu_svg" src="./visionFalloff.svg"></th>
+                        <th id="visionBlindHeader" class="clickable-header"><img class="menu_svg" src="./blind.svg"></th>
+                        <th id="visionHideHeader" class="clickable-header"><img class="menu_svg" src="./eyeclosed.svg"></th>
                     </tr>
                     <tr id="visionPanelSub" style="display: none;">
                         <th>Name</th>
-                        <th id="visionBumperHeader" class="clickable-header" title="Token Wall Collision Distance"><img class="menu_svg" src="./visionBumper.svg"></th>
-                        <th id="visionInAngleHeader" class="clickable-header" title="Vision Inner Angle (For hard edge, match with Outer Angle)"><img class="menu_svg" src="./visionInner.svg"></th>
-                        <th id="visionOutAngleHeader" class="clickable-header" title="Vision Outer Angle (For hard edge, match with Inner Angle)"><img class="menu_svg" src="./visionOuter.svg"></th>
-                        <th id="visionHideHeader" class="clickable-header" title="Move token to the 'Out-of-Sight' list"><img class="menu_svg" src="./eyeclosed.svg"></th>
+                        <th id="visionBumperHeader" class="clickable-header"><img class="menu_svg" src="./visionBumper.svg"></th>
+                        <th id="visionInAngleHeader" class="clickable-header"><img class="menu_svg" src="./visionInner.svg"></th>
+                        <th id="visionOutAngleHeader" class="clickable-header"><img class="menu_svg" src="./visionOuter.svg"></th>
+                        <th id="visionDarkHeader" class="clickable-header"><img class="menu_svg" src="./darkvision.svg"></th>
                     </tr>
                 </thead>
                 <tbody id="token_list"></tbody>
@@ -152,7 +168,7 @@ export class Constants
 
     static SPECTREHTML = `
     <div class="visionTitle grid-3">Tokens with Spectre Enabled
-        <div class="note" title='Spectre tokens are only visible to specific players. Enable vision here after it has been Spectred.'>📝</div>
+        <div id= "tip_spectretokens" class="note">📝</div>
     </div>
     <div id="main-ui" class="grid-main">
         <div id="ghostContainer" class="grid-3">
@@ -182,27 +198,27 @@ export class Constants
                 </colgroup>
                 <tbody>
                     <tr>
-                        <td colspan="2"><label for="toggle_fogfill" title="Toggle Fog Fill for the Scene">FogFill</label></td>
+                        <td colspan="2"><label for="toggle_fogfill" id="tip_fogfill">FogFill</label></td>
                         <td><input type="checkbox" id="toggle_fogfill"></td>
-                        <td colspan="2"><label for="disable_vision" title="Toggles vision for all tokens">Disable Vision</label></td>
+                        <td colspan="2"><label for="disable_vision" id="tip_disablevision">Disable Vision</label></td>
                         <td><input type="checkbox" id="disable_vision"></td>
                     </tr>
                     <tr>
-                        <td><label for="toggle_persistence" title="Toggle Persistence with Map Revealing">Persistence</label></td>
+                        <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
                         <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
                         <td><input type="checkbox" id="toggle_persistence"></td>
-                        <td colspan="2"><label for="snap_checkbox" title-"Toggle doors being visible to players">Player-Visible Doors</label></td>
+                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Player-Visible Doors</label></td>
                         <td><input type="checkbox" id="door_checkbox"></td>
                     </tr>
                     <tr>
-                        <td colspan="2"><label for="toggle_ownerlines" title="Show colored rings around to indicate token's vision owner">Owner Highlight</label></td>
+                        <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
                         <td><input type="checkbox" id="toggle_ownerlines"></td>
-                        <td colspan="2"><label for="snap_checkbox" title="Toggle Grid Snapping when drawing Obstruction Lines">Grid Snap</label></td>
+                        <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
                         <td><input type="checkbox" id="snap_checkbox"></td>
                     </tr>
                     <tr>
-                        <td colspan="2"><label for="toggle_placeholder" title="Setting Needed">Placeholder</label></td>
-                        <td><input type="checkbox" id="toggle_placeholder"></td>
+                        <td colspan="2"></td>
+                        <td></td>
                         <td colspan="3"><input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls"></td>
                     </tr>
                     <tr>
@@ -210,8 +226,8 @@ export class Constants
                         <td colspan="3"><input class="settingsButton" type="button" id="unblock_button" value="Unblock Walls"></td>
                     </tr>
                     <tr>
-                        <td colspan="3"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines" title="Lock all Obstruction Lines on the Scene"></td>
-                        <td colspan="3"><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines" title="Unlock all Obstruction Lines on the Scene"></td>
+                        <td colspan="3"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines"></td>
+                        <td colspan="3"><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines"></td>
                     </tr>
                     <tr>
                         <td colspan="6" style="text-align: center; font-weight: bold;">Tool Options</td>
@@ -259,7 +275,7 @@ export class Constants
                         <td colspan="2">Alignment</br><select id="map_align"><option selected>Loading..</option></select></td>
                     </tr>
                     <tr>
-                        <td colspan="2"><label for="dpi_autodetect" title="Whether or not to automatically detect the DPI of imported data based">DPI Autodetect</label></td>
+                        <td colspan="2"><label for="dpi_autodetect" id="tip_importdpi">DPI Autodetect</label></td>
                         <td colspan="2">
                             <input type="checkbox" id="dpi_autodetect" checked>
                             <input id="import_dpi" disabled type="text" value="150" maxlength="4">
@@ -283,9 +299,6 @@ export class Constants
         <li><a href="#ui-smoke">Smoke Panel</a></li>
         <li><a href="#ui-spectre">Spectre Panel</a></li>
         <li><a href="#ui-settings">Settings Panel</a></li>
-        <li><a href="#ui-info">Info Panel</a></li>
-        <li><a href="#ui-issue">Issue Indicator</a></li>
-        <li><a href="#ui-switch">Processing Switch</a></li>
         <li><a href="#ui-tools">Drawing Tools</a></li>
         <li><a href="#ui-convert">Drawing Conversions</a></li>
         <li><a href="#ui-convert">Elevation Tools</a></li>
@@ -305,7 +318,6 @@ export class Constants
       <ul>
         <li><a href="#smoke-light">Using Light Sources</a></li>
         <li><a href="#smoke-doors"> Using Doors</a></li>
-        <li><a href="#smoke-autohide"> Using Auto-Hide</a></li>
         <li><a href="#smoke-customfog"> Using Custom Fog Backgrounds</a></li>
       </ul></li>
       <li><a href="#smoke-elevation">Smoke: Elevation Mapping</a>
@@ -331,12 +343,11 @@ export class Constants
 
 ## Smoke: Quick Start <a id="quick-start-smoke" name="quick-start-smoke"></a>
 So, your game starts in an hour and you've prepped nothing - but you want to distract them with some fog. Sure.
-1. Add an IMAGE to the MAP layer, and in settings make sure Autodetect Maps is enabled OR leave Autodetect Maps off, and only draw within the pink-dashed boundary.
-2. Click the 'Glasses' icon in the toolbar, and select the Line tool.  Draw to your heart's content.
-3. Add a token to the scene. On that token, through the context-menu, 'Enable Vision'.
-4. (Optional: Assign ownership of that token to a specific player, so they can only see through that token.)
-5. Click the checkbox at the top of Smoke&Spectre to turn on processing.
-6. Done!
+1. Click the 'Glasses' icon in the toolbar, and select the Line tool.  Draw to your heart's content.
+2. Add a token to the scene. On that token, through the context-menu, 'Enable Vision'.
+3. (Optional: Assign ownership of that token to a specific player, so they can only see through that token.)
+4. Click the checkbox in settings  to turn on Fog Fill.
+5. Done!
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -353,12 +364,16 @@ You need to drive someone crazy in a hurry, I get it.  Just make sure the player
 #### <a id="ui-smoke"></a>1. Smoke Panel
 This panel holds information on all tokens that have Vision Enabled.  This includes Light sources as well as Character Tokens. A token only gets to this list if you click 'Enable Vision' on it.
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-panel.webp)
-The options next to a token's name are;
-1. Viewing Range: Set the desired radius for a token's vision range.
-2. Infinite Vision: Give a token 'infinite' viewing range.
-3. Light Source: Designate a token to be a Light Source, which will extend a character's vision range (more in the Light Sources section).
-4. Blind Vision: So a token no longer has vision.
-5. Filter Away: Move a token to the 'Out of Sight List'. (This is just an 'out of the way' area, if you happen to have a lot of tokens in the list that do not really require your attention - like 50 torches)
+There are two sets of options to configure a token's vision range;
+For Basic Settings:
+1. Range: Set the desired radius for a token's vision range.
+2. Falloff: Change the edge of a tokens' vision range from a hard line to a soft blur (Try values 0 - 5).
+3. Disable: Disable a single token's vision - useful for a quick 'Blind' status.
+4. Move to Out-of-Sight List: Moves this token to the lower list which can be hidden from view. Useful if you have lots of items in the scene but the majority of them will never be changed/updated
+For Advanced Settings:
+1. Collision: Set how far away from the token's center collision will occur when using unpassable walls. If the collision range is set too high, it could prove difficult to move a token in a narrow hallway.
+2. Inner/Outer Angle: When looking to use coned vision, set these to the angle in which you would like to constrain vision.  The direction doesn't matter as much, as you can rotate the token and the cone will follow it.
+3. Greyscale: Enable to remove color from a token's vision radius, useful for a 'Darkvision' effect.  This will set the entire vision radius to greyscale.
 
 Also, if you right-click a token's name you can assign an owner for a token quickly and easily (Even if you do not have owner-only permissions turned on in your room)
 <p align="right">(<a href="#smoke">back to top</a>)</p>
@@ -377,40 +392,17 @@ The options next to a token's name are;
 #### <a id="ui-settings"></a>3. Settings Panel
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-settings.webp)
 The settings for smoke are generally saved to the Scene, as each scene might have different needs to make it work.  The options are as follows;
-1. Auto-Detect Maps: When enabled, Smoke will looks for images on the Map layer of your scene and determine the bounds for calculations based on the images position.  If you have multiple maps, it will make a box around all of them and base the calculations on that.  When disabled, Smoke will add a Boundary Box to the scene and constrain it's calculations to that.  You can stretch the box using the OBR tools or set the dimensions in the Height/Width boxes that appear when the setting is disabled.
-2. Persistence: When enabled, Smoke will leave area 'unfogged' that your tokens have passed through.
-3. Persistence Reset: This will clear all of the fog shapes in the area your token has walked through.
-4. Trailing Fog: When used with Persistence, Smoke will 'semi-fog' the area that your token's have passed through but are not within active viewing range.
-5. Trailing Fog: Auto-Hide: When this setting is enabled, a token that has 'Auto-hide' turned on will disappear when inside the semi-fogged areas of Trailing Fog.
-6. Trailing Fog: Color: This allows you to select the color and opacity of the trailing fog on your map.
-7. Grid Snap: When enabled, the Smoke's drawing tools will snap to the grid points when drawing. (Note: You can hold CTRL while drawing to temporarily disable this.)
-8. Player-Visible Doors: When enabled, players will be able to see any doors you have enabled on the map. When disabled, players cannot see any door icons.
-9. Convert from Dynamic Fog: If you were using the basic Dynamic Fog extension before I took over, this would convert your scene items over.
-10. Unlock Fog Backgrounds: If you have Converted a Custom Fog Background in the scene, this will unlock that image so that you can manipulate it again.
-11. Unlock/Lock Lines: By default, when you draw an obstruction it will be auto-locked to make sure they are not moved on accident.  Use these buttons to lock/unlock all lines so that they can be manipulated again. 
-12. Default Elevation Mapping: This will determine the 'base level' a token/wall is at when using Elevation Mapping.  Leave this setting at 0 if you are not using Elevation Mapping.
-13. Tool Options: This is for customizing the style of the lines that are created when drawing with the Obstruction Tools.
-14. Import: Smoke is able to accept the UVTT format for building a scene for you. Select the map and Import, and the map image, obstructions, doors and light sources will be created in a new scene.
-
-#### <a id="ui-info"></a>4. Info Panel
-As Owlbear Rodeo runs in your browser, as does Smoke. All calculations are made on your device.  This window will output performance times to give you an idea of how processing is going.
-Maps with a massive amount of obstructions (1000+) can take a little longer to process on a slower machine, but with recent updates the time difference should be negligible.
-![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-info.webp)
-<p align="right">(<a href="#smoke">back to top</a>)</p>
-
-#### <a id="ui-issue"></a>5. Issue Indicator
-This little light is an early-warning if someone is having problems processing on the scene.
-This could be from something as simple as not having a token that they can see through, or the extension having issues running on their machine.  You can click this indicator to see which player is having issues to narrow it down.
-Green means things are good.
-Yellow means nothing is started/enabled, but no reason to worry.
-Red means something went wrong.
-<p align="right">(<a href="#smoke">back to top</a>)</p>
-
-#### <a id="ui-switch"></a>6. Processing Switch
-This checkbox turns on/off the Fog processing for the extension. When turned off, you don't need to worry about any vision calculations or fog fills.
-Though be sure to turn it on when you are ready to start using Dynamic Fog.
-
-<p align="right">(<a href="#smoke">back to top</a>)</p>
+1. Fog Fill: This will enable/disable the Fog Fill in the Owlbear Rodeo Fog settings.  S&S3.0 requires fog fill in order  to do dynamic fog processing (but does not require it for collision detection). This is a  deviation from S&S2.0 where fog could be calculated in a small area via the bounding grid - which is no longer possible.
+2. Disable Vision: This will disable vision for ALL tokens that have vision enabled.  Useful if you need to blind the entire group, but do not wish to click each individual token.
+3. Persistence/Reset: This will enable/disable Persistence on your map. Persistence will keep areas that a token has stopped as 'discovered', and it will not be covered in fog when the token moves away.  The 'reset' button next to the toggle will reset the uncovered areas for everyone currently in the room.
+4. Player-Visible Doors: This will allow player's to see and interact with doors that have been created.
+5. Owner Highlight: This will enable/disable the colored rings that indicate a player's viewable range as a GM.
+6. Grid Snap: This will enable/disable the custom grid snapping used for drawing Obstruction Lines/Objects in S&S (Note: You can hold CTRL while drawing to temporarily disable this.). <i>This is independent of the default Snap setting in OBR.</i>
+7. Double-Side Walls: This will change all walls on the map to be double-sided walls. This can be useful if an imported map lacked the information, and you do not wish to set each wall individually.
+8. Block/Unblock Walls: By default, when you draw an obstruction it will be passable (with the exception of the Obstruction Brush tool).  This will block/unblock all walls so that tokens ability to pass them is changed.
+9. Lock/Unlock Lines: By default, when you draw an obstruction it will be auto-locked to make sure they are not moved on accident.  Use these buttons to lock/unlock all lines so that they can be manipulated again. 
+11. Tool Options: This is for customizing the style of the lines that are created when drawing with the Obstruction Tools.
+12. Import: Smoke is able to accept the UVTT format for building a scene for you. Select the map and Import, and the map image, obstructions, doors and light sources will be created in a new scene.
 
 #### <a id="ui-tools"></a>7. Drawing Tools
 Added to the OBR Toolbar are Smoke's drawing tools.
@@ -448,10 +440,20 @@ When drawing obstructions, you have some options in the form of buttons...
 The line tool is the basic building block for scenes, and likely will be the most used when creating a scene.
 By default, they block vision no matter what side of the line you are on. (The 'hidden' area is seen from the GM view in this screenshot, so it's only lightly obscured by darkness.)
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-line.webp)
-<i> Note: You are able to change how the default vision works for a line by going to the context-menu for a line and changing between Two-Sided, One-Sided Left and One-sided Right.  The icon that is CURRENTLY being shown is the state the line is currently in. Refer to the icon for a simple idea of how it works - where the X is in relation to the line, is where you cannot see through it if the token is in that spot.</i>
+<i> Note: You are able to change how the default vision works for a line by going to the context-menu for a line and changing between Two-Sided, and One-sided.</i>
 
 You can also toggle an Obstruction Line's ability to block vision by clicking 'Disable/Enable Vision Line' in the context menu.
 In addition to that, you can also toggle a line into a 'Door'.  Which works similar to the Vision toggle, but adds a door icon. More on this in the Doors section.
+You can change how an obstruction behaves in several ways:
+1. Enable/Disable Vision Line: This will toggle how this line interacts with a token's vision.
+2. Swap to One-Sided/Two-Sided: This will toggle how a token sees this line. A one-sided line will block vision from one side, but allow vision from the other. A two-sided line will block vision from both sides.
+	A. (When on One-sided) Swap Obstructing Side: This will change what side of the line you are able to see through.
+3. Swap to Passable/Unpassable: This will change how this line behaves as a collider.  A passable line will not stop a token's movement, but an unpassable one will.
+4. Enable Door: This will change the line to have 'Door' functionality. A line that has Door functionable has a few more buttons to improve flow.
+	A. Disable Door: This will disable the line behaving as a door.
+	B. Open/Close Door: This will change if a token can see through, and pass through this line.
+	C.  Lock Door: This will lock the door, so that players are unable to open it.
+	<i>Note: The 'Door' picture that appears can be double-clicked in order to open the door. It only serves the purposes of showing a door though. In order to manipulate the obstruction line that is the door - select the line.</i>
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -485,9 +487,14 @@ For this specific issue, adding a Door, it might be beneficial to 'bump out' a s
 
 #### <a id="smoke-vision"></a>1. Changing a token's vision range
 In the Smoke Panel, once a token has had it's Vision Enabled, the token will appear on the list with some options. The default radius is 30, but you can change this to whatever suits your needs.![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-vision.webp)
-If you select the 'Infinite' toggle, it will over-ride the radius.
-If you select the 'Blind' toggle, it will disable vision for the token.
-<i>Note: The Light Source toggle should not be used for character tokens. You'll just confuse yourself for using it on a character if you are unsure.</i>
+There are two sets of settings - Basic and Advanced. In order, the controls are:
+1. (Basic) Vision Range.
+2. (Basic) Vision Falloff.
+3. (Basic) Vision Disable.
+4. (Advanced) Collision Range.
+5. (Advanced) Inner Vision Angle.
+6. (Advanced) Outer Vision Angle.
+7. (Advanced) Greyscale Vision.
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -505,16 +512,16 @@ To speed up the flow of assigning ownership, you have two options:
   
 ## Smoke: Advanced Features <a id="smoke-advanced" name="smoke-advanced">
 
-#### <a id="smoke-light"></a>1. Using Light Sources
-When you turn a token into a 'Light Source', it will largely look the same unless something is obstructing the full view of that light source.
-What a light source does, is stop a token from giving general vision in it's area - and instead only give vision based on what a token WITH vision can see of it.
+#### <a id="smoke-light"></a>1. Using Torchlight (Previously Light Sources)
+If you need ambient lighting on a map, you need to create a 'Torch'.  This can only be token with token's on the PROP layer.  When you open the context menu of a token on the PROP layer, you will see the 'Create Torchlight' option.
+Torchlights are added to the token vision list like all other tokens, but are appended with a 🔦icon. All of the same settings can be used.
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-light.webp)
-This is easiest to see with narrow hallways.  If you add a light source to a small room, and then have a narrow hallway between it and a character token with vision, you will see that the vision the torch gives is constricted.
+This is easiest to see with narrow hallways.  If you add a torchlight to a small room, and then have a narrow hallway between it and a character token with vision, you will see that the vision the torch gives is constricted.
 
-If you're looking to have your characters explore a dark area where they have to hold torches, it's a simple task.   Create torch tokens, enable vision, set them as a light source and then attach them to the characters.  Your other players will then be able to see each other when the light of the torch is not behind something obstructing it.
+If you're looking to have your characters explore a dark area where they have to hold torches, it's a simple task.   Create torch tokens, enable vision, set them as a torchlight and then attach them to the characters.  Your other players will then be able to see each other when the light of the torch is not behind something obstructing it.
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-light2.webp)
-<i>Given that light sources are not needed to be manipulated often, it's often better to move them to the 'Out-of-Sight' list, to clean up the clutter in the Smoke panel.</i>
+<i>Given that torchlights are not needed to be manipulated often, it's often better to move them to the 'Out-of-Sight' list, to clean up the clutter in the Smoke panel.</i>
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -532,16 +539,8 @@ If your players are a little click-happy, you can 'Lock Door' to stop players fr
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
-#### <a id="smoke-autohide"></a>3. Using Auto-hide
-If you have 'Trailing Fog + Autohide' enabled, there will be an extra option in the context menu for tokens. Auto-Hide.
-Turning this on will make token's 'disappear' when they are outside of viewable range for a token and inside the trailing fog area.
-Trailing fog can be useful for areas that were explored and you want your player's to have some recollection of, but sometimes you don't want them to actively see everything that's happening in a room they are not currently in.
-This option is for that scenario.
-
-<p align="right">(<a href="#smoke">back to top</a>)</p>
-
-#### <a id="smoke-customfog"></a>4. Using Custom Fog
-Sometimes flat-colored fog isn't exactly what you're going for.  If you want things to get a little fancy, Custom Fog is a great feature to spruce things up.  It does require a little more process to get going though. Which is setting up a separate fog image to overlay on your map.
+#### <a id="smoke-customfog"></a>3. Using Custom Fog
+Sometimes flat-colored fog isn't exactly what you're going for.  If you want things to get a little fancy, Custom Fog is a great feature to spruce things up.
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-customfog1.webp)
 The basic steps are;
 1. Make sure your Custom Fog image is on the Map layer.
@@ -550,6 +549,7 @@ The basic steps are;
 4. Done!
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-customfog2.webp)
+<i>Note: To remove the Fog Background, use the Fog Tool to Select the Custom Fog Background (Because it's a Fog Item now!) and select the option to Convert the item back.</i>
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 ## Smoke: Elevation Mapping <a id="smoke-elevation" name="smoke-elevation">
@@ -656,13 +656,9 @@ Spectre'd token data is bundled up and stored in your scene. So if you decide to
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
-#### <a id="spectre-limits"></a>3. How many things can be Spectred?
-Fourteen items per scene.  14. That's it.
-<p align="right">(<a href="#smoke">back to top</a>)</p>
-
 ## Support
 
-If you have questions, please join the [Owlbear Rodeo Discord](https://discord.gg/UY8AXjhzhe).
+If you have questions, please join the [Owlbear Rodeo Discord](https://discord.gg/u5RYMkV98s).
 
 Or you can reach out to me at manuel@battle-system.com.
 You can also support these projects at the [Battle-System Patreon](https://www.patreon.com/battlesystem).
