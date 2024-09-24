@@ -40,6 +40,7 @@ export async function finishDrawing()
     {
         polygon.visible = false;
         polygon.layer = Constants.LINELAYER;
+        polygon.style.fillOpacity = 0;
         polygon.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = true;
         polygon.metadata[`${Constants.EXTENSIONID}/blocking`] = true;
         polygon.metadata[`${Constants.EXTENSIONID}/doubleSided`] = true;

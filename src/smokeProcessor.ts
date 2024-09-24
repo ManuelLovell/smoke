@@ -117,20 +117,24 @@ class SmokeProcessor
                         const localTransform = MathM.fromPosition(door.points[i]);
                         points.push(MathM.decompose(MathM.multiply(shapeTransform, localTransform)).position);
                     }
-                    const size = BSCACHE.gridDpi / 2;
+
                     const doorOpen = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true;
+                    const doorPosition = Math2.centroid(points);
                     createLocalDoors.push(buildImage(
                         {
-                            height: size,
-                            width: size,
+                            height: 100,
+                            width: 100,
                             url: doorOpen ? Constants.DOOROPEN : Constants.DOORCLOSED,
                             mime: 'image/svg+xml'
-                        }, { dpi: BSCACHE.gridDpi, offset: { x: size, y: size } }
+                        }, { dpi: 300, offset: { x: 75, y: 75 } }
                     )
-                        .scale(({ x: 0.5, y: 0.5 }))
+                        .scale(({
+                            x: 1, y: 1
+                        }))
+                        .layer("POINTER")
                         .locked(true)
                         .name(doorOpen ? "Opened Door" : "Closed Door")
-                        .position(Math2.centroid(points))
+                        .position({ x: doorPosition.x, y: doorPosition.y })
                         .metadata({ [`${Constants.EXTENSIONID}/doorId`]: door.id })
                         .build());
                 }
