@@ -101,7 +101,7 @@ class SmokeProcessor
         if (BSCACHE.playerRole === "PLAYER" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
 
         const sceneDoors = BSCACHE.sceneItems.filter(x => isDoor(x)) as Curve[];
-        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined) as Image[];
         if (sceneDoors.length > 0)
         {
             const createLocalDoors: Item[] = [];
@@ -117,11 +117,19 @@ class SmokeProcessor
                         const localTransform = MathM.fromPosition(door.points[i]);
                         points.push(MathM.decompose(MathM.multiply(shapeTransform, localTransform)).position);
                     }
-                    createLocalDoors.push(buildPath()
+                    const size = BSCACHE.gridDpi / 2;
+                    const doorOpen = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true;
+                    createLocalDoors.push(buildImage(
+                        {
+                            height: size,
+                            width: size,
+                            url: doorOpen ? Constants.DOOROPEN : Constants.DOORCLOSED,
+                            mime: 'image/svg+xml'
+                        }, { dpi: BSCACHE.gridDpi, offset: { x: size, y: size } }
+                    )
+                        .scale(({ x: 0.5, y: 0.5 }))
                         .locked(true)
-                        .commands(this.getDoorPath(door.metadata[`${Constants.EXTENSIONID}/doorOpen`] !== true))
-                        .scale({ x: 0.2, y: 0.2 })
-                        .name("Closed Door")
+                        .name(doorOpen ? "Opened Door" : "Closed Door")
                         .position(Math2.centroid(points))
                         .metadata({ [`${Constants.EXTENSIONID}/doorId`]: door.id })
                         .build());
@@ -148,8 +156,8 @@ class SmokeProcessor
                     {
                         deletedDoorWalls.push(local.id);
                     }
-                    else if ((local.name === "Open Door" && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === undefined)
-                        || (local.name === "Closed Door" && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true))
+                    else if ((local.image.url === Constants.DOOROPEN && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === undefined)
+                        || (local.image.url === Constants.DOORCLOSED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true))
                     {
                         changedLocalDoorIds.push(local.id);
                     }
@@ -165,15 +173,15 @@ class SmokeProcessor
                 {
                     for (let door of doors)
                     {
-                        if (door.name === "Open Door")
+                        if (door.image.url === Constants.DOOROPEN)
                         {
                             // Close it
-                            door.commands = this.getDoorPath(true);
+                            door.image.url = Constants.DOORCLOSED;
                             door.name = "Closed Door";
                         }
                         else
                         {
-                            door.commands = this.getDoorPath(false);
+                            door.image.url = Constants.DOOROPEN;
                             door.name = "Open Door";
                         }
                     }
@@ -811,18 +819,6 @@ class SmokeProcessor
             }
         }
         return true;
-    }
-
-    private getDoorPath(close: boolean): PathCommand[]
-    {
-        if (close)
-        {
-            return Constants.DOORCLOSED;
-        }
-        else
-        {
-            return Constants.DOOROPEN;
-        }
     }
 
     public async ToggleDoor(toggleDoorId: string)
