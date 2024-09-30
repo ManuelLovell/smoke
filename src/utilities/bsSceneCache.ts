@@ -611,7 +611,14 @@ class BSCache
         {
             const playerContextMenu = document.getElementById("playerListing")!;
             playerContextMenu.innerHTML = "";
-            playerContextMenu.appendChild(SMOKEMAIN.GetEmptyContextItem());
+            playerContextMenu.appendChild(SMOKEMAIN.GetEmptyContextItem("Self"));
+
+            const playerPreviewMenu = document.getElementById("preview_select")!;
+            playerPreviewMenu.innerHTML = "";
+            const selfItem = document.createElement("option");
+            selfItem.value = BSCACHE.playerId;
+            selfItem.textContent = `View As: Self`;
+            playerPreviewMenu.appendChild(selfItem);
 
             for (const player of this.party)
             {
@@ -620,8 +627,13 @@ class BSCache
                 listItem.textContent = player.name;
                 listItem.style.color = player.color;
                 playerContextMenu.appendChild(listItem);
+
+                const previewItem = document.createElement("option");
+                previewItem.value = player.id;
+                previewItem.textContent = `View As: ${player.name}`
+                previewItem.style.color = player.color;
+                playerPreviewMenu.appendChild(previewItem);
             }
-            //SPECTRE.UpdateSpectreTargets();
         }
     }
 
@@ -643,8 +655,20 @@ class BSCache
 
     public async ToggleBusy(on: boolean)
     {
-        await OBR.action.setBadgeText(on ? "⏱️" : undefined);
-        BSCACHE.busy = on;
+        const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
+        if (playerPreviewSelect.value !== BSCACHE.playerId && !on)
+        {
+            const currentPreviewPlayer = BSCACHE.party.find(x => x.id === playerPreviewSelect.value);
+            if (currentPreviewPlayer)
+            {
+                await OBR.action.setBadgeText(`Viewing as: ${currentPreviewPlayer.name}`);
+            }
+        }
+        else
+        {
+            await OBR.action.setBadgeText(on ? "⏱️" : undefined);
+            BSCACHE.busy = on;
+        }
     }
 
     public async CheckRegistration()

@@ -16,6 +16,7 @@ import { SPECTREMACHINE } from "./SpectreTwo.ts";
 import * as Utilities from "./utilities/bsUtilities.ts";
 import 'tippy.js/dist/border.css';
 import { CreateTooltips } from "./utilities/bsTooltips.ts";
+import { ViewportFunctions } from "./utilities/bsViewport.ts";
 
 export class SmokeMain
 {
@@ -103,7 +104,16 @@ export class SmokeMain
 
             // Setup Player Owner Context Menu
             const playerContextMenu = document.getElementById("playerListing")!;
-            playerContextMenu.appendChild(this.GetEmptyContextItem());
+            playerContextMenu.appendChild(this.GetEmptyContextItem("Self"));
+
+            // Setup Player Owner Context Menu
+            const playerPreviewMenu = document.getElementById("preview_select")!;
+            playerPreviewMenu.innerHTML = "";
+            const selfItem = document.createElement("option");
+            selfItem.value = BSCACHE.playerId;
+            selfItem.textContent = `View As: Self`;
+            playerPreviewMenu.appendChild(selfItem);
+
             for (const player of BSCACHE.party)
             {
                 const listItem = document.createElement("li");
@@ -111,6 +121,12 @@ export class SmokeMain
                 listItem.textContent = player.name;
                 listItem.style.color = player.color;
                 playerContextMenu.appendChild(listItem);
+
+                const previewItem = document.createElement("option");
+                previewItem.value = player.id;
+                previewItem.textContent = `View As: ${player.name}`
+                previewItem.style.color = player.color;
+                playerPreviewMenu.appendChild(previewItem);
             };
 
             Coloris.init();
@@ -204,11 +220,11 @@ export class SmokeMain
         }
     }
 
-    public GetEmptyContextItem()
+    public GetEmptyContextItem(textContent: string)
     {
         const listItem = document.createElement("li");
         listItem.id = BSCACHE.playerId;
-        listItem.textContent = "Self";
+        listItem.textContent = textContent;
         return listItem;
     }
 
@@ -380,6 +396,12 @@ export class SmokeMain
             nameCell.style.color = "black !important";
             nameCell.style.fontStyle = "italic";
         }
+
+        nameCell.onclick = async () =>
+        {
+            ViewportFunctions.CenterViewportOnImage(token);
+            await OBR.player.select([token.id]);
+        };
 
         // CELL ONE - Vision Range / Vision Bumper
         // Attenuation Radius

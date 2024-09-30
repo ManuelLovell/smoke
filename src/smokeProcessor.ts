@@ -131,7 +131,7 @@ class SmokeProcessor
                         .scale(({
                             x: 1, y: 1
                         }))
-                        .layer("POINTER")
+                        .layer("DRAWING")
                         .locked(true)
                         .name(doorOpen ? "Opened Door" : "Closed Door")
                         .position({ x: doorPosition.x, y: doorPosition.y })
@@ -334,7 +334,17 @@ class SmokeProcessor
         let sceneVisionTokens: Item[] = [];
         if (BSCACHE.playerRole === "GM")
         {
-            sceneVisionTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+            const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
+            if (playerPreviewSelect.value !== BSCACHE.playerId)
+            {
+                // We're running as someone else
+                sceneVisionTokens = BSCACHE.sceneItems.filter(item => (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
+                    && item.createdUserId === playerPreviewSelect.value && item.metadata[`${Constants.EXTENSIONID}/hasVision`])
+            }
+            else
+            {
+                sceneVisionTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+            }
         }
         else
         {
@@ -380,9 +390,11 @@ class SmokeProcessor
                     === existingLight.innerAngle.toString();
                 const equalOuterAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
                     === existingLight.outerAngle.toString();
+                const equalBlind = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`]
+                    === existingLight.metadata[`${Constants.EXTENSIONID}/visionOutAngle`];
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
-                if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalDepth)
+                if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalBlind || !equalDepth)
                 {
                     this.UpdateLightToQueue(sceneToken, existingLight, sceneTokenDepth);
                 }
@@ -495,6 +507,7 @@ class SmokeProcessor
                         light.falloff = mine.falloff;
                         light.innerAngle = mine.innerAngle;
                         light.outerAngle = mine.outerAngle;
+                        light.metadata[`${Constants.EXTENSIONID}/visionBlind`] = mine.blind;
                         light.zIndex = mine.zIndex;
                     }
                 }
@@ -677,16 +690,22 @@ class SmokeProcessor
     {
         // We are 'light' to follow the token around, that we can identify which one it's replicating
         const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
+        const visionRange = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
+            1 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+
         const item = buildLight()
             .position(token.position)
             .lightType(lightType)
-            .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT))
+            .attenuationRadius(visionRange)
             .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT))
             .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT))
             .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT))
             .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? Constants.OUTANGLEDEFAULT))
             .zIndex(this.GetDepth(depth, false))
-            .metadata({ [`${Constants.EXTENSIONID}/isVisionLight`]: token.id })
+            .metadata({
+                [`${Constants.EXTENSIONID}/isVisionLight`]: token.id,
+                [`${Constants.EXTENSIONID}/visionBlind`]: token.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false
+            })
             .attachedTo(token.id)
             .disableAttachmentBehavior(["SCALE"])
             .build();
@@ -770,13 +789,16 @@ class SmokeProcessor
     private UpdateLightToQueue(sceneToken: Item, localLight: Light, depth: number)
     {
         const lightType = sceneToken.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
+        const visionRange = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
+            1 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
         const update = {
             id: localLight.id,
-            attenuationRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT),
+            attenuationRadius: visionRange,
             sourceRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT),
             falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT),
             innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT),
             outerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? Constants.OUTANGLEDEFAULT),
+            blind: sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false,
             zIndex: this.GetDepth(depth, false)
         };
         this.lightsToUpdate.push(update);

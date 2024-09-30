@@ -167,8 +167,7 @@ export class Constants
                         <td><input type="checkbox" id="snap_checkbox"></td>
                     </tr>
                     <tr>
-                        <td colspan="2"></td>
-                        <td></td>
+                        <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
                         <td colspan="3"><input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls"></td>
                     </tr>
                     <tr>

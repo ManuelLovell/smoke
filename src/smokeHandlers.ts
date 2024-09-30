@@ -5,6 +5,7 @@ import { Constants } from "./utilities/bsConstants";
 import { isVisionLine } from "./utilities/itemFilters";
 import { importFog, ImportScene } from "./tools/importUVTT";
 import { BSCACHE } from "./utilities/bsSceneCache";
+import { SMOKEMACHINE } from "./smokeProcessor";
 
 export function SetupGMInputHandlers()
 {
@@ -318,6 +319,14 @@ export function SetupGMInputHandlers()
     const toolColor = document.getElementById("tool_color") as HTMLInputElement;
     const toolStyle = document.getElementById("tool_style") as HTMLSelectElement;
     let debouncer: ReturnType<typeof setTimeout>;
+
+    const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
+    playerPreviewSelect!.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await BSCACHE.ToggleBusy(false);
+        await SMOKEMACHINE.Run();
+    };
 
     // Tool Option Handling - Tool Color
     toolColor!.onclick = async (_event: MouseEvent) =>

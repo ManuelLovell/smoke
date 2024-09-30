@@ -710,7 +710,7 @@ input[type=button]:hover {
 }
 
 select {
-    width: 100px;
+    width: 100%;
     height: 26px;
     border: 1px solid var(--OBR-offset-fore);
     border-radius: 6px;
@@ -734,6 +734,9 @@ button {
     width: 150px !important;
 }
 
+#tool_style {
+    max-width: 100px;
+}
 #tool_color {
     width: 50px;
     cursor: pointer;

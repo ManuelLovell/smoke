@@ -65,8 +65,7 @@ function isActiveVisionLine(item: Item)
 function isTokenWithVision(item: Item)
 {
     return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
-        && item.metadata[`${Constants.EXTENSIONID}/hasVision`]
-        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
+        && item.metadata[`${Constants.EXTENSIONID}/hasVision`];
 }
 
 function isTokenWithVisionForUI(item: Item)
@@ -78,8 +77,7 @@ function isTokenWithVisionForUI(item: Item)
 function isTokenWithVisionIOwn(item: Item)
 {
     return (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP") && item.createdUserId == BSCACHE.playerId
-        && item.metadata[`${Constants.EXTENSIONID}/hasVision`]
-        && !item.metadata[`${Constants.EXTENSIONID}/visionBlind`];
+        && item.metadata[`${Constants.EXTENSIONID}/hasVision`];
 }
 
 function isBrushSquare(item: Item)
