@@ -21,7 +21,7 @@ export function CreateTooltips()
     tooltips.set(`visionBlindHeader`, "Blind: If this token is temporarily without sight.");
     tooltips.set(`visionHideHeader`, "Move token to the 'Out-of-Sight' list");
     
-    tooltips.set(`visionBumperHeader`, "Collision Distance: How close this tokenk can get to an active wall.");
+    tooltips.set(`visionBumperHeader`, "Collision Distance: How close this token can get to an active wall.");
     tooltips.set(`visionInAngleHeader`, "Inner Angle: Inner angle of token vision, for hard edge, match with Outer Angle");
     tooltips.set(`visionOutAngleHeader`, "Outer Angle:  Outer angle of token vision, for hard edge, match with Inner Angle");
     tooltips.set(`visionDarkHeader`, "Greyscale: Change vision to greyscale coloring.");
@@ -41,6 +41,7 @@ export function CreateTooltips()
     tooltips.set(`lock_button`, "This will lock all obstruction lines, so they cannot be accidentally (or purposefully) moved.");
     tooltips.set(`unlock_button`, "This will unlock all obstruction lines so they can be moved and/or editted.");
     tooltips.set(`reset_persistence`, "This will reset all persistence on a map, for all players in the room.");
+    tooltips.set(`preview_select`, "This will allow you to view fog as the selected Player would see it.");
 
     tooltips.forEach((value, key) => { SetupTooltips(key, value); });
 }

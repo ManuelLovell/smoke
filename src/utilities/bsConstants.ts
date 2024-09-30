@@ -3,6 +3,7 @@ import { Command, Layer, PathCommand } from "@owlbear-rodeo/sdk";
 export class Constants
 {
     static EXTENSIONID = "com.battle-system.smoke";
+    static EXTENSIONNOTICE = "com.battle-system.smoke-notice";
     static RESETID = "com.battle-system.smoke-reset";
     static SPECTREID = "com.battle-system.spectre";
     static EXTENSIONWHATSNEW = "com.battle-system.smoke-whatsnew";

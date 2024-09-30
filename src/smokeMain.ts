@@ -63,6 +63,19 @@ export class SmokeMain
 
     public async Start()
     {
+        /// Temporary message for letting people be aware
+        const noticed = localStorage.getItem("NOTICED");
+        if (noticed !== "true")
+        {
+            await OBR.modal.open({
+                id: Constants.EXTENSIONNOTICE,
+                url: `/src/notice/notice.html?subscriber=${BSCACHE.USER_REGISTERED}`,
+                height: 400,
+                width: 500,
+            });
+            localStorage.setItem("NOTICED", "true");
+        }
+
         if (BSCACHE.playerRole === "GM")
         {
             await OBR.action.setHeight(530);
