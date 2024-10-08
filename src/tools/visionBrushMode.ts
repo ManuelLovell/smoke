@@ -9,9 +9,6 @@ interface PointLine
     End: Vector2;
 }
 
-const DEFAULTCOLOR = "#000000";
-const DEFAULTWIDTH = 8;
-const DEFAULTSTROKE: number[] = [];
 let currentTrack: Vector2[] = [];
 
 async function cleanUpPopovers()
@@ -92,7 +89,7 @@ async function GetGridSquare(coords: Vector2)
             [Command.CLOSE]
         ];
 
-        const filledSquare = buildPath().commands(fillSquareCommands).strokeOpacity(0).fillOpacity(.5).fillColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR).build();
+        const filledSquare = buildPath().commands(fillSquareCommands).strokeOpacity(0).fillOpacity(.5).fillColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR).build();
         filledSquare.metadata[`${Constants.EXTENSIONID}/isBrushSquare`] = true;
         filledSquare.layer = "POINTER";
         currentTrack.push(trueCoords);
@@ -275,9 +272,9 @@ function GetLine(lines: PointLine[]): Curve[]
         const line = buildCurve()
             .tension(0)
             .points([ln.Start, ln.End])
-            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

@@ -668,21 +668,30 @@ export class SmokeMain
         };
 
         const darkVisionInput = document.createElement('input');
-        darkVisionInput.type = 'checkbox';
-        darkVisionInput.checked = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
-            ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as boolean
-            : false;
+        darkVisionInput.type = 'number';
+        darkVisionInput.value = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
+            ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
+            : Constants.DARKVISIONDEFAULT;
         darkVisionInput.classList.add("token-darkvision");
         darkVisionInput.classList.add("vision-panel-sub-input");
         darkVisionInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
         darkVisionInput.onchange = async (event: Event) =>
         {
             if (!event || !event.target) return;
-            const target = event.target as HTMLInputElement;
+            // Grab from scene to avoid a snapshot of the playerstate
             const thisPlayer = BSCACHE.sceneItems.find(x => x.id === token.id)!;
+
+            const target = event.target as HTMLInputElement;
+            const value = parseInt(target.value);
+            if (value < 0)
+                target.value = "0";
+            if (value > 999)
+                target.value = "999";
+            if (isNaN(value))
+                target.value = Constants.ATTENUATIONDEFAULT;
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
-                items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.checked;
+                items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
             });
         };
         cellFour.appendChild(hideUnitInput);
@@ -894,9 +903,9 @@ export class SmokeMain
         }
         if (darkvisionInput)
         {
-            darkvisionInput.checked = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
-                ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as boolean
-                : false;
+            darkvisionInput.value = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
+                ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
+                : Constants.DARKVISIONDEFAULT;
         }
     }
 

@@ -5,10 +5,6 @@ import { GetSnappedCoordinates } from "./visionToolUtilities";
 
 let interaction: [any, any] | [any] | null = null;
 
-const DEFAULTCOLOR = "#000000";
-const DEFAULTWIDTH = 8;
-const DEFAULTSTROKE: number[] = [];
-
 async function cleanUpPopovers(): Promise<void>
 {
     await OBR.popover.close(Constants.LINETOOLID);
@@ -78,9 +74,9 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         const line = buildCurve()
             .tension(0)
             .points([newPos, newPos])
-            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

@@ -1,4 +1,4 @@
-import OBR, { buildCurve, Curve, Line, Image, Shape } from "@owlbear-rodeo/sdk";
+import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
@@ -44,7 +44,7 @@ export async function SetupContextMenus(): Promise<void>
                     {
                         const line = buildCurve()
                             .tension(0)
-                            .points(baseCurve.points)
+                            .points(adjustPoints(baseCurve.points, baseCurve.position))
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
                             .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
@@ -55,7 +55,6 @@ export async function SetupContextMenus(): Promise<void>
                             .closed(false)
                             .locked(true)
                             .visible(false)
-                            .position(baseCurve.position)
                             .metadata({
                                 [`${Constants.EXTENSIONID}/isVisionLine`]: true,
                                 [`${Constants.EXTENSIONID}/blocking`]: true,
@@ -75,7 +74,7 @@ export async function SetupContextMenus(): Promise<void>
                     const baseLine = item as Line;
                     const line = buildCurve()
                         .tension(0)
-                        .points([baseLine.startPosition, baseLine.endPosition])
+                        .points(adjustPoints([baseLine.startPosition, baseLine.endPosition], baseLine.position))
                         .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                         .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
                         .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
@@ -86,7 +85,6 @@ export async function SetupContextMenus(): Promise<void>
                         .closed(false)
                         .locked(true)
                         .visible(false)
-                        .position(baseLine.position)
                         .metadata({
                             [`${Constants.EXTENSIONID}/isVisionLine`]: true,
                             [`${Constants.EXTENSIONID}/blocking`]: true,
@@ -150,10 +148,9 @@ export async function SetupContextMenus(): Promise<void>
 
                     if (points.length > 0)
                     {
-
                         const line = buildCurve()
                             .tension(0)
-                            .points(points)
+                            .points(adjustPoints(points, { x: 1, y: 1 }))
                             .position(baseShape.position)
                             .rotation(baseShape.rotation)
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
@@ -499,10 +496,13 @@ export async function SetupContextMenus(): Promise<void>
                     if (!enableDoor)
                     {
                         delete item.metadata[`${Constants.EXTENSIONID}/isDoor`];
+                        item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
                     }
                     else
                     {
+                        //#bb99ff
                         item.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
+                        item.style.strokeColor = Constants.DOORCOLOR;
                     }
                 }
             });
@@ -757,6 +757,13 @@ export async function SetupContextMenus(): Promise<void>
     });
 }
 
+function adjustPoints(points: Vector2[], adjustment: Vector2): Vector2[]
+{
+    return points.map(point => ({
+        x: point.x + adjustment.x,
+        y: point.y + adjustment.y
+    }));
+}
 // export async function SetupAutohideMenus(show: boolean): Promise<void>
 // {
 //     if (show)

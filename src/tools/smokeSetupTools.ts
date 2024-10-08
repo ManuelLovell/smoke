@@ -5,6 +5,7 @@ import { brushMode } from "./visionBrushMode";
 import { elevationMode } from "./elevationMode";
 import { Constants } from "./../utilities/bsConstants";
 import { BSCACHE } from "./../utilities/bsSceneCache";
+import { cutterMode } from "./visionDoorMode.ts";
 
 export async function SetupTools(): Promise<void>
 {
@@ -34,24 +35,6 @@ export async function SetupTools(): Promise<void>
         },
     });
 
-    // Create "add polygon" mode
-    await OBR.tool.createMode({
-        id: `${Constants.EXTENSIONID}/add-vision-polygon-mode`,
-        icons: [
-            {
-                icon: "/object.svg",
-                label: "Add Obstruction Object",
-                filter: {
-                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
-                },
-            },
-        ],
-        onToolDown: polygonMode.onToolClick,
-        onToolMove: polygonMode.onToolMove,
-        onKeyDown: polygonMode.onKeyDown,
-        preventDrag: { dragging: false }
-    });
-
     // Create "add line" mode
     await OBR.tool.createMode({
         id: `${Constants.EXTENSIONID}/add-vision-line-mode`,
@@ -67,6 +50,24 @@ export async function SetupTools(): Promise<void>
         onToolDown: lineMode.onToolClick, // Tool 'click' is slightly less responsive compared to check for the down state, clearly this wont allow dragging
         onToolMove: lineMode.onToolMove,
         onKeyDown: lineMode.onKeyDown,
+        preventDrag: { dragging: false }
+    });
+
+    // Create "add polygon" mode
+    await OBR.tool.createMode({
+        id: `${Constants.EXTENSIONID}/add-vision-polygon-mode`,
+        icons: [
+            {
+                icon: "/object.svg",
+                label: "Add Obstruction Object",
+                filter: {
+                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
+                },
+            },
+        ],
+        onToolDown: polygonMode.onToolClick,
+        onToolMove: polygonMode.onToolMove,
+        onKeyDown: polygonMode.onKeyDown,
         preventDrag: { dragging: false }
     });
 
@@ -88,6 +89,25 @@ export async function SetupTools(): Promise<void>
         onToolDragMove: brushMode.onDragMove,
         onToolDragEnd: brushMode.onDragEnd,
         onToolDragCancel: brushMode.onDragCancel,
+    });
+
+    // Create Line Trimmer
+    await OBR.tool.createMode({
+        id: `${Constants.EXTENSIONID}/add-line-cutter-mode`,
+        icons: [
+            {
+                icon: "/cutter.svg",
+                label: "Trim Line",
+                filter: {
+                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
+                },
+            },
+        ],
+        onToolDown: cutterMode.onToolClick, // Tool 'click' is slightly less responsive compared to check for the down state, clearly this wont allow dragging
+        onToolMove: cutterMode.onToolMove,
+        onKeyDown: cutterMode.onKeyDown,
+        preventDrag: { dragging: false },
+        cursors: [{ cursor: "crosshair" }]
     });
 
     // Create "Elevation" mode

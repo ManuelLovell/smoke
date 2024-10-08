@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildPath, buildShape, buildWall, Effect, Uniform, buildEffect } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
@@ -335,7 +335,7 @@ class SmokeProcessor
         if (BSCACHE.playerRole === "GM")
         {
             const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
-            if (playerPreviewSelect.value !== BSCACHE.playerId)
+            if (playerPreviewSelect?.value !== BSCACHE.playerId)
             {
                 // We're running as someone else
                 sceneVisionTokens = BSCACHE.sceneItems.filter(item => (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
@@ -380,8 +380,14 @@ class SmokeProcessor
             else
             {
                 // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
-                const equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
+                let equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
                     === existingLight.attenuationRadius;
+                if (parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                    > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
+                {
+                    equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                        === existingLight.attenuationRadius;
+                }
                 const equalInnerRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string)
                     === existingLight.sourceRadius;
                 const equalFalloff = sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`]
@@ -484,7 +490,7 @@ class SmokeProcessor
             if (!exists) this.decalsToDelete.push(darkvision.id);
             else
             {
-                if (exists.metadata[`${Constants.EXTENSIONID}/visionDark`] !== true)
+                if (parseInt(exists.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) < parseInt(exists.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
                     this.decalsToDelete.push(darkvision.id);
             }
         }
@@ -693,10 +699,14 @@ class SmokeProcessor
         const visionRange = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
             1 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
 
+        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+
         const item = buildLight()
             .position(token.position)
             .lightType(lightType)
-            .attenuationRadius(visionRange)
+            .attenuationRadius(useDarkVision ? darkVisionRange : visionRange)
             .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT))
             .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT))
             .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT))
@@ -721,15 +731,23 @@ class SmokeProcessor
 
     private CreateDarkVisionToQueue(token: Item)
     {
-        if (token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== true) return;
+        const darkMeta = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const visionMeta = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        if (!darkMeta || !visionMeta || (darkMeta < visionMeta)) return;
 
-        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT) * 2;
+        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
+        const darkVisionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
+        const clearView = ((visionDistance * .9) / darkVisionDistance) / 2; // This cuts the vision back slightlyh to fuzz the edge easier
 
         const darkVision = buildEffect()
-            .position({ x: token.position.x - (visionDistance / 2), y: token.position.y - (visionDistance / 2) })
+            .position(
+                {
+                    x: token.position.x - (darkVisionDistance / 2),
+                    y: token.position.y - (darkVisionDistance / 2)
+                })
             .attachedTo(token.id)
-            .width(visionDistance)
-            .height(visionDistance)
+            .width(darkVisionDistance)
+            .height(darkVisionDistance)
             .blendMode("SATURATION")
             .effectType("STANDALONE")
             //.layer("POST_PROCESS") - This seems to cause the square to render black, unsure how to use yet.
@@ -740,6 +758,8 @@ class SmokeProcessor
             .uniforms([
                 { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
                 { name: "radius", value: .5 }, // Radius of the circle in normalized units
+                { name: "clear", value: clearView },
+                { name: "smoothwidth", value: 0.075 }
             ])
             .build();
 
@@ -791,9 +811,13 @@ class SmokeProcessor
         const lightType = sceneToken.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         const visionRange = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
             1 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+        const useDarkVision = parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+
         const update = {
             id: localLight.id,
-            attenuationRadius: visionRange,
+            attenuationRadius: useDarkVision ? darkVisionRange : visionRange,
             sourceRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT),
             falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT),
             innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT),

@@ -18,11 +18,16 @@ export class Constants
     static SPECTREBROADCASTID = "SPECTREBROADCAST";
     static RESETPERSISTID = "RESETPERSISTID";
 
+    static DEFAULTLINECOLOR = '#000000';
+    static DEFAULTLINEWIDTH = 8;
+    static DEFAULTLINESTROKE: number[] = [];
     static LINELAYER: Layer = "POINTER";
+    static DOORCOLOR = "#4000ff";
 
     static ATTENUATIONDEFAULT = "30";
     static SOURCEDEFAULT = "3";
     static FALLOFFDEFAULT = "0";
+    static DARKVISIONDEFAULT = "0";
     static INANGLEDEFAULT = "360";
     static OUTANGLEDEFAULT = "360";
     static CHECKREGISTRATION = 'https://vrwtdtmnbyhaehtitrlb.supabase.co/functions/v1/patreon-check';
@@ -55,15 +60,17 @@ export class Constants
         uniform vec2 size;
         uniform vec2 center;
         uniform float radius;
+        uniform float clear;
+        uniform float smoothwidth;
 
         half4 main(float2 coord) {
             vec2 normalizedCoord = coord / size;
             float dist = distance(normalizedCoord, center);
-            if (dist < radius) {
-                return half4(0.5, 0.5, 0.5, 1.0);
-            } else {
-                return half4(0.0, 0.0, 0.0, 0.0); // Transparent
-            }
+            
+            // Smooth transition from clear to gray
+            float alpha = smoothstep(clear, clear + smoothwidth, dist);
+            
+            return half4(0.5, 0.5, 0.5, alpha);
         }
     `;
 

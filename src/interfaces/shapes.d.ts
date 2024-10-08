@@ -4,6 +4,12 @@ interface Polygon
     fromShape: line.originalShape
 }
 
+interface CutCurve
+{
+    extracted: Vector2[];
+    remaining: Vector2[][];
+}
+
 // DELETE ?
 // interface Detail
 // {

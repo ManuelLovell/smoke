@@ -5,10 +5,6 @@ import { BSCACHE } from "../utilities/bsSceneCache";
 
 type ImportVector2 = Vector2 & { door: boolean };
 
-const DEFAULTCOLOR = "#000000";
-const DEFAULTWIDTH = 8;
-const DEFAULTSTROKE: number[] = [];
-
 export function UpdateMaps()
 {
     const mapAlign = document.getElementById("map_align") as HTMLSelectElement;
@@ -106,9 +102,9 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
         const line = buildCurve()
             .tension(0)
             .points(newItemPaths)
-            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)
@@ -137,9 +133,9 @@ function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
         const line = buildCurve()
             .tension(0)
             .points(newItemPaths)
-            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+            .strokeColor(Constants.DOORCOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)
@@ -273,9 +269,9 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
             const line = buildCurve()
                 .tension(0)
                 .points(chunkPoints)
-                .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-                .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-                .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? DEFAULTWIDTH)
+                .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+                .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+                .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
                 .fillOpacity(0)
                 .fillColor("#000000")
                 .layer(Constants.LINELAYER)
