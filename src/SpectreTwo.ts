@@ -259,7 +259,9 @@ class Spectre
         };
 
         // Needed
-        const currentViewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
+        let currentViewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
+        if (!currentViewers) currentViewers = [];
+
         const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
         if (currentViewers.length > 1)
         {
