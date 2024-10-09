@@ -239,6 +239,10 @@ class SmokeProcessor
             || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true)
             && !override) return;
 
+        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+
         const existingRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true && x.attachedTo === token.id);
         if (existingRing)
         {
@@ -252,8 +256,8 @@ class SmokeProcessor
                 .strokeColor(owner.color)
                 .fillOpacity(0)
                 .position({ x: token.position.x, y: token.position.y })
-                .width(ringSize * 2)
-                .height(ringSize * 2)
+                .width(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
+                .height(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
                 .shapeType("CIRCLE")
                 .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
                 .attachedTo(token.id)
@@ -285,6 +289,10 @@ class SmokeProcessor
     {
         if (BSCACHE.playerRole !== "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
 
+        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+
         const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
         const thisRing = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true);
 
@@ -292,8 +300,8 @@ class SmokeProcessor
         {
             const update = {
                 id: thisRing.id,
-                height: ringSize * 2,
-                width: ringSize * 2,
+                height: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
+                width: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
             };
             this.ringsToUpdate.push(update);
         }

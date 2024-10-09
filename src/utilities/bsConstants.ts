@@ -67,8 +67,11 @@ export class Constants
             vec2 normalizedCoord = coord / size;
             float dist = distance(normalizedCoord, center);
             
-            // Smooth transition from clear to gray
-            float alpha = smoothstep(clear, clear + smoothwidth, dist);
+            float innerAlpha = smoothstep(clear, clear + smoothwidth, dist);
+            
+            float outerAlpha = 1.0 - step(radius, dist);
+            
+            float alpha = innerAlpha * outerAlpha;
             
             return half4(0.5, 0.5, 0.5, alpha);
         }
