@@ -15,7 +15,7 @@ class Spectre
         position: Vector2,
         rotation: number,
         scale: Vector2,
-        layer: string,
+        layer: any,
     }[] = [];
 
     constructor()

@@ -336,7 +336,7 @@ export async function SetupContextMenus(): Promise<void>
         ],
         async onClick(ctx)
         {
-            await OBR.scene.items.updateItems(ctx.items, items =>
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
             {
                 for (const item of items)
                 {
@@ -489,7 +489,7 @@ export async function SetupContextMenus(): Promise<void>
             const enableDoor = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === undefined);
 
-            await OBR.scene.items.updateItems(ctx.items, items =>
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
             {
                 for (const item of items)
                 {

@@ -300,6 +300,7 @@ export class Constants
 
 ## Smoke: Quick Start <a id="quick-start-smoke" name="quick-start-smoke"></a>
 So, your game starts in an hour and you've prepped nothing - but you want to distract them with some fog. Sure.
+
 1. Click the 'Glasses' icon in the toolbar, and select the Line tool.  Draw to your heart's content.
 2. Add a token to the scene. On that token, through the context-menu, 'Enable Vision'.
 3. (Optional: Assign ownership of that token to a specific player, so they can only see through that token.)

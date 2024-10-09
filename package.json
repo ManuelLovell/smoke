@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@melloware/coloris": "^0.24.0",
-    "@owlbear-rodeo/sdk": "github:owlbear-rodeo/sdk#beta",
+    "@owlbear-rodeo/sdk": "github:owlbear-rodeo/sdk",
     "showdown": "^2.1.0",
     "simplify-js": "^1.2.4",
     "tippy.js": "^6.3.7",

@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
@@ -173,7 +173,7 @@ class SmokeProcessor
             }
             if (changedLocalDoorIds.length > 0)
             {
-                await OBR.scene.local.updateItems(x => changedLocalDoorIds.includes(x.id), (doors) =>
+                await OBR.scene.local.updateItems<Image>(x => changedLocalDoorIds.includes(x.id), (doors) =>
                 {
                     for (let door of doors)
                     {
@@ -259,6 +259,7 @@ class SmokeProcessor
                 .attachedTo(token.id)
                 .locked(true)
                 .layer(Constants.LINELAYER)
+                .disableAttachmentBehavior(["SCALE"])
                 .zIndex(1)
                 .build();
             this.ringsToCreate.push(playerRing);
@@ -309,8 +310,8 @@ class SmokeProcessor
             await OBR.scene.local.deleteItems(this.ringsToDelete);
         if (this.ringsToUpdate.length > 0)
         {
-            const sceneRings = BSCACHE.sceneLocal.filter(x => isIndicatorRing(x));
-            await OBR.scene.local.updateItems(sceneRings.filter(x => !this.ringsToDelete.includes(x.id)), (rings) =>
+            const sceneRings = BSCACHE.sceneLocal.filter(x => isIndicatorRing(x)) as Shape[];
+            await OBR.scene.local.updateItems<Shape>(sceneRings.filter(x => !this.ringsToDelete.includes(x.id)), (rings) =>
             {
                 for (let ring of rings)
                 {
@@ -483,7 +484,7 @@ class SmokeProcessor
         }
 
         // DarkVision should be deleted with the owning token, but just in case for local cleanup
-        const localDarkVisions = BSCACHE.sceneLocal.filter(x => isDarkVision(x)) as Image[];
+        const localDarkVisions = BSCACHE.sceneLocal.filter(x => isDarkVision(x)) as Effect[];
         for (const darkvision of localDarkVisions)
         {
             const exists = sceneVisionTokens.find(x => x.id === darkvision.metadata[`${Constants.EXTENSIONID}/isDarkVision`]) as Image;
@@ -755,6 +756,7 @@ class SmokeProcessor
             .sksl(Constants.DARKVISIONSHADER)
             .metadata({ [`${Constants.EXTENSIONID}/isDarkVision`]: true })
             .disableHit(true)
+            .disableAttachmentBehavior(["SCALE"])
             .uniforms([
                 { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
                 { name: "radius", value: .5 }, // Radius of the circle in normalized units
