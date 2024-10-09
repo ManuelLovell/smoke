@@ -1,4 +1,4 @@
-import OBR, { Metadata } from "@owlbear-rodeo/sdk";
+import OBR from "@owlbear-rodeo/sdk";
 import "./css/style.css";
 import { Constants } from "./utilities/bsConstants";
 
@@ -56,9 +56,12 @@ OBR.onReady(async () =>
             target.value = "999";
         if (isNaN(value))
             target.value = GetVisionDefault('visionRangeDefault');
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionRange`] = target.value;
+            }
         });
     };
 
@@ -75,9 +78,12 @@ OBR.onReady(async () =>
         if (isNaN(value))
             target.value = GetVisionDefault('visionSourceDefault');
 
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = target.value;
+            }
         });
     };
 
@@ -94,9 +100,12 @@ OBR.onReady(async () =>
         if (isNaN(value))
             target.value = GetVisionDefault('visionFallOffDefault');
 
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionFallOff`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = target.value;
+            }
         });
     };
 
@@ -112,9 +121,12 @@ OBR.onReady(async () =>
             target.value = "360";
         if (isNaN(value))
             target.value = GetVisionDefault('visionInAngleDefault');
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionInAngle`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = target.value;
+            }
         });
     };
 
@@ -130,9 +142,12 @@ OBR.onReady(async () =>
             target.value = "360";
         if (isNaN(value))
             target.value = GetVisionDefault('visionOutAngleDefault');
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = target.value;
+            }
         });
     };
 
@@ -148,9 +163,12 @@ OBR.onReady(async () =>
             target.value = "999";
         if (isNaN(value))
             target.value = GetVisionDefault('visionDarkDefault');
-        await OBR.scene.items.updateItems(unitItems, items =>
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
-            items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
+            for (let item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
+            }
         });
     };
 
