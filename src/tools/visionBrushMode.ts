@@ -274,7 +274,7 @@ function GetLine(lines: PointLine[]): Curve[]
             .points([ln.Start, ln.End])
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

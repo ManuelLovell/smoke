@@ -372,7 +372,6 @@ export function SetupGMInputHandlers()
         // Debounce this input to avoid hitting OBR rate limit
         debouncer = setTimeout(async () =>
         {
-
             await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolWidth`]: target.value });
         }, 400);
     };

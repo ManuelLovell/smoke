@@ -30,7 +30,7 @@ export async function finishDrawing(oldLine: Curve): Promise<void>
         .points(newLines.extracted)
         .strokeColor("red")
         .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-        .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
+        .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
         .fillOpacity(0)
         .fillColor("#000000")
         .layer(Constants.LINELAYER)
@@ -53,7 +53,7 @@ export async function finishDrawing(oldLine: Curve): Promise<void>
             .position(oldLine.position)
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
             .fillOpacity(0)
             .rotation(oldLine.rotation)
             .fillColor("#000000")
@@ -148,9 +148,10 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
 
 function GetPointer(): Pointer
 {
+    const pointerSize = parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH;
     const pointer = buildPointer()
         .color("red")
-        .radius((BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH) + 4)
+        .radius(pointerSize + 4)
         .disableHit(true)
         .build();
     return pointer;
