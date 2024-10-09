@@ -2,6 +2,7 @@ import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2 } from "@owlbear-ro
 import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
+import { GetToolWidth } from "./tools/visionToolUtilities";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -47,7 +48,7 @@ export async function SetupContextMenus(): Promise<void>
                             .points(adjustPoints(baseCurve.points, baseCurve.position))
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-                            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? DEFAULTWIDTH)
+                            .strokeWidth(GetToolWidth())
                             .fillOpacity(0)
                             .fillColor("#000000")
                             .layer(Constants.LINELAYER)
@@ -77,7 +78,7 @@ export async function SetupContextMenus(): Promise<void>
                         .points(adjustPoints([baseLine.startPosition, baseLine.endPosition], baseLine.position))
                         .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                         .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-                        .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? DEFAULTWIDTH)
+                        .strokeWidth(GetToolWidth())
                         .fillOpacity(0)
                         .fillColor("#000000")
                         .layer(Constants.LINELAYER)
@@ -155,7 +156,7 @@ export async function SetupContextMenus(): Promise<void>
                             .rotation(baseShape.rotation)
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
-                            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? DEFAULTWIDTH)
+                            .strokeWidth(GetToolWidth())
                             .fillOpacity(0)
                             .fillColor("#000000")
                             .layer(Constants.LINELAYER)

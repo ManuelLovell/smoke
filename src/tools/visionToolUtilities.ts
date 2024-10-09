@@ -1,6 +1,14 @@
 import { ToolEvent, Vector2 } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import * as Utilities from "../utilities/bsUtilities";
+import { Constants } from "../utilities/bsConstants";
+
+export function GetToolWidth()
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`];
+    const parsedValue = cacheValue !== undefined ? parseInt(cacheValue as string) : NaN;
+    return !Number.isNaN(parsedValue) ? parsedValue : Constants.DEFAULTLINEWIDTH;
+}
 
 export function SplitLines(originalLineX: Vector2[], clickPoint1: Vector2, clickPoint2: Vector2, rotation: number, rotationCenter: Vector2): CutCurve
 {

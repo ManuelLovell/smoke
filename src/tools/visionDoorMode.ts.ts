@@ -1,7 +1,7 @@
 import OBR, { Curve, KeyEvent, Pointer, ToolContext, ToolEvent, Vector2, buildCurve, buildPointer } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
-import { SplitLines } from "./visionToolUtilities";
+import { GetToolWidth, SplitLines } from "./visionToolUtilities";
 
 let newSegment: Vector2[] = [];
 let newPlaceholder: string = "";
@@ -30,7 +30,7 @@ export async function finishDrawing(oldLine: Curve): Promise<void>
         .points(newLines.extracted)
         .strokeColor("red")
         .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-        .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+        .strokeWidth(GetToolWidth())
         .fillOpacity(0)
         .fillColor("#000000")
         .layer(Constants.LINELAYER)
@@ -53,7 +53,7 @@ export async function finishDrawing(oldLine: Curve): Promise<void>
             .position(oldLine.position)
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(0)
             .rotation(oldLine.rotation)
             .fillColor("#000000")
@@ -148,7 +148,7 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
 
 function GetPointer(): Pointer
 {
-    const pointerSize = parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH;
+    const pointerSize = GetToolWidth();
     const pointer = buildPointer()
         .color("red")
         .radius(pointerSize + 4)

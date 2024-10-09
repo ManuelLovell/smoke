@@ -2,6 +2,7 @@ import OBR, { Image, buildCurve, Vector2, buildImageUpload, buildSceneUpload, Cu
 import { Constants } from "../utilities/bsConstants";
 import simplify from "simplify-js";
 import { BSCACHE } from "../utilities/bsSceneCache";
+import { GetToolWidth } from "./visionToolUtilities";
 
 type ImportVector2 = Vector2 & { door: boolean };
 
@@ -104,7 +105,7 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
             .points(newItemPaths)
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)
@@ -135,7 +136,7 @@ function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
             .points(newItemPaths)
             .strokeColor(Constants.DOORCOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)
@@ -271,7 +272,7 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
                 .points(chunkPoints)
                 .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
                 .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-                .strokeWidth(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as number ?? Constants.DEFAULTLINEWIDTH)
+                .strokeWidth(GetToolWidth())
                 .fillOpacity(0)
                 .fillColor("#000000")
                 .layer(Constants.LINELAYER)

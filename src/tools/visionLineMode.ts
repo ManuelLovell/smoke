@@ -1,7 +1,7 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
-import { GetSnappedCoordinates } from "./visionToolUtilities";
+import { GetSnappedCoordinates, GetToolWidth } from "./visionToolUtilities";
 
 let interaction: [any, any] | [any] | null = null;
 
@@ -76,7 +76,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .points([newPos, newPos])
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

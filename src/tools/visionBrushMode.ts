@@ -2,6 +2,7 @@ import OBR, { Command, Image, Curve, ItemFilter, PathCommand, ToolContext, ToolE
 import { Constants } from "../utilities/bsConstants";
 import { isBrushSquare } from "../utilities/itemFilters";
 import { BSCACHE } from "../utilities/bsSceneCache";
+import { GetToolWidth } from "./visionToolUtilities";
 
 interface PointLine
 {
@@ -274,7 +275,7 @@ function GetLine(lines: PointLine[]): Curve[]
             .points([ln.Start, ln.End])
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(0)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

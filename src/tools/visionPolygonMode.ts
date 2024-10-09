@@ -1,7 +1,7 @@
 import OBR, { Curve, KeyEvent, ToolContext, ToolEvent, buildCurve } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
-import { GetSnappedCoordinates } from "./visionToolUtilities";
+import { GetSnappedCoordinates, GetToolWidth } from "./visionToolUtilities";
 
 /// There's a bug in here with OBR interaction API, on the player view when
 /// finishing an object it throws an error because the point is supposedly undefined.
@@ -82,7 +82,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .points([newPos, newPos])
             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(parseInt(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolWidth`] as string) ?? Constants.DEFAULTLINEWIDTH)
+            .strokeWidth(GetToolWidth())
             .fillOpacity(.5)
             .fillColor("#000000")
             .layer(Constants.LINELAYER)

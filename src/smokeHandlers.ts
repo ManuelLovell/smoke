@@ -369,6 +369,19 @@ export function SetupGMInputHandlers()
         const target = event.currentTarget as HTMLInputElement;
         clearTimeout(debouncer);
 
+        try
+        {
+            const numberValue = parseInt(target.value);
+            if (numberValue < 1 || numberValue > 100)
+            {
+                target.value = "8";
+            }
+        } catch (error)
+        {
+            console.log("Tool Width value set out of range, swapping to default")
+            target.value = "8";
+        }
+
         // Debounce this input to avoid hitting OBR rate limit
         debouncer = setTimeout(async () =>
         {
