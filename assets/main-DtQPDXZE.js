@@ -1,4 +1,4 @@
-import{C as d,b as Oe,O as I,a as Kt,c as Ca,d as Aa,e as qn,f as $a,g as Ma,h as Pa,i as _t,j as Ra,k as xa}from"./bsConstants-glJ5URpn.js";/* empty css              */const Xe=(()=>{/*!
+import{C as d,b as Oe,O as I,a as Kt,c as Ca,d as Aa,e as qn,f as $a,g as Ma,h as Pa,i as _t,j as Ra,k as xa}from"./bsConstants-CshtfDt5.js";/* empty css              */const Xe=(()=>{/*!
 * Copyright (c) 2021-2024 Momo Bassit.
 * Licensed under the MIT License (MIT)
 * https://github.com/mdbassit/Coloris
