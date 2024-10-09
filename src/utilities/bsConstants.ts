@@ -25,7 +25,7 @@ export class Constants
     static DOORCOLOR = "#4000ff";
 
     static ATTENUATIONDEFAULT = "30";
-    static SOURCEDEFAULT = "3";
+    static SOURCEDEFAULT = "2";
     static FALLOFFDEFAULT = "0";
     static DARKVISIONDEFAULT = "0";
     static INANGLEDEFAULT = "360";
