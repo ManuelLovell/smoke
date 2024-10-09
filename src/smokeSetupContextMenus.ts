@@ -2,7 +2,7 @@ import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2 } from "@owlbear-ro
 import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
-import { GetToolWidth } from "./tools/visionToolUtilities";
+import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -231,11 +231,12 @@ export async function SetupContextMenus(): Promise<void>
                         item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
                         if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
                         {
-                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = Constants.ATTENUATIONDEFAULT; // Vision Attenuation - Outer Circle
-                            item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = Constants.SOURCEDEFAULT; // Inner Circle
-                            item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = Constants.FALLOFFDEFAULT; // Fall off at end of vision
-                            item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = Constants.INANGLEDEFAULT; // Set an inner cone for vision
-                            item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = Constants.OUTANGLEDEFAULT; // Set an outer cone for vision
+                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = GetVisionRangeDefault(); // Vision Attenuation - Outer Circle
+                            item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = GetSourceRangeDefault(); // Inner Circle
+                            item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = GetFalloffRangeDefault(); // Fall off at end of vision
+                            item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = GetInnerAngleDefault(); // Set an inner cone for vision
+                            item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = GetOuterAngleDefault(); // Set an outer cone for vision
+                            item.metadata[`${Constants.EXTENSIONID}/visionDark`] = GetDarkvisionDefault(); // Set an outer cone for vision
                         }
                     }
                 }

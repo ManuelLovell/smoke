@@ -6,6 +6,7 @@ import { isVisionLine } from "./utilities/itemFilters";
 import { importFog, ImportScene } from "./tools/importUVTT";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SMOKEMACHINE } from "./smokeProcessor";
+import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 
 export function SetupGMInputHandlers()
 {
@@ -221,6 +222,115 @@ export function SetupGMInputHandlers()
         }
         await BSCACHE.ToggleBusy(false);
     };
+
+    // Token Defaults
+    const visionDefaultInput = document.getElementById("visionDefaultInput") as HTMLButtonElement;
+    visionDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionRangeDefault`] as string ?? GetVisionRangeDefault();
+    visionDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 999)
+            target.value = "999";
+        if (isNaN(value))
+            target.value = GetSourceRangeDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionRangeDefault`]: target.value });
+    };
+
+    const collisionDefaultInput = document.getElementById("collisionDefaultInput") as HTMLButtonElement;
+    collisionDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionSourceDefault`] as string ?? GetSourceRangeDefault().toString();
+    collisionDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseFloat(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 999)
+            target.value = "999";
+        if (isNaN(value))
+            target.value = GetSourceRangeDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionSourceDefault`]: target.value });
+    };
+
+    const greyscaleDefaultInput = document.getElementById("greyscaleDefaultInput") as HTMLButtonElement;
+    greyscaleDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionDarkDefault`] as string ?? GetDarkvisionDefault().toString();
+    greyscaleDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 999)
+            target.value = "999";
+        if (isNaN(value))
+            target.value = GetSourceRangeDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionDarkDefault`]: target.value });
+    };
+
+    const innerAngleDefaultInput = document.getElementById("innerAngleDefaultInput") as HTMLButtonElement;
+    innerAngleDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionInAngleDefault`] as string ?? GetInnerAngleDefault().toString();
+    innerAngleDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 360)
+            target.value = "360";
+        if (isNaN(value))
+            target.value = GetOuterAngleDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionInAngleDefault`]: target.value });
+    }
+
+    const outerAngleDefaultInput = document.getElementById("outerAngleDefaultInput") as HTMLButtonElement;
+    outerAngleDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionOutAngleDefault`] as string ?? GetOuterAngleDefault().toString();
+    outerAngleDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 360)
+            target.value = "360";
+        if (isNaN(value))
+            target.value = GetOuterAngleDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionOutAngleDefault`]: target.value });
+    }
+
+    const falloffDefaultInput = document.getElementById("falloffDefaultInput") as HTMLButtonElement;
+    falloffDefaultInput.value = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionFallOffDefault`] as string ?? GetFalloffRangeDefault().toString();
+    falloffDefaultInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseFloat(target.value);
+        if (value < 0)
+            target.value = "0";
+        if (value > 10)
+            target.value = "10";
+        if (isNaN(value))
+            target.value = GetFalloffRangeDefault();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionFallOffDefault`]: target.value });
+    }
 
     // TODO: this is a hack, need to pass json between different event handlers
     var importObject: any;

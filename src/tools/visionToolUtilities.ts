@@ -10,6 +10,48 @@ export function GetToolWidth()
     return !Number.isNaN(parsedValue) ? parsedValue : Constants.DEFAULTLINEWIDTH;
 }
 
+export function GetVisionRangeDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionRangeDefault`] as string;
+    if (!cacheValue) return Constants.ATTENUATIONDEFAULT;
+    else return cacheValue;
+}
+
+export function GetSourceRangeDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionSourceDefault`] as string;
+    if (!cacheValue) return Constants.SOURCEDEFAULT;
+    else return cacheValue;
+}
+
+export function GetFalloffRangeDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionFallOffDefault`] as string;
+    if (!cacheValue) return Constants.FALLOFFDEFAULT;
+    else return cacheValue;
+}
+
+export function GetDarkvisionDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionDarkDefault`] as string;
+    if (!cacheValue) return Constants.DARKVISIONDEFAULT;
+    else return cacheValue;
+}
+
+export function GetInnerAngleDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionInAngleDefault`] as string;
+    if (!cacheValue) return Constants.INANGLEDEFAULT;
+    else return cacheValue;
+}
+
+export function GetOuterAngleDefault(): string
+{
+    const cacheValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionOutAngleDefault`] as string;
+    if (!cacheValue) return Constants.OUTANGLEDEFAULT;
+    else return cacheValue;
+}
+
 export function SplitLines(originalLineX: Vector2[], clickPoint1: Vector2, clickPoint2: Vector2, rotation: number, rotationCenter: Vector2): CutCurve
 {
     const remainingSegments: Vector2[][] = [[], []];

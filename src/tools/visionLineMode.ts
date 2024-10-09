@@ -88,7 +88,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
         interaction = await OBR.interaction.startItemInteraction(line);
 
         const width = await OBR.viewport.getWidth();
-        
+
         //Create Tooltip
         await OBR.popover.open({
             id: Constants.LINETOOLID,
@@ -136,6 +136,12 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     });
 }
 
+async function onToolDouble(toolContext: ToolContext, event: ToolEvent)
+{
+    await onToolClick(toolContext, event);
+    await finishDrawing();
+}
+
 function onKeyDown(_: ToolContext, event: KeyEvent)
 {
     if (!interaction)
@@ -154,4 +160,4 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
     }
 }
 
-export const lineMode = { onToolClick, onToolMove, onKeyDown };
+export const lineMode = { onToolClick, onToolDouble, onToolMove, onKeyDown };

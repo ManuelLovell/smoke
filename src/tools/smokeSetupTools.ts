@@ -49,6 +49,7 @@ export async function SetupTools(): Promise<void>
         ],
         onToolDown: lineMode.onToolClick, // Tool 'click' is slightly less responsive compared to check for the down state, clearly this wont allow dragging
         onToolMove: lineMode.onToolMove,
+        onToolDoubleClick: lineMode.onToolDouble,
         onKeyDown: lineMode.onKeyDown,
         preventDrag: { dragging: false }
     });
@@ -67,6 +68,7 @@ export async function SetupTools(): Promise<void>
         ],
         onToolDown: polygonMode.onToolClick,
         onToolMove: polygonMode.onToolMove,
+        onToolDoubleClick: polygonMode.onToolDouble,
         onKeyDown: polygonMode.onKeyDown,
         preventDrag: { dragging: false }
     });

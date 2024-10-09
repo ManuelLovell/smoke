@@ -98,17 +98,17 @@ export class Constants
                 <thead>
                     <tr id="visionPanelMain">
                         <th>Name</th>
-                        <th id="visionRangeHeader" class="clickable-header"><img class="menu_svg" src="./visionRange.svg"></th>
-                        <th id="visionFalloffHeader" class="clickable-header"><img class="menu_svg" src="./visionFalloff.svg"></th>
+                        <th id="visionRangeHeader" class="clickable-header"><img id="visionRangeSvg" class="menu_svg" src="./visionRange.svg"></th>
+                        <th id="visionFalloffHeader" class="clickable-header"><img id="visionFalloffSvg" class="menu_svg" src="./visionFalloff.svg"></th>
                         <th id="visionBlindHeader" class="clickable-header"><img class="menu_svg" src="./blind.svg"></th>
                         <th id="visionHideHeader" class="clickable-header"><img class="menu_svg" src="./eyeclosed.svg"></th>
                     </tr>
                     <tr id="visionPanelSub" style="display: none;">
                         <th>Name</th>
-                        <th id="visionBumperHeader" class="clickable-header"><img class="menu_svg" src="./visionBumper.svg"></th>
-                        <th id="visionInAngleHeader" class="clickable-header"><img class="menu_svg" src="./visionInner.svg"></th>
-                        <th id="visionOutAngleHeader" class="clickable-header"><img class="menu_svg" src="./visionOuter.svg"></th>
-                        <th id="visionDarkHeader" class="clickable-header"><img class="menu_svg" src="./darkvision.svg"></th>
+                        <th id="visionBumperHeader" class="clickable-header"><img id="visionBumperSvg" class="menu_svg" src="./visionBumper.svg"></th>
+                        <th id="visionInAngleHeader" class="clickable-header"><img id="visionInnerSvg" class="menu_svg" src="./visionInner.svg"></th>
+                        <th id="visionOutAngleHeader" class="clickable-header"><img id="visionOuterSvg" class="menu_svg" src="./visionOuter.svg"></th>
+                        <th id="visionDarkHeader" class="clickable-header"><img id="visionDarkSvg" class="menu_svg" src="./darkvision.svg"></th>
                     </tr>
                 </thead>
                 <tbody id="token_list"></tbody>
@@ -203,6 +203,27 @@ export class Constants
                                 </select>
                             </div>
                         </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6" style="text-align: center; font-weight: bold;">Vision Defaults</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><label for="visionDefaultInput" id="tip_visionDefault">Vision</label></td>
+                        <td><input type="number" id="visionDefaultInput"></td>
+                        <td colspan="2"><label for="collisionDefaultInput" id="tip_collisionDefault">Collision</label></td>
+                        <td><input type="number" id="collisionDefaultInput"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><label for="falloffDefaultInput" id="tip_falloffDefault">Falloff</label></td>
+                        <td><input type="number" id="falloffDefaultInput"></td>
+                        <td colspan="2"><label for="greyscaleDefaultInput" id="tip_greyscaleDefault">Greyscale</label></td>
+                        <td><input type="number" id="greyscaleDefaultInput"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><label for="innerAngleDefaultInput" id="tip_innerAngleDefault">Inner-Angle</label></td>
+                        <td><input type="number" id="innerAngleDefaultInput"></td>
+                        <td colspan="2"><label for="outerAngleDefaultInput" id="tip_outerAngleDefault">Outer-Angle</label></td>
+                        <td><input type="number" id="outerAngleDefaultInput"></td>
                     </tr>
                 </tbody>
             </table>

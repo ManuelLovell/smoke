@@ -7,7 +7,7 @@ import OBR, { Item, Image, Player } from '@owlbear-rodeo/sdk';
 import { BSCACHE } from './utilities/bsSceneCache.ts';
 import { Constants } from "./utilities/bsConstants.ts";
 import { SetupContextMenus } from "./smokeSetupContextMenus.ts";
-import { isTokenWithVisionForUI, isTokenWithVisionIOwn } from "./utilities/itemFilters.ts";
+import { isTokenWithVisionForUI, isTokenWithVisionIOwn, isTorch } from "./utilities/itemFilters.ts";
 import { SetupGMInputHandlers } from "./smokeHandlers.ts";
 import { UpdateMaps } from "./tools/importUVTT.ts";
 import { SetupTools } from "./tools/smokeSetupTools.ts";
@@ -17,6 +17,8 @@ import * as Utilities from "./utilities/bsUtilities.ts";
 import 'tippy.js/dist/border.css';
 import { CreateTooltips } from "./utilities/bsTooltips.ts";
 import { ViewportFunctions } from "./utilities/bsViewport.ts";
+import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities.ts";
+import { ClickableInput } from "./utilities/bsClickableInput.ts";
 
 export class SmokeMain
 {
@@ -204,7 +206,7 @@ export class SmokeMain
                 if (name) name.textContent = token.text?.plainText || token.name;
                 if (visionRange) visionRange.textContent = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
                     ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
-                    : Constants.ATTENUATIONDEFAULT;
+                    : GetVisionRangeDefault();
                 if (distanceType) distanceType.textContent = BSCACHE.gridType;
             }
             else
@@ -221,7 +223,7 @@ export class SmokeMain
                 const distanceCell = document.createElement('td');
                 distanceCell.textContent = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
                     ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
-                    : Constants.ATTENUATIONDEFAULT;
+                    : GetVisionRangeDefault();
                 tokenRow.appendChild(distanceCell);
 
                 const distanceTypeCell = document.createElement('td');
@@ -325,6 +327,118 @@ export class SmokeMain
         }
     }
 
+    private SetupMassEditors()
+    {
+        const visionRangeSubmit = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 999)
+                cleanValue = 999;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionRange`] = cleanValue.toString();
+                }
+            });
+        };
+
+        const visionFalloff = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 10)
+                cleanValue = 10;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = cleanValue.toString();
+                }
+            });
+        };
+
+        const visionBumper = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 999)
+                cleanValue = 999;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = cleanValue.toString();
+                }
+            });
+        }
+
+        const visionInner = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 360)
+                cleanValue = 360;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = cleanValue.toString();
+                }
+            });
+        };
+
+        const visionOuter = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 360)
+                cleanValue = 360;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = cleanValue.toString();
+                }
+            });
+        };
+
+        const visionDark = async (value: number, torch: boolean) =>
+        {
+            let cleanValue = value;
+            if (value < 0)
+                cleanValue = 0;
+            if (value > 999)
+                cleanValue = 999;
+            const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
+            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            {
+                for (let item of items)
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/visionDark`] = cleanValue.toString();
+                }
+            });
+        };
+
+        new ClickableInput('#visionRangeSvg', visionRangeSubmit, "Vision Range");
+        new ClickableInput('#visionFalloffSvg', visionFalloff, "Falloff Range");
+        new ClickableInput('#visionBumperSvg', visionBumper, "Collision Range");
+        new ClickableInput('#visionInnerSvg', visionInner, "Inner Angle");
+        new ClickableInput('#visionOuterSvg', visionOuter, "Outer Angle");
+        new ClickableInput('#visionDarkSvg', visionDark, "Greyscale");
+    }
+
     private SetupViewPanel()
     {
         const viewPanelToggleContainer = document.getElementById('visionPanelToggleContainer') as HTMLDivElement;
@@ -332,6 +446,8 @@ export class SmokeMain
         this.visionPanelSub = document.getElementById('visionPanelSub') as HTMLTableRowElement;
         this.smokeUnitTablePrime = document.getElementById('smokeUnitTablePrime') as HTMLTableElement;
         this.smokeUnitTableSub = document.getElementById('smokeUnitTableSub') as HTMLTableElement;
+
+        this.SetupMassEditors();
 
         const viewPanelToggle = document.createElement('input');
         viewPanelToggle.type = 'button';
@@ -423,7 +539,7 @@ export class SmokeMain
         aRadiusInput.type = 'number';
         aRadiusInput.value = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
-            : Constants.ATTENUATIONDEFAULT;
+            : GetVisionRangeDefault();
         aRadiusInput.classList.add("token-aradius");
         aRadiusInput.classList.add("vision-panel-main-input");
         aRadiusInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
@@ -441,7 +557,7 @@ export class SmokeMain
             if (value > 999)
                 target.value = "999";
             if (isNaN(value))
-                target.value = Constants.ATTENUATIONDEFAULT;
+                target.value = GetVisionRangeDefault();
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = target.value;
@@ -454,7 +570,7 @@ export class SmokeMain
         sRadiusInput.style.display = "none";
         sRadiusInput.value = token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string
-            : Constants.SOURCEDEFAULT;
+            : GetSourceRangeDefault();
         sRadiusInput.classList.add("token-sradius");
         sRadiusInput.classList.add("vision-panel-sub-input");
         sRadiusInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
@@ -466,13 +582,13 @@ export class SmokeMain
             const thisPlayer = BSCACHE.sceneItems.find(x => x.id === token.id)!;
 
             const target = event.target as HTMLInputElement;
-            const value = parseInt(target.value);
+            const value = parseFloat(target.value);
             if (value < 0)
                 target.value = "0";
             if (value > 999)
                 target.value = "999";
             if (isNaN(value))
-                target.value = Constants.SOURCEDEFAULT;
+                target.value = GetSourceRangeDefault();
 
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
@@ -490,7 +606,7 @@ export class SmokeMain
         falloffInput.type = 'number';
         falloffInput.value = token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string
-            : Constants.FALLOFFDEFAULT;
+            : GetFalloffRangeDefault();
         falloffInput.classList.add("token-falloff");
         falloffInput.classList.add("vision-panel-main-input");
         falloffInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
@@ -508,7 +624,7 @@ export class SmokeMain
             if (value > 10)
                 target.value = "10";
             if (isNaN(value))
-                target.value = Constants.FALLOFFDEFAULT;
+                target.value = GetFalloffRangeDefault();
 
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
@@ -522,7 +638,7 @@ export class SmokeMain
         innerAngInput.style.display = "none";
         innerAngInput.value = token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string
-            : Constants.INANGLEDEFAULT;
+            : GetInnerAngleDefault();
         innerAngInput.classList.add("token-innerang");
         innerAngInput.classList.add("vision-panel-sub-input");
         innerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
@@ -540,7 +656,7 @@ export class SmokeMain
             if (value > 360)
                 target.value = "360";
             if (isNaN(value))
-                target.value = Constants.INANGLEDEFAULT;
+                target.value = GetInnerAngleDefault();
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionInAngle`] = target.value;
@@ -577,7 +693,7 @@ export class SmokeMain
         outerAngInput.style.display = "none";
         outerAngInput.value = token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string
-            : Constants.OUTANGLEDEFAULT;
+            : GetOuterAngleDefault();
         outerAngInput.classList.add("token-outerang");
         outerAngInput.classList.add("vision-panel-sub-input");
         outerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
@@ -595,7 +711,7 @@ export class SmokeMain
             if (value > 360)
                 target.value = "360";
             if (isNaN(value))
-                target.value = Constants.OUTANGLEDEFAULT;
+                target.value = GetOuterAngleDefault();
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = target.value;
@@ -671,7 +787,7 @@ export class SmokeMain
         darkVisionInput.type = 'number';
         darkVisionInput.value = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
-            : Constants.DARKVISIONDEFAULT;
+            : GetDarkvisionDefault();
         darkVisionInput.classList.add("token-darkvision");
         darkVisionInput.classList.add("vision-panel-sub-input");
         darkVisionInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
@@ -688,12 +804,13 @@ export class SmokeMain
             if (value > 999)
                 target.value = "999";
             if (isNaN(value))
-                target.value = Constants.ATTENUATIONDEFAULT;
+                target.value = GetVisionRangeDefault();
             await OBR.scene.items.updateItems([thisPlayer], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
             });
         };
+
         cellFour.appendChild(hideUnitInput);
         cellFour.appendChild(darkVisionInput);
 
@@ -869,31 +986,31 @@ export class SmokeMain
         {
             aradiusInput.value = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
-                : Constants.ATTENUATIONDEFAULT;
+                : GetVisionRangeDefault();
         }
         if (sradiusInput)
         {
             sradiusInput.value = token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string
-                : Constants.SOURCEDEFAULT;
+                : GetSourceRangeDefault();
         }
         if (falloffsInput)
         {
             falloffsInput.value = token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string
-                : Constants.FALLOFFDEFAULT;
+                : GetFalloffRangeDefault();
         }
         if (innerAngInput)
         {
             innerAngInput.value = token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string
-                : Constants.INANGLEDEFAULT;
+                : GetInnerAngleDefault();
         }
         if (outerAngInput)
         {
             outerAngInput.value = token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string
-                : Constants.OUTANGLEDEFAULT;
+                : GetOuterAngleDefault();
         }
         if (blindInput)
         {
@@ -905,7 +1022,7 @@ export class SmokeMain
         {
             darkvisionInput.value = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
                 ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
-                : Constants.DARKVISIONDEFAULT;
+                : GetDarkvisionDefault();
         }
     }
 
@@ -950,7 +1067,7 @@ export class SmokeMain
     };
 }
 
-export const SMOKEMAIN = new SmokeMain("3.01");
+export const SMOKEMAIN = new SmokeMain("3.1");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness

@@ -140,6 +140,12 @@ function onToolMove(_: ToolContext, event: ToolEvent)
     });
 }
 
+async function onToolDouble(toolContext: ToolContext, event: ToolEvent)
+{
+    await onToolClick(toolContext, event);
+    await finishDrawing();
+}
+
 function onKeyDown(_: ToolContext, event: KeyEvent)
 {
     if (!interaction)
@@ -158,4 +164,4 @@ function onKeyDown(_: ToolContext, event: KeyEvent)
     }
 }
 
-export const polygonMode = { onToolClick, onToolMove, onKeyDown };
+export const polygonMode = { onToolClick, onToolDouble, onToolMove, onKeyDown };

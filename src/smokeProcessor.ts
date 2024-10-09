@@ -3,6 +3,7 @@ import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
+import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 
 class SmokeProcessor
 {
@@ -251,7 +252,7 @@ class SmokeProcessor
         else
         {
             const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
-            const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+            const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
             const playerRing = buildShape()
                 .strokeColor(owner.color)
                 .fillOpacity(0)
@@ -272,7 +273,7 @@ class SmokeProcessor
 
     private UpdateDarkVision(token: Item)
     {
-        const darkVisionSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+        const darkVisionSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
         const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
 
         if (thisDarkVision)
@@ -293,7 +294,7 @@ class SmokeProcessor
             > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
         const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
-        const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+        const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
         const thisRing = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true);
 
         if (thisRing)
@@ -683,11 +684,11 @@ class SmokeProcessor
         const persistenceItem = buildLight()
             .position(token.position)
             .lightType("AUXILIARY")
-            .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT))
-            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT))
-            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT))
-            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT))
-            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? Constants.OUTANGLEDEFAULT))
+            .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault()))
+            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
+            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
+            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
+            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
             .metadata({ [`${Constants.EXTENSIONID}/isPersistentLight`]: token.id })
             .build();
@@ -706,7 +707,7 @@ class SmokeProcessor
         // We are 'light' to follow the token around, that we can identify which one it's replicating
         const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         const visionRange = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            1 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+            1 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
 
         const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
             > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
@@ -716,10 +717,10 @@ class SmokeProcessor
             .position(token.position)
             .lightType(lightType)
             .attenuationRadius(useDarkVision ? darkVisionRange : visionRange)
-            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT))
-            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT))
-            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT))
-            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? Constants.OUTANGLEDEFAULT))
+            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
+            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
+            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
+            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isVisionLight`]: token.id,
@@ -820,7 +821,7 @@ class SmokeProcessor
     {
         const lightType = sceneToken.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         const visionRange = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            1 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? Constants.ATTENUATIONDEFAULT);
+            1 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
         const useDarkVision = parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
             > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
         const darkVisionRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
@@ -828,10 +829,10 @@ class SmokeProcessor
         const update = {
             id: localLight.id,
             attenuationRadius: useDarkVision ? darkVisionRange : visionRange,
-            sourceRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? Constants.SOURCEDEFAULT),
-            falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? Constants.FALLOFFDEFAULT),
-            innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? Constants.INANGLEDEFAULT),
-            outerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? Constants.OUTANGLEDEFAULT),
+            sourceRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true),
+            falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()),
+            innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()),
+            outerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()),
             blind: sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false,
             zIndex: this.GetDepth(depth, false)
         };
@@ -839,9 +840,9 @@ class SmokeProcessor
         if (lightType === "PRIMARY") this.UpdateOwnerHightlight(sceneToken);
     }
 
-    private GetLightRange(distance: string)
+    private GetLightRange(distance: string, asFloat = false)
     {
-        const numDistance = parseInt(distance);
+        const numDistance = asFloat ? parseFloat(distance) : parseInt(distance);
         const tileDistance = numDistance / BSCACHE.gridScale;
         return tileDistance * BSCACHE.gridDpi;
     }
