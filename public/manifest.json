@@ -1,12 +1,12 @@
 {
-    "name": "S&S! Experimental",
+    "name": "Smoke & Spectre!",
     "description": "Dynamic fog of war with Per-Player fog and 'Ghost' tokens.",
     "version": "3.0",
     "author": "Battle-System, Doggosaurus & Armindo Flores",
     "icon": "/logo.png",
     "manifest_version": 1,
     "action": {
-        "title": "S&S!X",
+        "title": "Smoke & Spectre!",
         "icon": "/icon.svg",
         "popover": "/",
         "height": 530,

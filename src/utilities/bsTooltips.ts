@@ -24,7 +24,7 @@ export function CreateTooltips()
     tooltips.set(`visionBumperHeader`, "Collision Distance: How close this token can get to an active wall.");
     tooltips.set(`visionInAngleHeader`, "Inner Angle: Inner angle of token vision, for hard edge, match with Outer Angle");
     tooltips.set(`visionOutAngleHeader`, "Outer Angle:  Outer angle of token vision, for hard edge, match with Inner Angle");
-    tooltips.set(`visionDarkHeader`, "Greyscale: Change vision to greyscale coloring.");
+    tooltips.set(`visionDarkHeader`, "Greyscale: Add an 'outer-ring' of visible greyscale outside of your vision (Darkvision-Esque).");
 
     tooltips.set(`tip_spectretokens`, "Spectre tokens are only visible to specific players. Enable vision here after it has been Spectred.");
 
