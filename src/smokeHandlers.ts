@@ -110,6 +110,17 @@ export function SetupGMInputHandlers()
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/playerDoors`]: target.checked });
     };
 
+    // Toggles showing the unit vision settings context menu
+    const unitContextMenuCheckbox = document.getElementById("toggle_contextmenu") as HTMLInputElement;
+    unitContextMenuCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true;
+    unitContextMenuCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/unitContextMenu`]: target.checked });
+    };
+
     // Toggles the locked/unlocked state of all lines
     const lockFogButton = document.getElementById("lock_button") as HTMLButtonElement;
     const unlockFogButton = document.getElementById("unlock_button") as HTMLButtonElement;

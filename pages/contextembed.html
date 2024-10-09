@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vision Settings</title>
+</head>
+
+<body>
+    <div id="contextmenu">
+        <table class="context-embed-menu">
+            <tr>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionRangeSvg" class="menu_svg" src="../visionRange.svg">
+                        <input type="number" id="visionContext" />
+                    </div>
+                </td>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionBumperSvg" class="menu_svg" src="../visionBumper.svg">
+                        <input type="number" id="bumperContext" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionFalloffSvg" class="menu_svg" src="../visionFalloff.svg">
+                        <input type="number" id="falloffContext" />
+                    </div>
+                </td>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionDarkSvg" class="menu_svg" src="../darkvision.svg">
+                        <input type="number" id="darkContext" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionInnerSvg" class="menu_svg" src="../visionInner.svg">
+                        <input type="number" id="innerContext" />
+                    </div>
+                </td>
+                <td>
+                    <div class="context-embed-cell">
+                        <img id="visionOuterSvg" class="menu_svg" src="../visionOuter.svg">
+                        <input type="number" id="outerContext" />
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <script type="module" src="/src/smokeContextEmbed.ts"></script>
+</body>
+
+</html>

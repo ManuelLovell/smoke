@@ -11,6 +11,7 @@ export default {
         elevationtool: path.resolve(__dirname, 'pages/elevation.html'),
         elevationwarning: path.resolve(__dirname, 'pages/ewarning.html'),
         polygontool: path.resolve(__dirname, 'pages/polygon.html'),
+        contextembed: path.resolve(__dirname, 'pages/contextembed.html'),
         notice: path.resolve(__dirname, "src/notice/notice.html"),
       }
     }

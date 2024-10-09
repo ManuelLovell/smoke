@@ -888,3 +888,15 @@ button {
     font-weight: bolder;
     line-height: 2;
 }
+
+.context-embed-menu
+{
+    width: 100%;
+}
+
+.context-embed-cell
+{
+    display: flex;
+    width: 100%;
+    justify-content: space-evenly;
+}

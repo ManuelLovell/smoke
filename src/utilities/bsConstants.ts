@@ -13,7 +13,7 @@ export class Constants
     static ELEVATIONWARNID = "com.battle-system.elevationwarn";
     static BRUSHTOOLID = "com.battle-system.brushtool";
     static PROCESSEDID = "com.battle-system.processing";
-    static LABELSID = "com.battle-system.labels";
+    static CONTEXTID = "com.battle-system.smoke-context";
     static GRIDID = "d9953ba1-f417-431c-8a39-3c3376e3caf0";
     static SPECTREBROADCASTID = "SPECTREBROADCAST";
     static RESETPERSISTID = "RESETPERSISTID";
@@ -168,7 +168,7 @@ export class Constants
                         <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
                         <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
                         <td><input type="checkbox" id="toggle_persistence"></td>
-                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Player-Visible Doors</label></td>
+                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
                         <td><input type="checkbox" id="door_checkbox"></td>
                     </tr>
                     <tr>
@@ -176,6 +176,12 @@ export class Constants
                         <td><input type="checkbox" id="toggle_ownerlines"></td>
                         <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
                         <td><input type="checkbox" id="snap_checkbox"></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
+                        <td><input type="checkbox" id="toggle_contextmenu"></td>
+                        <td colspan="2"></td>
+                        <td></td>
                     </tr>
                     <tr>
                         <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>

@@ -7,6 +7,7 @@ import { finishDrawing as FinishElevationDrawing, cancelDrawing as CancelElevati
 import { SMOKEMAIN } from "../smokeMain";
 import { SMOKEMACHINE } from "../smokeProcessor";
 import { SPECTREMACHINE } from "../SpectreTwo";
+import { SetupUnitContextMenu } from "../smokeSetupContextMenus";
 
 class BSCache
 {
@@ -328,26 +329,38 @@ class BSCache
                 {
                     // Handle Player Door Visibility being toggled off/on
                     if (this.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] === true
-                        && metadata[`${Constants.EXTENSIONID}/playerDoors`] === false)
+                        && metadata[`${Constants.EXTENSIONID}/playerDoors`] !== true)
                     {
                         SMOKEMACHINE.ClearDoors();
                     }
 
+                    // Handle ContextMenu turning on and off
+                    if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true
+                        && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
+                    {
+                        await SetupUnitContextMenu(true);
+                    }
+                    else if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true
+                        && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
+                    {
+                        await SetupUnitContextMenu(false);
+                    }
+
                     // Handle Persistence being toggled off/on
                     if (this.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true
-                        && metadata[`${Constants.EXTENSIONID}/persistence`] === false)
+                        && metadata[`${Constants.EXTENSIONID}/persistence`] !== true)
                     {
                         SMOKEMACHINE.ClearPersistence();
                     }
 
                     // Handle Ownership being toggled on AFTER lights are built
-                    if (this.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] === false
+                    if (this.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true
                         && metadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] === true)
                     {
                         SMOKEMACHINE.InitiateOwnerHighlight();
                     }
                     else if (this.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] === true
-                        && metadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] === false)
+                        && metadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true)
                     {
                         SMOKEMACHINE.ClearOwnershipHighlights();
                     }
@@ -357,8 +370,8 @@ class BSCache
                     if (visionOff !== undefined)
                     {
                         if ((this.sceneMetadata[`${Constants.EXTENSIONID}/disableVision`] === true
-                            && metadata[`${Constants.EXTENSIONID}/disableVision`] === false)
-                            || (this.sceneMetadata[`${Constants.EXTENSIONID}/disableVision`] === false
+                            && metadata[`${Constants.EXTENSIONID}/disableVision`] !== true)
+                            || (this.sceneMetadata[`${Constants.EXTENSIONID}/disableVision`] !== true
                                 && metadata[`${Constants.EXTENSIONID}/disableVision`] === true))
                         {
                             SMOKEMACHINE.TogglePersistentLightVisibility(visionOff);

@@ -757,6 +757,52 @@ export async function SetupContextMenus(): Promise<void>
             }
         }
     });
+
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
+    {
+        await SetupUnitContextMenu(true);
+    }
+}
+
+export async function SetupUnitContextMenu(enable: boolean)
+{
+    if (enable)
+    {
+        await OBR.contextMenu.create({
+            id: `${Constants.EXTENSIONID}/context-menu-embed`,
+            icons: [
+                {
+                    icon: "/icon.svg",
+                    label: "Vision Settings",
+                    filter: {
+                        every: [
+                            { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], operator: "==", value: true, coordinator: "&&" },
+                            { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined }],
+                        some: [
+                            { key: "layer", value: "CHARACTER", coordinator: "||" },
+                            { key: "layer", value: "PROP", coordinator: "||" },
+                            { key: "layer", value: "ATTACHMENT" }],
+                    },
+                },
+            ],
+
+            async onClick(_ctx, elementId: string)
+            {
+                await OBR.popover.open({
+                    id: Constants.CONTEXTID,
+                    url: `/pages/contextembed.html`,
+                    height: 110,
+                    width: 200,
+                    anchorElementId: elementId
+                });
+            },
+            embed: { url: `/pages/contextembed.html?contextmenu=true`, height: 110 }
+        });
+    }
+    else
+    {
+        await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/context-menu-embed`);
+    }
 }
 
 function adjustPoints(points: Vector2[], adjustment: Vector2): Vector2[]
