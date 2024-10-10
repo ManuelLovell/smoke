@@ -791,6 +791,7 @@ class SmokeProcessor
                 dpi: token.grid.dpi,
                 offset: token.grid.offset
             })
+            .rotation(token.rotation)
             .position(token.position)
             .attachedTo(token.id)
             .layer("FOG")

@@ -421,12 +421,14 @@ export async function SetupContextMenus(): Promise<void>
                     {
                         item.layer = "MAP";
                         item.zIndex = -1;
+                        item.disableAutoZIndex = false;
                         delete item.metadata[`${Constants.EXTENSIONID}/isFogMap`];
                     }
                     else
                     {
                         item.layer = "FOG";
                         item.zIndex = -1;
+                        item.disableAutoZIndex = true;
                         item.metadata[`${Constants.EXTENSIONID}/isFogMap`] = true;
                     }
                 }
