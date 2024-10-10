@@ -25,7 +25,7 @@ export class Constants
     static DOORCOLOR = "#4000ff";
 
     static ATTENUATIONDEFAULT = "30";
-    static SOURCEDEFAULT = "2";
+    static SOURCEDEFAULT = "0";
     static FALLOFFDEFAULT = "0";
     static DARKVISIONDEFAULT = "0";
     static INANGLEDEFAULT = "360";
@@ -55,6 +55,66 @@ export class Constants
         [Command.CUBIC, 150, 260, 200, 270, 250, 270],
         [Command.CLOSE]
     ];
+
+    static TRAILINGFOGSHADER = `
+        uniform shader scene;
+        uniform mat3 modelView;
+        uniform float darknessLevel;
+        uniform vec3 darknessColor;
+
+        half4 main(float2 coord) {
+            // Transform the coordinates
+            vec2 uv = (vec3(coord, 1) * modelView).xy;
+
+            // Sample the color from the scene
+            half4 color = scene.eval(uv);
+
+            // Blend the scene color with the dynamic darknessColor based on darknessLevel
+            half3 darkenedColor = mix(color.rgb, darknessColor, darknessLevel);
+
+            return half4(darkenedColor, color.a); // Return the final color with original alpha
+        }
+    `;
+
+    static TRAILINGFOGREVEALSHADER = `
+        uniform shader scene;
+        uniform vec2 size;
+        uniform float radiusRatio;
+        uniform float darknessLevel;
+        uniform vec3 darknessColor;
+        uniform mat3 modelView;
+
+        half4 main(float2 coord) {
+        
+            vec2 sceneCoord = (vec3(coord, 1) * modelView).xy;
+
+            // Sample the color from the scene
+            half4 sceneColor = scene.eval(sceneCoord);
+
+            // Calculate distance from the center of the effect
+            vec2 center = size / 2.0;
+            vec2 diff = coord - center;
+            float aspectRatio = size.x / size.y;
+            diff.x /= aspectRatio;
+            float dist = length(diff);
+
+            // Calculate the radius based on the smaller dimension of the effect
+            float radius = min(size.x, size.y) * radiusRatio / 2.0;
+
+            // Inside the circle, remove darkness. Outside, leave unchanged.
+            if (dist <= radius) 
+            {
+                // Remove darkness by returning the original sceneColor
+                return sceneColor;
+            } 
+            else 
+            {
+                // Outside of that, return the darkened color
+                half3 darkenedColor = mix(sceneColor.rgb, darknessColor, darknessLevel);
+                return half4(darkenedColor, sceneColor.a);
+            }
+        }
+    `;
 
     static DARKVISIONSHADER = `
         uniform vec2 size;
@@ -168,8 +228,8 @@ export class Constants
                         <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
                         <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
                         <td><input type="checkbox" id="toggle_persistence"></td>
-                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
-                        <td><input type="checkbox" id="door_checkbox"></td>
+                        <td colspan="2">Trailing Fog (Beta)</td>
+                        <td><input type="checkbox" id="toggle_trailingfog"></td>
                     </tr>
                     <tr>
                         <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
@@ -180,8 +240,8 @@ export class Constants
                     <tr>
                         <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
                         <td><input type="checkbox" id="toggle_contextmenu"></td>
-                        <td colspan="2"></td>
-                        <td></td>
+                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
+                        <td><input type="checkbox" id="door_checkbox"></td>
                     </tr>
                     <tr>
                         <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>

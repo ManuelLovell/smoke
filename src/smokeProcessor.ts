@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape, isImage } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
@@ -35,6 +35,9 @@ class SmokeProcessor
     }[] = [];
     persistenceCullingDistance = 1;
     persistenceLimit = 50;
+
+    public trailingFoggedMaps: string[] = [];
+    public trailingFogTokens: string[] = [];
 
     constructor()
     {
@@ -82,10 +85,135 @@ class SmokeProcessor
         await this.UpdateDoors();
         await this.UpdateLights();
         await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
+        await this.UpdateTrailingFog();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
             localStorage.setItem('PersistentFogData', JSON.stringify(this.persistentLights));
+        }
+    }
+
+    private async UpdateTrailingFog()
+    {
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
+        {
+            // If our trailing fog setting is on, we'll process
+            await this.CreateTrailingFogOverlay();
+            await this.CreateTrailingFogForToken();
+        }
+        else if (this.trailingFogTokens.length > 0 || this.trailingFoggedMaps.length > 0)
+        {
+            // Otherwise, we need to remove all and not process
+            const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
+            const trailingFogMaps = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogger`] !== undefined) as Effect[];
+            if (trailingFogMaps.length > 0) await OBR.scene.local.deleteItems(trailingFogMaps.map(x => x.id));
+            if (trailingFogRevealers.length > 0) await OBR.scene.local.deleteItems(trailingFogRevealers.map(x => x.id));
+            this.trailingFogTokens = [];
+            this.trailingFoggedMaps = [];
+        }
+    }
+
+    public async UpdateTrailingFogColor(newColor: string)
+    {
+        const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
+        await OBR.scene.local.updateItems<Effect>(trailingFogRevealers.map(x => x.id), (revealers) =>
+        {
+            for (let revealer of revealers)
+            {
+                revealer.uniforms = [
+                    { name: "darknessLevel", value: 0.65 },
+                    { name: "darknessColor", value: Utilities.HexToRgbShader(newColor) },
+                    { name: "radiusRatio", value: 1.0 },
+                ];
+            }
+        });
+        const trailingFogMaps = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogger`] !== undefined) as Effect[];
+        await OBR.scene.local.updateItems<Effect>(trailingFogMaps.map(x => x.id), (fogMaps) =>
+        {
+            for (let fogMap of fogMaps)
+            {
+                fogMap.uniforms = [
+                    { name: "darknessLevel", value: 0.65 },
+                    { name: "darknessColor", value: Utilities.HexToRgbShader(newColor) },
+                ];
+            }
+        });
+    }
+
+    private async CreateTrailingFogForToken()
+    {
+        // Find all of the primary lights in the scene
+        // This doesn't need an owner check, as lights should only be made for things that you as a player own or can see through
+        const allLights = BSCACHE.sceneLocal.filter(x => x.type === "LIGHT") as Light[];
+        const primaryLights = allLights.filter(x => x.lightType === "PRIMARY");
+        const trailRevealersToCreate: Effect[] = [];
+
+        for (const light of primaryLights)
+        {
+            // We keep track of all tokens we attached a revealer to
+            if (!this.trailingFogTokens.includes(light.id))
+            {
+                const revealerEffect = buildEffect()
+                    .position(light.position)
+                    .attachedTo(light.id)
+                    .width(200)
+                    .height(200)
+                    .effectType("ATTACHMENT")
+                    .layer("POST_PROCESS")
+                    .sksl(Constants.TRAILINGFOGREVEALSHADER)
+                    .disableAttachmentBehavior(["SCALE"])
+                    .uniforms([
+                        { name: "darknessLevel", value: 0.65 },
+                        { name: "darknessColor", value: Utilities.HexToRgbShader(BSCACHE.fogColor) },
+                        { name: "radiusRatio", value: 1.0 },
+                    ])
+                    .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
+                    .disableHit(true)
+                    .build();
+                trailRevealersToCreate.push(revealerEffect);
+                this.trailingFogTokens.push(light.id);
+            }
+        }
+        if (trailRevealersToCreate.length > 0)
+        {
+            await OBR.scene.local.addItems(trailRevealersToCreate);
+        }
+    }
+
+    private async CreateTrailingFogOverlay()
+    {
+        // We are fogging only the map items, which causes the 'edges' of the Revealer to stick out when a token goes outside of the map bounds
+        // This would be changed if we fogged the viewport instead - because we would be beyond the boundaries of the map with fog and it wouldn't matter.
+        // I think leaving it as such is a decent trade-off to not make everything unnecessarily dark.
+        const trailFoggersToCreate: Effect[] = [];
+        const maps = BSCACHE.sceneItems.filter(x => x.layer === "MAP" && x.type === "IMAGE") as Image[];
+        for (const map of maps)
+        {
+            if (!this.trailingFoggedMaps.includes(map.id))
+            {
+                const trailingFogEffect = buildEffect()
+                    .position(map.position)
+                    .attachedTo(map.id)
+                    .width(map.image.width)
+                    .height(map.image.height)
+                    .effectType("ATTACHMENT")
+                    .layer("POST_PROCESS")
+                    .sksl(Constants.TRAILINGFOGSHADER)
+                    .uniforms([
+                        { name: "darknessLevel", value: 0.65 },
+                        { name: "darknessColor", value: Utilities.HexToRgbShader(BSCACHE.fogColor) },
+                    ])
+                    .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogger`]: map.id })
+                    .disableHit(true)
+                    .build();
+                trailFoggersToCreate.push(trailingFogEffect);
+                this.trailingFoggedMaps.push(map.id);
+            }
+        }
+
+        if (trailFoggersToCreate.length > 0)
+        {
+            await OBR.scene.local.addItems(trailFoggersToCreate);
         }
     }
 
@@ -203,6 +331,7 @@ class SmokeProcessor
     {
         await OBR.scene.local.deleteItems(this.persistentLights.map(x => x.id));
         this.persistentLights = [];
+        localStorage.setItem('PersistentFogData', JSON.stringify(this.persistentLights));
     }
 
     public async TogglePersistentLightVisibility(off: boolean)
@@ -507,7 +636,9 @@ class SmokeProcessor
 
         // Add, Update and Delete
         if (this.lightsToCreate.length > 0)
+        {
             await OBR.scene.local.addItems(this.lightsToCreate);
+        }
         if (this.lightsToDelete.length > 0)
             await OBR.scene.local.deleteItems(this.lightsToDelete);
         if (this.lightsToUpdate.length > 0)

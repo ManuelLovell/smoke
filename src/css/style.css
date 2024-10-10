@@ -639,6 +639,11 @@ input[type="checkbox"] {
     margin-bottom: 2px;
 }
 
+input[type="checkbox"]:disabled {
+
+    border: 1px solid grey;
+}
+
 /* Style for unchecked state */
 input[type="checkbox"]:not(:checked) {
     background-color: transparent;
@@ -889,13 +894,11 @@ button {
     line-height: 2;
 }
 
-.context-embed-menu
-{
+.context-embed-menu {
     width: 100%;
 }
 
-.context-embed-cell
-{
+.context-embed-cell {
     display: flex;
     width: 100%;
     justify-content: space-evenly;

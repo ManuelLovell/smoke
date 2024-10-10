@@ -35,6 +35,7 @@ export function CreateTooltips()
     tooltips.set(`tip_ownerrings`, "Toggle to enable/disable the colored rings seen around a player to indicate their vision radius. GM-Only.");
     tooltips.set(`tip_gridsnap`, "Toggle to enable/disable grid snapping when drawing Obstruction Lines and Objects. This is separate from the default OBR Snap setting.");
     tooltips.set(`toggle_contextmenu`, "Enable to show the Unit Vision Settings on the Context Menu for tokens");
+    tooltips.set(`toggle_trailingfog`, "Enable to 'fog' areas that have been revealed by Persistence, but a token is not currently in.")
 
     tooltips.set(`doublewall_button`, "This will change ALL walls within the scene to be double-sided, so they cannot be passed from either side.");
     tooltips.set(`block_button`, "This will set all walls to be Blocking walls, so that tokens cannot move past them.");

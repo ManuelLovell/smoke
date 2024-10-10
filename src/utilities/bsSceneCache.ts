@@ -655,6 +655,12 @@ class BSCache
         const toggleFogFill = document.getElementById("toggle_fogfill") as HTMLInputElement;
         if (toggleFogFill)
             toggleFogFill.checked = fog.filled;
+
+        if (this.fogColor !== fog.style.color)
+        {
+            // If the color has changed, we need to update the uniforms on our effects.
+            await SMOKEMACHINE.UpdateTrailingFogColor(fog.style.color);
+        }
     }
 
     public async OnRoomMetadataChange(_metadata: Metadata)

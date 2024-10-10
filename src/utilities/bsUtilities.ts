@@ -1,5 +1,6 @@
 import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
+import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
 
 export function GetPatreonButton()
 {
@@ -251,6 +252,25 @@ export function TestEnvironment()
         const storageWarningElement = document.getElementById("localStorageWarning")!;
         storageWarningElement.innerText = "Local Storage disabled. Some features will not function.";
     }
+}
+
+export function HexToRgbShader(hex: string): Vector3
+{
+    // Remove the leading #
+    hex = hex.replace(/^#/, '');
+
+    // Convert the hex values to decimal (R, G, B)
+    let bigint = parseInt(hex, 16);
+    let r = (bigint >> 16) & 255;
+    let g = (bigint >> 8) & 255;
+    let b = bigint & 255;
+
+    // Normalize the values to a 0.0 - 1.0 range
+    return {
+        x: r / 255,
+        y: g / 255,
+        z: b / 255
+    };
 }
 
 export function InvertColor(hex: any)

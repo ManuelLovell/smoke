@@ -68,15 +68,42 @@ export function SetupGMInputHandlers()
         await OBR.scene.fog.setFilled(target.checked);
     };
 
+    // Toggles trailing fog being active, which is reliant on persistence.
+    const trailingFogCheckbox = document.getElementById("toggle_trailingfog") as HTMLInputElement;
+    trailingFogCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true;
+    trailingFogCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/trailingFog`]: target.checked });
+    };
+
     // Toggles the colored ownership lines
     const togglPersistence = document.getElementById("toggle_persistence") as HTMLInputElement;
     togglPersistence.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true;
+    // Trailing Fog Reliance
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] !== true)
+    {
+        trailingFogCheckbox.disabled = true;
+        trailingFogCheckbox.checked = false;
+    }
     togglPersistence!.onclick = async (event: MouseEvent) =>
     {
         if (!event || !event.target) return;
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/persistence`]: target.checked });
+        if (!target.checked)
+        {
+            trailingFogCheckbox.disabled = true;
+            trailingFogCheckbox.checked = false;
+            await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/trailingFog`]: false });
+        }
+        else
+        {
+            trailingFogCheckbox.disabled = false;
+        }
     };
 
     // Resets all persistent lights
