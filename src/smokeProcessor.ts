@@ -78,9 +78,9 @@ class SmokeProcessor
 
     public async Run()
     {
-        await this.UpdateLights();
         await this.UpdateWalls();
         await this.UpdateDoors();
+        await this.UpdateLights();
         await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
