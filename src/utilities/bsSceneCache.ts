@@ -41,6 +41,7 @@ class BSCache
 
     storedMetaItems: Item[];
 
+    sceneId: string;
     sceneItems: Item[];
     sceneLocal: Item[];
     sceneSelected: string[];
@@ -86,6 +87,7 @@ class BSCache
         this.fogColor = "#000";
         this.fogStroke = 5;
         this.storedMetaItems = [];
+        this.sceneId = "";
         this.sceneItems = [];
         this.sceneLocal = [];
         this.sceneSelected = [];
@@ -149,6 +151,11 @@ class BSCache
                 if (savedItems)
                 {
                     this.storedMetaItems = savedItems as Item[];
+                }
+                this.sceneId = this.sceneMetadata[`${Constants.EXTENSIONID}/sceneId`] as string;
+                if (this.sceneId === "" || this.sceneId === undefined)
+                {
+                    await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID() });
                 }
             }
         }

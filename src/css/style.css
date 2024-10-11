@@ -63,11 +63,6 @@
     align-content: center;
 }
 
-#localStorageWarning {
-    font-size: 12px;
-    font-style: italic;
-}
-
 .tooltip {
     cursor: pointer;
     display: inline;

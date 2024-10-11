@@ -49,7 +49,7 @@ class SmokeProcessor
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
-            const persistentFogData = localStorage.getItem('PersistentFogData');
+            const persistentFogData = localStorage.getItem(Utilities.GetPersistentLocalKey());
             if (persistentFogData)
             {
                 const unwrappedData = JSON.parse(persistentFogData) as {
@@ -77,6 +77,8 @@ class SmokeProcessor
     public async Reset()
     {
         this.persistentLights = [];
+        this.trailingFogTokens = [];
+        this.trailingFoggedMaps = [];
     }
 
     public async Run()
@@ -89,7 +91,7 @@ class SmokeProcessor
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
-            localStorage.setItem('PersistentFogData', JSON.stringify(this.persistentLights));
+            localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
         }
     }
 
@@ -331,7 +333,7 @@ class SmokeProcessor
     {
         await OBR.scene.local.deleteItems(this.persistentLights.map(x => x.id));
         this.persistentLights = [];
-        localStorage.setItem('PersistentFogData', JSON.stringify(this.persistentLights));
+        localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
     }
 
     public async TogglePersistentLightVisibility(off: boolean)

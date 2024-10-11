@@ -1,6 +1,12 @@
 import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
+import { Constants } from "./bsConstants";
+
+export function GetPersistentLocalKey()
+{
+    return `${Constants.EXTENSIONID}/Persistence/${BSCACHE.playerId}/${BSCACHE.sceneId}`;
+}
 
 export function GetPatreonButton()
 {
@@ -239,19 +245,6 @@ export function ApplyUpdatesToGhostArray(mainList: Image[], updates: Image[]): v
             mainList.push(update);
         }
     });
-}
-
-export function TestEnvironment()
-{
-    try
-    {
-        localStorage.setItem("STORAGECHECK", "test");
-    }
-    catch (error)
-    {
-        const storageWarningElement = document.getElementById("localStorageWarning")!;
-        storageWarningElement.innerText = "Local Storage disabled. Some features will not function.";
-    }
 }
 
 export function HexToRgbShader(hex: string): Vector3
