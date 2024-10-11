@@ -289,6 +289,48 @@ class Spectre
             newTr.remove();
             await OBR.scene.items.deleteItems([ghost.id]);
         };
+
+        const colorSwapTargets = document.getElementsByClassName('ts-control');
+        for (let element of colorSwapTargets)
+        {
+            const tomSelectElement = element as HTMLDivElement;
+            tomSelectElement.style.backgroundColor = BSCACHE.theme.mode === "DARK" ? 'rgb(49, 49, 65)' : 'rgb(210, 210, 223)';
+            tomSelectElement.style.borderRadius = '6px';
+        }
+    }
+
+    public UpdateSpectreTargets(): void
+    {
+        const existingSelects = document.querySelectorAll('.tSelects') as any;
+
+        for (const tSelect of existingSelects)
+        {
+            if (tSelect && tSelect.tomselect)
+            {
+                // Access the TomSelect instance using .tomselect
+                const tomSelectInstance = tSelect.tomselect as TomSelect;
+
+                const newOptions = [];
+                for (const player of BSCACHE.party)
+                {
+                    newOptions.push({ value: player.id, text: player.name });
+                }
+
+                tomSelectInstance.clearOptions();
+                tomSelectInstance.addOption(newOptions);
+
+                if (newOptions.length === 0)
+                {
+                    tomSelectInstance.settings.placeholder = "No Players Present";
+                    tomSelectInstance.inputState();
+                }
+                else
+                {
+                    tomSelectInstance.settings.placeholder = "Choose..";
+                    tomSelectInstance.inputState();
+                }
+            }
+        }
     }
 }
 

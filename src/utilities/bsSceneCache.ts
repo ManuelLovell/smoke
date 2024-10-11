@@ -50,7 +50,7 @@ class BSCache
 
     roomMetadata: Metadata;
 
-    theme: any;
+    theme: Theme;
 
     caches: string[];
 
@@ -97,7 +97,7 @@ class BSCache
         this.gridSnap = 10;
         this.gridType = "ft";
         this.sceneReady = false;
-        this.theme = "DARK";
+        this.theme = {} as any;
         this.roomMetadata = {};
         this.snap = false;
         this.busy = false;
@@ -175,7 +175,6 @@ class BSCache
         {
             if (this.sceneReady) this.roomMetadata = await OBR.room.getMetadata();
         }
-        await this.CheckRegistration();
     }
 
     public async InitializeCache()
@@ -296,6 +295,7 @@ class BSCache
             await SMOKEMACHINE.ClearPersistence();
         });
 
+        await this.CheckRegistration();
         await this.SaveUserToScene();
     }
 
@@ -495,7 +495,7 @@ class BSCache
         {
             this.themeHandler = OBR.theme.onChange(async (theme) =>
             {
-                this.theme = theme.mode;
+                this.theme = theme;
                 await this.OnThemeChange(theme);
             });
         }
@@ -654,6 +654,7 @@ class BSCache
                 previewItem.style.color = player.color;
                 playerPreviewMenu.appendChild(previewItem);
             }
+            SPECTREMACHINE.UpdateSpectreTargets();
         }
     }
 

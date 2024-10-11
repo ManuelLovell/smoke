@@ -137,6 +137,95 @@ export class Constants
         }
     `;
 
+    static SMOKEMOBILEMAIN = `
+    <div id="tabControls">
+                    <div class="controlContainer">
+                        <div class="even-set-button-container">
+                            <button class="view-button selected" id="smokeViewToggle"><img class="menu_svg" src="./icon.svg"></button>
+                            <button class="view-button" id="spectreViewToggle"><img class="menu_svg" src="./ghost.svg"></button>
+                            <button class="view-button" id="helpViewToggle"><img class="menu_svg" src="./help.svg"></button>
+                            <button class="view-button" id="settingsViewToggle"><img class="menu_svg" src="./settings.svg"></button>
+                        </div>
+                        <div id="patreonContainer"></div>
+                    </div>
+                </div>
+                <div id="smokeViewPanel" class="panel"></div>
+                <div id="spectreViewPanel" class="panel" style="display: none;"></div>
+                <div id="settingsViewPanel" class="panel" style="display: none;"></div>
+                <div id="helpViewPanel" class="panel" style="display: none;">
+                    <div id="markdownHelpContainer"></div>
+                </div>
+    `;
+    static SMOKEMOBILEHTML = `
+    <div id="contextMenu" class="context-menu" style="display: none">
+        Assign Owner:
+        <ul id="playerListing"></ul>
+    </div>
+    <div class="visionTitle grid-3">Vision Enabled<div id="tip_gmtokens" class="note">📝</div>
+        <div id="visionPanelToggleContainer"></div>
+    </div>
+    <div id="main-ui" class="grid-main">
+        <div id="token_list_div" class="grid-3" padding-bottom: 8px;">
+            <table id="smokeUnitTablePrime" class="smoke_unit_table" style="padding: 0;">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                </colgroup> 
+                <thead>
+                    <tr id="visionPanelMain">
+                        <th>Name</th>
+                        <th id="visionRangeHeader" class="clickable-header"><img id="visionRangeSvg" class="menu_svg" src="./visionRange.svg"></th>
+                        <th id="visionFalloffHeader" class="clickable-header"><img id="visionFalloffSvg" class="menu_svg" src="./visionFalloff.svg"></th>
+                        <th id="visionBlindHeader" class="clickable-header"><img class="menu_svg" src="./blind.svg"></th>
+                        <th id="visionHideHeader" class="clickable-header"><img class="menu_svg" src="./eyeclosed.svg"></th>
+                    </tr>
+                    <tr id="visionPanelSub" style="display: none;">
+                        <th>Name</th>
+                        <th id="visionBumperHeader" class="clickable-header"><img id="visionBumperSvg" class="menu_svg" src="./visionBumper.svg"></th>
+                        <th id="visionInAngleHeader" class="clickable-header"><img id="visionInnerSvg" class="menu_svg" src="./visionInner.svg"></th>
+                        <th id="visionOutAngleHeader" class="clickable-header"><img id="visionOuterSvg" class="menu_svg" src="./visionOuter.svg"></th>
+                        <th id="visionDarkHeader" class="clickable-header"><img id="visionDarkSvg" class="menu_svg" src="./darkvision.svg"></th>
+                    </tr>
+                </thead>
+                <tbody id="token_list"></tbody>
+            </table>
+            <table id="smokeUnitTableSub" class="smoke_unit_table" style="padding: 0;">
+                <colgroup>
+                    <col style="width: 40%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                    <col style="width: 15%;">
+                </colgroup>
+                <tbody id="hidden_list" style="display:none;">~ <input type="button" value="Tap to Show List" class="settingsButton" style="width: 60% !important;" id="hideListToggle"> ~</tbody>
+            </table>
+        </div>
+    </div>
+    `;
+
+    static SMOKEMAIN = `
+    <div id="tabControls">
+                    <div class="controlContainer">
+                        <div class="even-set-button-container">
+                            <button class="view-button selected" id="smokeViewToggle">Smoke</button>
+                            <button class="view-button" id="spectreViewToggle">Spectre</button>
+                            <button class="view-button" id="helpViewToggle">Help</button>
+                            <button class="view-button" id="settingsViewToggle">Settings</button>
+                        </div>
+                        <div id="patreonContainer"></div>
+                    </div>
+                </div>
+                <div id="smokeViewPanel" class="panel"></div>
+                <div id="spectreViewPanel" class="panel" style="display: none;"></div>
+                <div id="settingsViewPanel" class="panel" style="display: none;"></div>
+                <div id="helpViewPanel" class="panel" style="display: none;">
+                    <div id="markdownHelpContainer"></div>
+                </div>
+    `;
+
     static SMOKEHTML = `
     <div id="contextMenu" class="context-menu" style="display: none">
         Assign Owner:
@@ -205,133 +294,307 @@ export class Constants
         </div>
     </div>
     `;
-
     static SETTINGSHTML = `
-        <div id="settings-ui">
-            <table id="settingsTable">
-                <colgroup>
-                    <col style="width: 30%;">
-                    <col style="width: 10%;">
-                    <col style="width: 10%;">
-                    <col style="width: 30%;">
-                    <col style="width: 10%;">
-                    <col style="width: 10%;">
-                </colgroup>
-                <tbody>
-                    <tr>
-                        <td colspan="2"><label for="toggle_fogfill" id="tip_fogfill">FogFill</label></td>
-                        <td><input type="checkbox" id="toggle_fogfill"></td>
-                        <td colspan="2"><label for="disable_vision" id="tip_disablevision">Disable Vision</label></td>
-                        <td><input type="checkbox" id="disable_vision"></td>
-                    </tr>
-                    <tr>
-                        <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
-                        <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
-                        <td><input type="checkbox" id="toggle_persistence"></td>
-                        <td colspan="2">Trailing Fog (Beta)</td>
-                        <td><input type="checkbox" id="toggle_trailingfog"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
-                        <td><input type="checkbox" id="toggle_ownerlines"></td>
-                        <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
-                        <td><input type="checkbox" id="snap_checkbox"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
-                        <td><input type="checkbox" id="toggle_contextmenu"></td>
-                        <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
-                        <td><input type="checkbox" id="door_checkbox"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
-                        <td colspan="3"><input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"><input class="settingsButton" type="button" id="block_button" value="Block Walls"></td>
-                        <td colspan="3"><input class="settingsButton" type="button" id="unblock_button" value="Unblock Walls"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="3"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines"></td>
-                        <td colspan="3"><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="6" style="text-align: center; font-weight: bold;">Tool Options</td>
-                    </tr>
-                    <tr>
-                        <td colspan="6">
-                            <div id="toolOptions">
-                                Width: <input id="tool_width" type="number" value="8" style="width: 40px;" maxlength="2">
-                                 - Color: <input id="tool_color" type="text" maxlength="7">
-                                 - Style: <select id="tool_style">
-                                    <option value="solid" selected>Solid</option>
-                                    <option value="dotted">Dotted</option>
-                                </select>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="6" style="text-align: center; font-weight: bold;">Vision Defaults</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="visionDefaultInput" id="tip_visionDefault">Vision</label></td>
-                        <td><input type="number" id="visionDefaultInput"></td>
-                        <td colspan="2"><label for="collisionDefaultInput" id="tip_collisionDefault">Collision</label></td>
-                        <td><input type="number" id="collisionDefaultInput"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="falloffDefaultInput" id="tip_falloffDefault">Falloff</label></td>
-                        <td><input type="number" id="falloffDefaultInput"></td>
-                        <td colspan="2"><label for="greyscaleDefaultInput" id="tip_greyscaleDefault">Greyscale</label></td>
-                        <td><input type="number" id="greyscaleDefaultInput"></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="innerAngleDefaultInput" id="tip_innerAngleDefault">Inner-Angle</label></td>
-                        <td><input type="number" id="innerAngleDefaultInput"></td>
-                        <td colspan="2"><label for="outerAngleDefaultInput" id="tip_outerAngleDefault">Outer-Angle</label></td>
-                        <td><input type="number" id="outerAngleDefaultInput"></td>
-                    </tr>
-                </tbody>
-            </table>
+    <div id="settings-ui">
+        <table id="settingsTable">
+            <colgroup>
+                <col style="width: 30%;">
+                <col style="width: 10%;">
+                <col style="width: 10%;">
+                <col style="width: 30%;">
+                <col style="width: 10%;">
+                <col style="width: 10%;">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td colspan="2"><label for="toggle_fogfill" id="tip_fogfill">FogFill</label></td>
+                    <td><input type="checkbox" id="toggle_fogfill"></td>
+                    <td colspan="2"><label for="disable_vision" id="tip_disablevision">Disable Vision</label></td>
+                    <td><input type="checkbox" id="disable_vision"></td>
+                </tr>
+                <tr>
+                    <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
+                    <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
+                    <td><input type="checkbox" id="toggle_persistence"></td>
+                    <td colspan="2">Trailing Fog (Beta)</td>
+                    <td><input type="checkbox" id="toggle_trailingfog"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
+                    <td><input type="checkbox" id="toggle_ownerlines"></td>
+                    <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
+                    <td><input type="checkbox" id="snap_checkbox"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
+                    <td><input type="checkbox" id="toggle_contextmenu"></td>
+                    <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
+                    <td><input type="checkbox" id="door_checkbox"></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
+                    <td colspan="3"><input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls"></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><input class="settingsButton" type="button" id="block_button" value="Block Walls"></td>
+                    <td colspan="3"><input class="settingsButton" type="button" id="unblock_button" value="Unblock Walls"></td>
+                </tr>
+                <tr>
+                    <td colspan="3"><input class="settingsButton" type="button" id="lock_button" value="Lock Lines"></td>
+                    <td colspan="3"><input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines"></td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="text-align: center; font-weight: bold;">Tool Options</td>
+                </tr>
+                <tr>
+                    <td colspan="6">
+                        <div id="toolOptions">
+                            Width: <input id="tool_width" type="number" value="8" style="width: 40px;" maxlength="2">
+                             - Color: <input id="tool_color" type="text" maxlength="7">
+                             - Style: <select id="tool_style">
+                                <option value="solid" selected>Solid</option>
+                                <option value="dotted">Dotted</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="6" style="text-align: center; font-weight: bold;">Vision Defaults</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="visionDefaultInput" id="tip_visionDefault">Vision</label></td>
+                    <td><input type="number" id="visionDefaultInput"></td>
+                    <td colspan="2"><label for="collisionDefaultInput" id="tip_collisionDefault">Collision</label></td>
+                    <td><input type="number" id="collisionDefaultInput"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="falloffDefaultInput" id="tip_falloffDefault">Falloff</label></td>
+                    <td><input type="number" id="falloffDefaultInput"></td>
+                    <td colspan="2"><label for="greyscaleDefaultInput" id="tip_greyscaleDefault">Greyscale</label></td>
+                    <td><input type="number" id="greyscaleDefaultInput"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="innerAngleDefaultInput" id="tip_innerAngleDefault">Inner-Angle</label></td>
+                    <td><input type="number" id="innerAngleDefaultInput"></td>
+                    <td colspan="2"><label for="outerAngleDefaultInput" id="tip_outerAngleDefault">Outer-Angle</label></td>
+                    <td><input type="number" id="outerAngleDefaultInput"></td>
+                </tr>
+            </tbody>
+        </table>
 
-            <table id="importTable">
-                <colgroup>
-                    <col style="width: 35%;">
-                    <col style="width: 15%;">
-                    <col style="width: 35%;">
-                    <col style="width: 15%;">
-                </colgroup>
-                <tbody>
-                    <tr>
-                        <td colspan="4" class="tableHeader">Import</td>
-                    </tr>
-                    <tr>
-                        <td colspan="4">Import files from <a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a></br>and other tools.</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <div class="custom-file-input">
-                                <label for="import_file" id="import_file_name">Choose File...</label>
-                                <input id="import_file" type="file">
-                            </div>
-                        </td>
-                        <td colspan="2"><input type="button" id="import_button" value="Import" disabled></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
-                        <td colspan="2">Alignment</br><select id="map_align"><option selected>Loading..</option></select></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><label for="dpi_autodetect" id="tip_importdpi">DPI Autodetect</label></td>
-                        <td colspan="2">
-                            <input type="checkbox" id="dpi_autodetect" checked>
-                            <input id="import_dpi" disabled type="text" value="150" maxlength="4">
-                        </td>
-                    </tr>
-                </tbody>
-                <div id="import_errors" class="grid-3"></div>
-            </table>
-        </div>`;
+        <table id="importTable">
+            <colgroup>
+                <col style="width: 35%;">
+                <col style="width: 15%;">
+                <col style="width: 35%;">
+                <col style="width: 15%;">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td colspan="4" class="tableHeader">Import</td>
+                </tr>
+                <tr>
+                    <td colspan="4">Import files from <a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a></br>and other tools.</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="custom-file-input">
+                            <label for="import_file" id="import_file_name">Choose File...</label>
+                            <input id="import_file" type="file">
+                        </div>
+                    </td>
+                    <td colspan="2"><input type="button" id="import_button" value="Import" disabled></td>
+                </tr>
+                <tr>
+                    <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
+                    <td colspan="2">Alignment</br><select id="map_align"><option selected>Loading..</option></select></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="dpi_autodetect" id="tip_importdpi">DPI Autodetect</label></td>
+                    <td colspan="2">
+                        <input type="checkbox" id="dpi_autodetect" checked>
+                        <input id="import_dpi" disabled type="text" value="150" maxlength="4">
+                    </td>
+                </tr>
+            </tbody>
+            <div id="import_errors" class="grid-3"></div>
+        </table>
+    </div>`;
+
+    static SETTINGSMOBILEHTML = `
+<div id="settings-ui">
+    <div class="grid-container">
+        <div>
+            <label for="toggle_fogfill" id="tip_fogfill">FogFill</label>
+            <input type="checkbox" id="toggle_fogfill">
+        </div>
+        <div>
+            <label for="disable_vision" id="tip_disablevision">Disable Vision</label>
+            <input type="checkbox" id="disable_vision">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="toggle_persistence" id="tip_persistence">Persistence</label>
+            <button class="mobile-presistence"id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button>
+            <input type="checkbox" id="toggle_persistence">
+        </div>
+        <div>
+            <label for="toggle_trailingfog" id="tip_trailingfog">Trailing Fog (Beta)</label>
+            <input type="checkbox" id="toggle_trailingfog">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label>
+            <input type="checkbox" id="toggle_ownerlines">
+        </div>
+        <div>
+            <label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label>
+            <input type="checkbox" id="snap_checkbox">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label>
+            <input type="checkbox" id="toggle_contextmenu">
+        </div>
+        <div>
+            <label for="door_checkbox" id="tip_playerdoors">Players See Doors</label>
+            <input type="checkbox" id="door_checkbox">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <select class="settingsButton" id="preview_select"></select>
+        </div>
+        <div>
+            <input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <input class="settingsButton" type="button" id="block_button" value="Block Walls">
+        </div>
+        <div>
+            <input class="settingsButton" type="button" id="unblock_button" value="Unblock Walls">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <input class="settingsButton" type="button" id="lock_button" value="Lock Lines">
+        </div>
+        <div>
+            <input class="settingsButton" type="button" id="unlock_button" value="Unlock Lines">
+        </div>
+    </div>
+
+    <div style="text-align: center; font-weight: bold;">
+        Tool Options
+    </div>
+
+    <div class="grid-container">
+        <div style="display:flex; width: 100%;place-content: space-evenly;">
+            <label>Width:</label>
+            <input id="tool_width" type="number" value="8" style="width: 40px;" maxlength="2">
+            <div class="mobile-color"> 
+                <input id="tool_color" type="text" maxlength="7">
+            </div>
+        </div>
+        <label>Style:</label>
+        <select id="tool_style">
+            <option value="solid" selected>Solid</option>
+            <option value="dotted">Dotted</option>
+        </select>
+    </div>
+
+    <div style="text-align: center; font-weight: bold;">
+        Vision Defaults
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="visionDefaultInput" id="tip_visionDefault">Vision</label>
+            <input type="number" id="visionDefaultInput">
+        </div>
+        <div>
+            <label for="collisionDefaultInput" id="tip_collisionDefault">Collision</label>
+            <input type="number" id="collisionDefaultInput">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="falloffDefaultInput" id="tip_falloffDefault">Falloff</label>
+            <input type="number" id="falloffDefaultInput">
+        </div>
+        <div>
+            <label for="greyscaleDefaultInput" id="tip_greyscaleDefault">Greyscale</label>
+            <input type="number" id="greyscaleDefaultInput">
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="innerAngleDefaultInput" id="tip_innerAngleDefault">Inner-Angle</label>
+            <input type="number" id="innerAngleDefaultInput">
+        </div>
+        <div>
+            <label for="outerAngleDefaultInput" id="tip_outerAngleDefault">Outer-Angle</label>
+            <input type="number" id="outerAngleDefaultInput">
+        </div>
+    </div>
+
+    <div id="importTable">
+        <div class="tableHeader">Import</div>
+
+        <div>Import files from <a href="https://www.dungeonalchemist.com/" target="_blank">Dungeon Alchemist</a><br>and other tools.</div>
+
+        <div class="grid-container">
+            <div class="custom-file-input">
+                <label for="import_file" id="import_file_name">Choose File...</label>
+                <input id="import_file" type="file">
+            </div>
+            <div>
+                <input type="button" id="import_button" value="Import" disabled>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div>
+                <label>Format</label>
+                <select id="import_format">
+                    <option value="scene">UVTT Scene</option>
+                    <option value="foundry">Foundry</option>
+                    <option value="uvtt">Universal VTT</option>
+                </select>
+            </div>
+            <div>
+                <label>Alignment</label>
+                <select id="map_align">
+                    <option selected>Loading..</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <div style="align-items: center;">
+                <label for="dpi_autodetect" id="tip_importdpi">DPI Autodetect</label>
+                <input class="mobile-import-dpi-input" id="import_dpi" disabled type="text" value="150" maxlength="4">
+                <input type="checkbox" id="dpi_autodetect" checked>
+            </div>
+        </div>
+
+        <div id="import_errors" class="grid-3"></div>
+    </div>
+</div>
+`;
 
     static MARKDOWNHELP = `
 <a id="smoke" name="smoke"></a>

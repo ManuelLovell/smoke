@@ -80,21 +80,26 @@
     justify-content: space-evenly;
 }
 
-#settingsViewToggle {
-    width: 100px;
-}
-
 .menu_svg {
     height: 1.5em;
+    filter: var(--invert);
 }
 
 .setting_svg {
     height: 1em;
+    filter: var(--invert);
 }
 
 #vision_checkbox {
     position: relative;
     top: 2px;
+}
+
+#visionRangeHeader,
+#visionFalloffHeader,
+#visionBlindHeader,
+#visionBlindHeader {
+    width: 15%;
 }
 
 .title {
@@ -483,7 +488,7 @@ li>p {
     font-size: large;
     font-weight: bold;
     font-variant-caps: small-caps;
-    width: 25%;
+    width: 100%;
     height: 30px;
     color: var(--OBR-font);
     background-color: transparent;
@@ -501,9 +506,16 @@ li>p {
     cursor: help;
 }
 
-.controlContainer {
+.even-set-button-container {
     display: flex;
+    width: 100%;
+    justify-content: space-evenly;
+}
+
+.controlContainer {
     padding-bottom: 6px;
+    width: 100%;
+    display: flex;
 }
 
 #debugViewToggle {
@@ -825,7 +837,6 @@ button {
 
 .patreon-clickable {
     cursor: pointer;
-    filter: var(--invert);
     background-color: transparent !important;
     border-style: none !important;
     height: 20px;
@@ -897,4 +908,49 @@ button {
     display: flex;
     width: 100%;
     justify-content: space-evenly;
+}
+
+.grid-container {
+    margin-bottom: 10px;
+}
+
+.grid-container div {
+    display: flex;
+}
+
+.grid-container input[type="checkbox"] {
+    margin-left: auto;
+}
+
+.grid-container input[type="number"],
+.grid-container input[type="text"] {
+    width: 100px;
+    margin-left: auto;
+}
+
+.grid-container #import_file_name {
+    max-width: 100%;
+    width: 100%;
+    margin-bottom: 6px;
+}
+
+select {
+    margin-left: auto;
+}
+
+.mobile-presistence {
+    margin: 0 20px;
+    align-self: center;
+}
+
+.mobile-color {
+    width: 58px;
+}
+
+.mobile-import-dpi-input {
+    margin-top: 0 !important;
+}
+
+.ts-control {
+    background-color: var(--OBR-dark-blue);
 }

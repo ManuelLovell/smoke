@@ -8,7 +8,7 @@ import { BSCACHE } from "./utilities/bsSceneCache";
 import { SMOKEMACHINE } from "./smokeProcessor";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 
-export function SetupGMInputHandlers()
+export function SetupGMInputHandlers(mobile = false)
 {
     const hiddenListToggle = document.getElementById("hideListToggle") as HTMLInputElement;
     SMOKEMAIN.hiddenList = document.getElementById("hidden_list") as HTMLTableSectionElement;
@@ -19,12 +19,12 @@ export function SetupGMInputHandlers()
         if (SMOKEMAIN.hiddenList!.style.display === "none")
         {
             if (SMOKEMAIN.hiddenList) SMOKEMAIN.hiddenList.style.display = "table-row-group";
-            if (hiddenListToggle) hiddenListToggle.value = "Out-of-Sight List: Click to Hide";
+            if (hiddenListToggle) hiddenListToggle.value = mobile ? "Tap to Hide List" : "Out-of-Sight List: Click to Hide";
         }
         else
         {
             if (SMOKEMAIN.hiddenList) SMOKEMAIN.hiddenList.style.display = "none";
-            if (hiddenListToggle) hiddenListToggle.value = "Out-of-Sight List: Click to Show";
+            if (hiddenListToggle) hiddenListToggle.value = mobile ? "Tap to Show List" : "Out-of-Sight List: Click to Show";
         }
     }
 

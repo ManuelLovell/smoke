@@ -82,24 +82,11 @@ export class SmokeMain
         {
             await OBR.action.setHeight(530);
             await OBR.action.setWidth(420);
-            this.mainWindow!.innerHTML = `
-            <div id="tabControls">
-                <div class="controlContainer">
-                    <button class="view-button selected" id="smokeViewToggle">Smoke</button>
-                    <button class="view-button" id="spectreViewToggle">Spectre</button>
-                    <button class="view-button" id="helpViewToggle">Help</button>
-                    <button class="view-button" id="settingsViewToggle">Settings</button>
-                    <div id="patreonContainer"></div>
-                </div>
-            </div>
-            <div id="smokeViewPanel" class="panel"></div>
-            <div id="spectreViewPanel" class="panel" style="display: none;"></div>
-            <div id="settingsViewPanel" class="panel" style="display: none;"></div>
-            <div id="helpViewPanel" class="panel" style="display: none;">
-                <div id="markdownHelpContainer"></div>
-            </div>
-            `;
 
+            const width = await OBR.viewport.getWidth();
+            const useMobile = width < 400;
+
+            this.mainWindow!.innerHTML = useMobile ? Constants.SMOKEMOBILEMAIN : Constants.SMOKEMAIN;
             this.smokeViewToggle = document.getElementById("smokeViewToggle") as HTMLButtonElement;
             this.spectreViewToggle = document.getElementById("spectreViewToggle") as HTMLButtonElement;
             this.settingsViewToggle = document.getElementById("settingsViewToggle") as HTMLButtonElement;
@@ -113,9 +100,9 @@ export class SmokeMain
             this.patreonContainer = document.getElementById("patreonContainer") as HTMLDivElement;
 
             // Setup Panels before hitting Handlers
-            this.smokeViewPanel.innerHTML = Constants.SMOKEHTML;
+            this.smokeViewPanel.innerHTML = useMobile ? Constants.SMOKEMOBILEHTML : Constants.SMOKEHTML;
             this.spectreViewPanel.innerHTML = Constants.SPECTREHTML;
-            this.settingsViewPanel.innerHTML = Constants.SETTINGSHTML;
+            this.settingsViewPanel.innerHTML = useMobile ? Constants.SETTINGSMOBILEHTML : Constants.SETTINGSHTML;
 
             // Setup Player Owner Context Menu
             const playerContextMenu = document.getElementById("playerListing")!;
@@ -149,7 +136,7 @@ export class SmokeMain
             this.SetupHelpDocuments();
             this.SetupGMPanelHandlers();
             this.UpdateVisionList();
-            SetupGMInputHandlers();
+            SetupGMInputHandlers(useMobile);
             UpdateMaps();
             SetupTools();
             CreateTooltips();
@@ -312,6 +299,9 @@ export class SmokeMain
 
     public UpdateVisionList()
     {
+        const tokenTable = document.getElementById('token_list') as HTMLTableSectionElement;
+        if (!tokenTable) return;
+
         const tokensWithVision = BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item));
         const tokenTableEntries = document.getElementsByClassName("token-table-entry") as HTMLCollectionOf<HTMLTableRowElement>;
 

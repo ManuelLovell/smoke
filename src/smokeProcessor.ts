@@ -476,7 +476,7 @@ class SmokeProcessor
         if (BSCACHE.playerRole === "GM")
         {
             const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
-            if (playerPreviewSelect?.value !== BSCACHE.playerId)
+            if (playerPreviewSelect && playerPreviewSelect?.value !== BSCACHE.playerId)
             {
                 // We're running as someone else
                 sceneVisionTokens = BSCACHE.sceneItems.filter(item => (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
