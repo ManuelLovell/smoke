@@ -338,7 +338,7 @@ class BSCache
                     if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true
                         && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
                     {
-                        await SetupUnitContextMenu(true);
+                        if (BSCACHE.playerRole === "GM") await SetupUnitContextMenu(true);
                     }
                     else if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true
                         && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
