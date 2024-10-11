@@ -113,6 +113,8 @@ class Spectre
                 offset: token.grid.offset
             })
             .position(token.position)
+            .scale(token.scale)
+            .rotation(token.rotation)
             .attachedTo(token.id)
             .layer(token.layer)
             .metadata({ [`${Constants.SPECTREID}/isLocalSpectre`]: token.id })
