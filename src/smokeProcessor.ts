@@ -971,7 +971,19 @@ class SmokeProcessor
             zIndex: this.GetDepth(depth, false)
         };
         this.lightsToUpdate.push(update);
-        if (lightType === "PRIMARY") this.UpdateOwnerHightlight(sceneToken);
+        if (lightType === "PRIMARY")
+        {
+            this.UpdateOwnerHightlight(sceneToken);
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
+            {
+                const thisRevealer = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] === localLight.id);
+                if (thisRevealer)
+                {
+                    this.trailingFogTokens = this.trailingFogTokens.filter(x => x !== localLight.id);
+                    this.lightsToDelete.push(thisRevealer.id);
+                }
+            }
+        }
     }
 
     private GetLightRange(distance: string, asFloat = false)
