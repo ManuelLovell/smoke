@@ -341,16 +341,19 @@ class BSCache
                         SMOKEMACHINE.ClearDoors();
                     }
 
-                    // Handle ContextMenu turning on and off
-                    if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true
-                        && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
+                    if (BSCACHE.playerRole === "GM") 
                     {
-                        if (BSCACHE.playerRole === "GM") await SetupUnitContextMenu(true);
-                    }
-                    else if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true
-                        && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
-                    {
-                        await SetupUnitContextMenu(false);
+                        // Handle ContextMenu turning on and off
+                        if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true
+                            && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
+                        {
+                            await SetupUnitContextMenu(true);
+                        }
+                        else if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true
+                            && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
+                        {
+                            await SetupUnitContextMenu(false);
+                        }
                     }
 
                     // Handle Persistence being toggled off/on

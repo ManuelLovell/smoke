@@ -13,13 +13,33 @@ OBR.onReady(async () =>
     const visionDarkInput = document.getElementById('darkContext') as HTMLInputElement;
     const visionInnerInput = document.getElementById('innerContext') as HTMLInputElement;
     const visionOuterInput = document.getElementById('outerContext') as HTMLInputElement;
+    const visionOwnerSelect = document.getElementById('visionOwnerSelect') as HTMLSelectElement;
 
     const unitItems = await OBR.scene.items.getItems(item => unitsIds?.includes(item.id));
+    const party = await OBR.party.getPlayers();
+
+    const selfItem = document.createElement("option");https://www.twitch.tv/thenocturnalplay
+    selfItem.value = await OBR.player.getId();
+    selfItem.textContent = await OBR.player.getName();
+    selfItem.style.color = await OBR.player.getColor();
+    visionOwnerSelect.appendChild(selfItem);
+
+    for (const player of party)
+    {
+        const previewItem = document.createElement("option");
+        previewItem.value = player.id;
+        previewItem.textContent = player.name;
+        previewItem.style.color = player.color;
+        visionOwnerSelect.appendChild(previewItem);
+    }
+
     const sceneMetadata = await OBR.scene.getMetadata();
 
+    visionOwnerSelect.value = '';
     if (unitItems.length === 1)
     {
         const token = unitItems[0];
+        visionOwnerSelect.value = token.createdUserId;
         visionRangeInput.value = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
             : GetVisionDefault('visionRangeDefault');
@@ -44,6 +64,19 @@ OBR.onReady(async () =>
             ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
             : GetVisionDefault('visionDarkDefault');
     }
+
+    visionOwnerSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
+        {
+            for (const item of items)
+            {
+                item.createdUserId = target.value;
+            }
+        });
+    };
+
     visionRangeInput.onchange = async (event: Event) =>
     {
         if (!event || !event.target) return;

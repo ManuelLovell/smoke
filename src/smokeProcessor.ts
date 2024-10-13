@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, PathCommand, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape, isImage } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
@@ -715,6 +715,7 @@ class SmokeProcessor
     private async UpdateWalls()
     {
         const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
+        const wallPass = (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true && BSCACHE.playerRole === "GM");
 
         // Find all of the REAL fog lines to be recreated as local walls
         const sceneVisionLines = BSCACHE.sceneItems.filter(x => (isVisionLineAndEnabled(x))) as Curve[];
@@ -741,11 +742,12 @@ class SmokeProcessor
                 const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
                 const equalPosition = (visionLine.position.x === existingLine.position.x
                     && visionLine.position.y === existingLine.position.y);
-                const equalBlock = visionLine.metadata[`${Constants.EXTENSIONID}/blocking`]
-                    === existingLine.blocking;
                 const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`]
                     === existingLine.doubleSided;
                 const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
+
+                let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
+                    === existingLine.blocking;
 
                 if (!equalPoints || !equalPosition || !equalBlock || !equalSides || !equalDepth)
                 {
@@ -791,11 +793,16 @@ class SmokeProcessor
     private CreateWallToQueue(line: Curve, depth: number)
     {
         // We are making a mirror of the wall, that we can identify which one it's replicating
+        let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
+        if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
+        {
+            blockWall = false;
+        }
         const item = buildWall()
             .points(line.points)
             .position(line.position)
             .locked(true)
-            .blocking(line.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false)
+            .blocking(blockWall)
             .doubleSided(line.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false)
             .zIndex(this.GetDepth(depth, true))
             .metadata({ [`${Constants.EXTENSIONID}/isVisionWall`]: line.id })
@@ -940,11 +947,17 @@ class SmokeProcessor
 
     private UpdateWallToQueue(scenelLine: Curve, localWall: Wall, depth: number)
     {
+        let blockWall = scenelLine.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
+        if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
+        {
+            blockWall = false;
+        }
+
         const update = {
             id: localWall.id,
             points: scenelLine.points,
             position: scenelLine.position,
-            blocking: scenelLine.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false,
+            blocking: blockWall,
             doubleSided: scenelLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false,
             zIndex: this.GetDepth(depth, true)
         };

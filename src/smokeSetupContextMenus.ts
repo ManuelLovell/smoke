@@ -793,12 +793,12 @@ export async function SetupUnitContextMenu(enable: boolean)
                 await OBR.popover.open({
                     id: Constants.CONTEXTID,
                     url: `/pages/contextembed.html`,
-                    height: 110,
+                    height: 140,
                     width: 200,
                     anchorElementId: elementId
                 });
             },
-            embed: { url: `/pages/contextembed.html?contextmenu=true`, height: 110 }
+            embed: { url: `/pages/contextembed.html?contextmenu=true`, height: 140 }
         });
     }
     else

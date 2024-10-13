@@ -148,6 +148,18 @@ export function SetupGMInputHandlers(mobile = false)
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/unitContextMenu`]: target.checked });
     };
 
+
+    // Toggles the pass-through of walls for a GM
+    const passWallsCheckbox = document.getElementById("toggle_gmwalls") as HTMLInputElement;
+    passWallsCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true;
+    passWallsCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/passWallsGM`]: target.checked });
+    };
+
     // Toggles the locked/unlocked state of all lines
     const lockFogButton = document.getElementById("lock_button") as HTMLButtonElement;
     const unlockFogButton = document.getElementById("unlock_button") as HTMLButtonElement;
