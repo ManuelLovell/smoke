@@ -260,6 +260,12 @@
                     <td><input type="checkbox" id="door_checkbox"></td>
                 </tr>
                 <tr>
+                    <td colspan="2"><label for="toggle_gmwalls" id="tip_gmwalls">Wall Pass (GM)</label></td>
+                    <td><input type="checkbox" id="toggle_gmwalls"></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+                <tr>
                     <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
                     <td colspan="3"><input class="settingsButton" type="button" id="doublewall_button" value="Double-Side Walls"></td>
                 </tr>
