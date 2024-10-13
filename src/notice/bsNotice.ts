@@ -13,7 +13,7 @@ whatsnew.innerHTML = `
     <br> Smoke & Spectre 3.0 is officially released.  There have been a lot of changes and new features - walls, real-time lighting and more.
     So check the the <a href="https://www.patreon.com/battlesystem">Battle-System Patreon</a> for the full changelog, or jump right in and try it for yourself.
     <br>
-    <br> (This popup should only show once, so don't kill me.)
+    <br> (This will close in 10 seconds and should only show once.)
   </div>
 `;
 
@@ -53,4 +53,7 @@ OBR.onReady(async () =>
         e.preventDefault();
         window.open("https://www.patreon.com/battlesystem", "_blank");
     };
+
+    setTimeout(async () =>
+    { await OBR.modal.close(Constants.EXTENSIONNOTICE) }, 10000);
 });

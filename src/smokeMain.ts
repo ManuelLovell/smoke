@@ -66,7 +66,7 @@ export class SmokeMain
     public async Start()
     {
         /// Temporary message for letting people be aware
-        const noticed = localStorage.getItem("NOTICED");
+        const noticed = localStorage.getItem("NOTICEDe");
         if (noticed !== "true")
         {
             await OBR.modal.open({
