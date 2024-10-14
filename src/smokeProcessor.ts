@@ -158,6 +158,7 @@ class SmokeProcessor
                 const revealerEffect = buildEffect()
                     .position(light.position)
                     .attachedTo(light.id)
+                    .scale(light.scale)
                     .width(200)
                     .height(200)
                     .effectType("ATTACHMENT")
@@ -165,8 +166,6 @@ class SmokeProcessor
                     .sksl(Constants.TRAILINGFOGREVEALSHADER)
                     .disableAttachmentBehavior(["SCALE"])
                     .uniforms([
-                        { name: "darknessLevel", value: 0.65 },
-                        { name: "darknessColor", value: Utilities.HexToRgbShader(BSCACHE.fogColor) },
                         { name: "radiusRatio", value: 1.0 },
                     ])
                     .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
@@ -196,6 +195,7 @@ class SmokeProcessor
                 const trailingFogEffect = buildEffect()
                     .position(map.position)
                     .attachedTo(map.id)
+                    .scale(map.scale)
                     .width(map.image.width)
                     .height(map.image.height)
                     .effectType("ATTACHMENT")

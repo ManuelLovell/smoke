@@ -59,62 +59,49 @@ export class Constants
     ];
 
     static TRAILINGFOGSHADER = `
-        uniform shader scene;
-        uniform mat3 modelView;
-        uniform float darknessLevel;
         uniform vec3 darknessColor;
+        uniform shader scene;
+        uniform float darknessLevel;
+        uniform mat3 modelView;
 
         half4 main(float2 coord) {
-            // Transform the coordinates
             vec2 uv = (vec3(coord, 1) * modelView).xy;
+            half4 sceneColor = scene.eval(uv);
 
-            // Sample the color from the scene
-            half4 color = scene.eval(uv);
-
-            // Blend the scene color with the dynamic darknessColor based on darknessLevel
-            half3 darkenedColor = mix(color.rgb, darknessColor, darknessLevel);
-
-            return half4(darkenedColor, color.a); // Return the final color with original alpha
+            // Create a dark overlay color
+            vec3 overlayColor = darknessColor * darknessLevel;
+            half4 darkColor = half4(overlayColor, darknessLevel);
+            
+            // Return the overlay color with the specified alpha
+            return mix(sceneColor, darkColor, darkColor.a);
         }
     `;
 
     static TRAILINGFOGREVEALSHADER = `
         uniform shader scene;
         uniform vec2 size;
-        uniform float radiusRatio;
-        uniform float darknessLevel;
-        uniform vec3 darknessColor;
         uniform mat3 modelView;
 
         half4 main(float2 coord) {
-        
             vec2 sceneCoord = (vec3(coord, 1) * modelView).xy;
 
             // Sample the color from the scene
             half4 sceneColor = scene.eval(sceneCoord);
 
-            // Calculate distance from the center of the effect
-            vec2 center = size / 2.0;
+            // Precompute values
+            vec2 center = size * 0.5;
+            float aspectRatioInv = size.y / size.x; // Precompute inverse of aspect ratio
             vec2 diff = coord - center;
-            float aspectRatio = size.x / size.y;
-            diff.x /= aspectRatio;
-            float dist = length(diff);
+            diff.x *= aspectRatioInv; // Avoid division by multiplying by the inverse
+            float distSquared = dot(diff, diff); // Avoid sqrt by using squared distance
 
-            // Calculate the radius based on the smaller dimension of the effect
-            float radius = min(size.x, size.y) * radiusRatio / 2.0;
+            float radiusSquared = (min(size.x, size.y) * 0.5) * (min(size.x, size.y) * 0.5);
 
-            // Inside the circle, remove darkness. Outside, leave unchanged.
-            if (dist <= radius) 
-            {
-                // Remove darkness by returning the original sceneColor
-                return sceneColor;
-            } 
-            else 
-            {
-                // Outside of that, return the darkened color
-                half3 darkenedColor = mix(sceneColor.rgb, darknessColor, darknessLevel);
-                return half4(darkenedColor, sceneColor.a);
-            }
+            // Use a step function to avoid branching
+            float mask = step(distSquared, radiusSquared);
+
+            // Interpolate between scene color and black
+            return mix(half4(0, 0, 0, 0), sceneColor, mask);
         }
     `;
 
