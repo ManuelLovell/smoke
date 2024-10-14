@@ -402,6 +402,15 @@
 
     <div class="grid-container">
         <div>
+            <label for="toggle_gmwalls" id="tip_gmwalls">Wall Pass (GM)</label>
+            <input type="checkbox" id="toggle_gmwalls">
+        </div>
+        <div>
+        </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
             <select class="settingsButton" id="preview_select"></select>
         </div>
         <div>
