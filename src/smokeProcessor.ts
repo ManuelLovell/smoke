@@ -241,6 +241,8 @@ class SmokeProcessor
                 if (!localDoors.some(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] === door.id))
                 {
                     // No door exists, create the door.
+                    const doorOpen = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true;
+                    const doorLocked = door.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true;
                     const shapeTransform = MathM.fromItem(door);
                     const points: Vector2[] = [];
                     for (let i = 0; i < door.points.length; i++)
@@ -249,22 +251,34 @@ class SmokeProcessor
                         points.push(MathM.decompose(MathM.multiply(shapeTransform, localTransform)).position);
                     }
 
-                    const doorOpen = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true;
+                    let doorUrl = Constants.DOOROPEN;
+                    let doorName = "Opened Door";
+                    if (BSCACHE.playerRole === "GM" && doorLocked)
+                    {
+                        doorUrl = Constants.DOORLOCKED;
+                        doorName = "Locked Door";
+                    }
+                    else if (!doorOpen)
+                    {
+                        doorUrl = Constants.DOORCLOSED;
+                        doorName = "Closed Door";
+                    }
+
                     const doorPosition = Math2.centroid(points);
                     createLocalDoors.push(buildImage(
                         {
                             height: 100,
                             width: 100,
-                            url: doorOpen ? Constants.DOOROPEN : Constants.DOORCLOSED,
+                            url: doorUrl,
                             mime: 'image/svg+xml'
-                        }, { dpi: 300, offset: { x: 75, y: 75 } }
+                        }, { dpi: 150, offset: { x: 50, y: 50 } }
                     )
                         .scale(({
-                            x: 1, y: 1
+                            x: .5, y: .5
                         }))
                         .layer("DRAWING")
                         .locked(true)
-                        .name(doorOpen ? "Opened Door" : "Closed Door")
+                        .name(doorName)
                         .position({ x: doorPosition.x, y: doorPosition.y })
                         .metadata({ [`${Constants.EXTENSIONID}/doorId`]: door.id })
                         .build());
@@ -280,7 +294,10 @@ class SmokeProcessor
 
         if (localDoors.length > 0)
         {
-            const changedLocalDoorIds: string[] = [];
+            const openedDoors: string[] = [];
+            const closedDoors: string[] = [];
+            const lockedDoors: string[] = [];
+
             const deletedDoorWalls: string[] = [];
             for (const local of localDoors)
             {
@@ -291,10 +308,19 @@ class SmokeProcessor
                     {
                         deletedDoorWalls.push(local.id);
                     }
-                    else if ((local.image.url === Constants.DOOROPEN && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === undefined)
-                        || (local.image.url === Constants.DOORCLOSED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true))
+                    else if (BSCACHE.playerRole === "GM" && local.image.url !== Constants.DOORLOCKED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true)
                     {
-                        changedLocalDoorIds.push(local.id);
+                        lockedDoors.push(local.id);
+                    }
+                    else if (local.image.url !== Constants.DOOROPEN && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true)
+                    {
+                        openedDoors.push(local.id);
+                    }
+                    else if (local.image.url !== Constants.DOORCLOSED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/doorOpen`] !== true)
+                    {
+                        if (BSCACHE.playerRole === "GM" && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] !== true
+                            || BSCACHE.playerRole === "PLAYER")
+                            closedDoors.push(local.id);
                     }
                 }
                 else
@@ -302,23 +328,36 @@ class SmokeProcessor
                     deletedDoorWalls.push(local.id);
                 }
             }
-            if (changedLocalDoorIds.length > 0)
+            if (lockedDoors.length > 0)
             {
-                await OBR.scene.local.updateItems<Image>(x => changedLocalDoorIds.includes(x.id), (doors) =>
+                await OBR.scene.local.updateItems<Image>(x => lockedDoors.includes(x.id), (doors) =>
                 {
                     for (let door of doors)
                     {
-                        if (door.image.url === Constants.DOOROPEN)
-                        {
-                            // Close it
-                            door.image.url = Constants.DOORCLOSED;
-                            door.name = "Closed Door";
-                        }
-                        else
-                        {
-                            door.image.url = Constants.DOOROPEN;
-                            door.name = "Open Door";
-                        }
+                        door.image.url = Constants.DOORLOCKED;
+                        door.name = "Locked Door";
+                    }
+                });
+            }
+            if (openedDoors.length > 0)
+            {
+                await OBR.scene.local.updateItems<Image>(x => openedDoors.includes(x.id), (doors) =>
+                {
+                    for (let door of doors)
+                    {
+                        door.image.url = Constants.DOOROPEN;
+                        door.name = "Opened Door";
+                    }
+                });
+            }
+            if (closedDoors.length > 0)
+            {
+                await OBR.scene.local.updateItems<Image>(x => closedDoors.includes(x.id), (doors) =>
+                {
+                    for (let door of doors)
+                    {
+                        door.image.url = Constants.DOORCLOSED;
+                        door.name = "Closed Door";
                     }
                 });
             }
@@ -847,7 +886,7 @@ class SmokeProcessor
         // We are 'light' to follow the token around, that we can identify which one it's replicating
         const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         const visionRange = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            1 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+            0 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
 
         const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
             > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
@@ -968,7 +1007,7 @@ class SmokeProcessor
     {
         const lightType = sceneToken.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         const visionRange = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            1 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+            0 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
         const useDarkVision = parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
             > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
         const darkVisionRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);

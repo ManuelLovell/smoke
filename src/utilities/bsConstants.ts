@@ -35,6 +35,8 @@ export class Constants
 
     static DOOROPEN = 'https://battle-system.com/owlbear/smoke-docs/opendoor.svg';
     static DOORCLOSED = 'https://battle-system.com/owlbear/smoke-docs/closeddoor.svg';
+    static DOORLOCKED = 'https://battle-system.com/owlbear/smoke-docs/lockeddoor.svg';
+
     static TRAILINGCOLLAR: PathCommand[] = [
         [Command.MOVE, 250, 250],
         [Command.LINE, 250, 220],

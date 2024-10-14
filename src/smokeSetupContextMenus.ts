@@ -499,6 +499,9 @@ export async function SetupContextMenus(): Promise<void>
                 {
                     if (!enableDoor)
                     {
+                        delete item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`];
+                        delete item.metadata[`${Constants.EXTENSIONID}/doorOpen`];
+                        delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
                         delete item.metadata[`${Constants.EXTENSIONID}/isDoor`];
                         item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
                     }
