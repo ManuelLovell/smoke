@@ -27,6 +27,10 @@ class SmokeProcessor
     darkVisionToUpdate: { id: string, size: number }[] = [];
     darkVisionToDelete: string[] = [];
 
+    revealersToCreate: Effect[] = [];
+    revealersToUpdate: { id: string, size: number }[] = [];
+    revealersToDelete: string[] = [];
+
     persistentLights: {
         id: string;
         position: Vector2;
@@ -83,11 +87,12 @@ class SmokeProcessor
 
     public async Run()
     {
+        await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
         await this.UpdateWalls();
         await this.UpdateDoors();
         await this.UpdateLights();
         await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
-        await this.UpdateTrailingFog();
+        await this.UpdateTrailingFogTokens();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
@@ -95,13 +100,24 @@ class SmokeProcessor
         }
     }
 
-    private async UpdateTrailingFog()
+    private async UpdateTrailingFogMaps()
     {
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
         {
             // If our trailing fog setting is on, we'll process
             await this.CreateTrailingFogOverlay();
-            await this.CreateTrailingFogForToken();
+        }
+    }
+
+    private async UpdateTrailingFogTokens()
+    {
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
+        {
+            if (this.revealersToCreate.length > 0)
+            {
+                await OBR.scene.local.addItems(this.revealersToCreate);
+                this.revealersToCreate = [];
+            }
         }
         else if (this.trailingFogTokens.length > 0 || this.trailingFoggedMaps.length > 0)
         {
@@ -142,17 +158,10 @@ class SmokeProcessor
         });
     }
 
-    private async CreateTrailingFogForToken()
+    private CreateTrailingFogRevealer(light: Light)
     {
-        // Find all of the primary lights in the scene
-        // This doesn't need an owner check, as lights should only be made for things that you as a player own or can see through
-        const allLights = BSCACHE.sceneLocal.filter(x => x.type === "LIGHT") as Light[];
-        const primaryLights = allLights.filter(x => x.lightType === "PRIMARY");
-        const trailRevealersToCreate: Effect[] = [];
-
-        for (const light of primaryLights)
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
         {
-            // We keep track of all tokens we attached a revealer to
             if (!this.trailingFogTokens.includes(light.id))
             {
                 const revealerEffect = buildEffect()
@@ -164,20 +173,15 @@ class SmokeProcessor
                     .effectType("ATTACHMENT")
                     .layer("POST_PROCESS")
                     .sksl(Constants.TRAILINGFOGREVEALSHADER)
-                    .disableAttachmentBehavior(["SCALE"])
                     .uniforms([
                         { name: "radiusRatio", value: 1.0 },
                     ])
                     .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
                     .disableHit(true)
                     .build();
-                trailRevealersToCreate.push(revealerEffect);
+                this.revealersToCreate.push(revealerEffect);
                 this.trailingFogTokens.push(light.id);
             }
-        }
-        if (trailRevealersToCreate.length > 0)
-        {
-            await OBR.scene.local.addItems(trailRevealersToCreate);
         }
     }
 
@@ -918,6 +922,7 @@ class SmokeProcessor
         {
             this.CreateDarkVisionToQueue(token);
             this.CreateOwnerHighlight(token);
+            this.CreateTrailingFogRevealer(item);
         }
     }
 
@@ -1030,15 +1035,6 @@ class SmokeProcessor
         if (lightType === "PRIMARY")
         {
             this.UpdateOwnerHightlight(sceneToken);
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
-            {
-                const thisRevealer = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] === localLight.id);
-                if (thisRevealer)
-                {
-                    this.trailingFogTokens = this.trailingFogTokens.filter(x => x !== localLight.id);
-                    this.lightsToDelete.push(thisRevealer.id);
-                }
-            }
         }
     }
 
