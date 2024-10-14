@@ -779,6 +779,7 @@ class SmokeProcessor
             {
                 // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
                 const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
+                const equalScale = visionLine.scale === existingLine.scale;
                 const equalPosition = (visionLine.position.x === existingLine.position.x
                     && visionLine.position.y === existingLine.position.y);
                 const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`]
@@ -788,7 +789,7 @@ class SmokeProcessor
                 let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
                     === existingLine.blocking;
 
-                if (!equalPoints || !equalPosition || !equalBlock || !equalSides || !equalDepth)
+                if (!equalPoints || !equalPosition || !equalScale || !equalBlock || !equalSides || !equalDepth)
                 {
                     this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
                 }
@@ -817,6 +818,7 @@ class SmokeProcessor
                     {
                         line.points = mine.points;
                         line.position = mine.position;
+                        line.scale = mine.scale;
                         line.blocking = mine.blocking;
                         line.doubleSided = mine.doubleSided;
                         line.zIndex = mine.zIndex;
@@ -841,6 +843,7 @@ class SmokeProcessor
             .points(line.points)
             .position(line.position)
             .locked(true)
+            .scale(line.scale)
             .blocking(blockWall)
             .doubleSided(line.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false)
             .zIndex(this.GetDepth(depth, true))
@@ -996,6 +999,7 @@ class SmokeProcessor
             id: localWall.id,
             points: scenelLine.points,
             position: scenelLine.position,
+            scale: scenelLine.scale,
             blocking: blockWall,
             doubleSided: scenelLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false,
             zIndex: this.GetDepth(depth, true)
