@@ -837,6 +837,8 @@ class SmokeProcessor
 
     private CreateWallToQueue(line: Curve, depth: number)
     {
+        if (!line.points) return; //Let's just avoid any issues of this not being a line
+
         // We are making a mirror of the wall, that we can identify which one it's replicating
         let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
         if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
@@ -994,6 +996,8 @@ class SmokeProcessor
 
     private UpdateWallToQueue(scenelLine: Curve, localWall: Wall, depth: number)
     {
+        if (!scenelLine.points) return; //Let's just avoid any issues of this not being a line
+
         let blockWall = scenelLine.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
         if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
         {
