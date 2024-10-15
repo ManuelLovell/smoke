@@ -34,6 +34,7 @@ class SmokeProcessor
     persistentLights: {
         id: string;
         position: Vector2;
+        rotation: number;
         zIndex: number;
         metadata: any;
     }[] = [];
@@ -620,17 +621,27 @@ class SmokeProcessor
             // If persistence is enabled;
             // And there is no persistent light at this spot
             // And there is none within 10px
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true
-                && !this.persistentLights.find(x => x.position === sceneToken.position)
-                && this.IsPositionClear(sceneToken.position))
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
             {
-                // If we hit our limit, remove from the bottom of the stack
-                if (this.persistenceLimit === this.persistentLights.length)
+                const tokenInPosition = this.persistentLights.find(x => x.position.x === sceneToken.position.x && x.position.y === sceneToken.position.y);
+                if (!tokenInPosition)
                 {
-                    const removedPLight = this.persistentLights.shift()!;
-                    this.lightsToDelete.push(removedPLight.id);
+                    // This checks to see if there is any token in a small radius, as to avoid doubling up
+                    if (this.IsPositionClear(sceneToken.position))
+                    {
+                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth)
+                    }
                 }
-                this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth)
+                else
+                {
+                    // This means we're using coned vision, and should track rotation for persistence
+                    if ((sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== 360
+                        || sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== 360)
+                        && this.IsPositionAndRotationClear(sceneToken.rotation, sceneToken.position))
+                    {
+                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth)
+                    }
+                }
             }
         }
 
@@ -872,6 +883,7 @@ class SmokeProcessor
         const persistenceItem = buildLight()
             .position(token.position)
             .lightType("AUXILIARY")
+            .rotation(token.rotation)
             .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault()))
             .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
             .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
@@ -885,9 +897,17 @@ class SmokeProcessor
         this.persistentLights.push({
             id: persistenceItem.id,
             position: persistenceItem.position,
+            rotation: persistenceItem.rotation,
             zIndex: depth, // This is for when it's re-calculated on load
             metadata: token.metadata
         });
+
+        // If we hit our limit, remove from the bottom of the stack
+        if (this.persistenceLimit === this.persistentLights.length)
+        {
+            const removedPLight = this.persistentLights.shift()!;
+            this.lightsToDelete.push(removedPLight.id);
+        }
     }
 
     private CreateLightToQueue(token: Item, depth: number)
@@ -903,6 +923,7 @@ class SmokeProcessor
 
         const item = buildLight()
             .position(token.position)
+            .rotation(token.rotation)
             .lightType(lightType)
             .attenuationRadius(useDarkVision ? darkVisionRange : visionRange)
             .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
@@ -1079,6 +1100,21 @@ class SmokeProcessor
             if (distance <= griddedDistance)
             {
                 return false;
+            }
+        }
+        return true;
+    }
+
+    private IsPositionAndRotationClear(rotation: number, position: Vector2): boolean
+    {
+        const griddedDistance = (BSCACHE.gridDpi - 10) * this.persistenceCullingDistance;
+        for (const light of this.persistentLights)
+        {
+            const distance = Utilities.distanceBetween(position, light.position);
+            if (distance <= griddedDistance)
+            {
+                if (rotation === light.rotation)
+                    return false;
             }
         }
         return true;
