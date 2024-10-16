@@ -794,6 +794,7 @@ class SmokeProcessor
             {
                 // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
                 const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
+                const equalRotation = visionLine.rotation === existingLine.rotation;
                 const equalScale = visionLine.scale === existingLine.scale;
                 const equalPosition = (visionLine.position.x === existingLine.position.x
                     && visionLine.position.y === existingLine.position.y);
@@ -804,7 +805,7 @@ class SmokeProcessor
                 let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
                     === existingLine.blocking;
 
-                if (!equalPoints || !equalPosition || !equalScale || !equalBlock || !equalSides || !equalDepth)
+                if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth)
                 {
                     this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
                 }
@@ -833,6 +834,7 @@ class SmokeProcessor
                     {
                         line.points = mine.points;
                         line.position = mine.position;
+                        line.rotation = mine.rotation;
                         line.scale = mine.scale;
                         line.blocking = mine.blocking;
                         line.doubleSided = mine.doubleSided;
@@ -858,6 +860,7 @@ class SmokeProcessor
         }
         const item = buildWall()
             .points(line.points)
+            .rotation(line.rotation)
             .position(line.position)
             .locked(true)
             .scale(line.scale)
@@ -1028,6 +1031,7 @@ class SmokeProcessor
         const update = {
             id: localWall.id,
             points: scenelLine.points,
+            rotation: scenelLine.rotation,
             position: scenelLine.position,
             scale: scenelLine.scale,
             blocking: blockWall,
