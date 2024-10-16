@@ -26,7 +26,7 @@ OBR.onReady(async () =>
     buttonCancel.type = "button";
     buttonCancel.onclick = async () =>
     {
-        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, "FINISH", { destination: "LOCAL" });
+        await OBR.broadcast.sendMessage(`${Constants.EXTENSIONID}/POLYGONEVENT`, "CANCEL", { destination: "LOCAL" });
     };
 
     const buttonUndo = document.createElement('input');
