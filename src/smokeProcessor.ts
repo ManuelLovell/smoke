@@ -582,7 +582,7 @@ class SmokeProcessor
                 const equalOuterAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
                     === existingLight.outerAngle.toString();
                 const equalBlind = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`]
-                    === existingLight.metadata[`${Constants.EXTENSIONID}/visionOutAngle`];
+                    === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
                 if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalBlind || !equalDepth)
@@ -621,7 +621,7 @@ class SmokeProcessor
             // If persistence is enabled;
             // And there is no persistent light at this spot
             // And there is none within 10px
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true && sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] !== true)
             {
                 const tokenInPosition = this.persistentLights.find(x => x.position.x === sceneToken.position.x && x.position.y === sceneToken.position.y);
                 if (!tokenInPosition)
