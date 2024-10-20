@@ -605,6 +605,11 @@ class SmokeProcessor
                 {
                     this.CreateDarkVisionToQueue(sceneToken);
                 }
+
+                if (existingLight.lightType === "PRIMARY")
+                {
+                    this.CreateTrailingFogRevealer(existingLight);
+                }
             }
 
             // Check to see if we need to overlay a top-level decal to show the token
@@ -972,7 +977,6 @@ class SmokeProcessor
         {
             this.CreateDarkVisionToQueue(token);
             this.CreateOwnerHighlight(token);
-            this.CreateTrailingFogRevealer(item);
         }
     }
 
