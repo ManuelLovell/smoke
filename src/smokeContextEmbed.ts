@@ -18,7 +18,7 @@ OBR.onReady(async () =>
     const unitItems = await OBR.scene.items.getItems(item => unitsIds?.includes(item.id));
     const party = await OBR.party.getPlayers();
 
-    const selfItem = document.createElement("option");https://www.twitch.tv/thenocturnalplay
+    const selfItem = document.createElement("option");
     selfItem.value = await OBR.player.getId();
     selfItem.textContent = await OBR.player.getName();
     selfItem.style.color = await OBR.player.getColor();

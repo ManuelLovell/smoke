@@ -379,6 +379,30 @@ export async function SetupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/switch-player-wall`,
+        icons: [
+            {
+                icon: "/person.svg",
+                label: "Change Wall Viewer",
+                filter: {
+                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }]
+                },
+            }
+        ],
+        async onClick(_ctx, elementId: string)
+        {
+            await OBR.popover.open({
+                id: Constants.CONTEXTID,
+                url: `/pages/wallcontextembed.html`,
+                height: 44,
+                width: 200,
+                anchorElementId: elementId
+            });
+        },
+        embed: { url: `/pages/wallcontextembed.html?contextmenu=true`, height: 44 }
+    });
+
+    await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/switch-blockage`,
         icons: [
             {

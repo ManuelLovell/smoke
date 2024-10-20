@@ -11,6 +11,7 @@ class SmokeProcessor
     wallsToUpdate: any[] = [];
     wallsToDelete: string[] = [];
     wallsToError: string[] = [];
+    wallsNotOwner: string[] = [];
 
     lightsToCreate: Light[] = [];
     lightsToUpdate: any[] = [];
@@ -788,46 +789,66 @@ class SmokeProcessor
                 continue;
             }
 
-            let visionLineDepth = -10;
-            for (const mapping of elevationMappings)
+            // Wall Viewers - If no viewer - If you are Viewer - If you are GM
+            const viewers = visionLine.metadata[`${Constants.EXTENSIONID}/wallViewers`] as string[];
+            if (!viewers || (viewers && viewers.length > 0 && viewers[0] === BSCACHE.playerId) || BSCACHE.playerRole === "GM")
             {
-                const withinMap = Utilities.isPointInPolygon(visionLine.points[0], mapping.Points);
-                if (withinMap && (mapping.Depth > visionLineDepth))
+                let visionLineDepth = -10;
+                for (const mapping of elevationMappings)
                 {
-                    visionLineDepth = mapping.Depth;
+                    const withinMap = Utilities.isPointInPolygon(visionLine.points[0], mapping.Points);
+                    if (withinMap && (mapping.Depth > visionLineDepth))
+                    {
+                        visionLineDepth = mapping.Depth;
+                    }
                 }
-            }
 
-            const existingLine = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isVisionWall`] === visionLine.id) as Wall;
-            if (!existingLine)
-            {
-                this.CreateWallToQueue(visionLine, visionLineDepth);
+                const existingLine = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isVisionWall`] === visionLine.id) as Wall;
+                if (!existingLine)
+                {
+                    this.CreateWallToQueue(visionLine, visionLineDepth);
+                }
+                else
+                {
+                    // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
+                    const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
+                    const equalRotation = visionLine.rotation === existingLine.rotation;
+                    const equalScale = (visionLine.scale.x === existingLine.scale.x && visionLine.scale.y === existingLine.scale.y);
+                    const equalPosition = (visionLine.position.x === existingLine.position.x && visionLine.position.y === existingLine.position.y);
+                    const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
+                    const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
+
+                    let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
+                        === existingLine.blocking;
+
+                    if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth)
+                    {
+                        this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
+                    }
+                }
             }
             else
             {
-                // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
-                const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
-                const equalRotation = visionLine.rotation === existingLine.rotation;
-                const equalScale = (visionLine.scale.x === existingLine.scale.x && visionLine.scale.y === existingLine.scale.y);
-                const equalPosition = (visionLine.position.x === existingLine.position.x && visionLine.position.y === existingLine.position.y);
-                const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
-                const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
-
-                let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
-                    === existingLine.blocking;
-
-                if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth)
-                {
-                    this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
-                }
+                // If it's not for you, we want to make sure you aren't rendering it
+                this.wallsNotOwner.push(visionLine.id);
             }
+
         }
 
         const localVisionWalls = BSCACHE.sceneLocal.filter(x => (isLocalVisionWall(x))) as Wall[];
         for (const localWall of localVisionWalls)
         {
             const exists = sceneVisionLines.find(x => x.id === localWall.metadata[`${Constants.EXTENSIONID}/isVisionWall`]);
-            if (!exists) this.wallsToDelete.push(localWall.id);
+            if (!exists)
+            {
+                this.wallsToDelete.push(localWall.id);
+                continue;
+            }
+
+            if (this.wallsNotOwner.includes(localWall.metadata[`${Constants.EXTENSIONID}/isVisionWall`] as string))
+            {
+                this.wallsToDelete.push(localWall.id);
+            }
         }
 
         // Add, Update and Delete
@@ -875,6 +896,7 @@ class SmokeProcessor
         this.wallsToUpdate = [];
         this.wallsToDelete = [];
         this.wallsToError = [];
+        this.wallsNotOwner = [];
     }
 
     private CreateWallToQueue(line: Curve, depth: number)
@@ -889,6 +911,7 @@ class SmokeProcessor
         }
         const item = buildWall()
             .points(line.points)
+            .attachedTo(line.id)
             .rotation(line.rotation)
             .position(line.position)
             .locked(true)
