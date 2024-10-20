@@ -1034,6 +1034,7 @@ class SmokeProcessor
                 offset: token.grid.offset
             })
             .rotation(token.rotation)
+            .scale(token.scale)
             .position(token.position)
             .attachedTo(token.id)
             .layer("FOG")
