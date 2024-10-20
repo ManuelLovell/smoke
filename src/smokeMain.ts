@@ -327,7 +327,7 @@ export class SmokeMain
             if (value > 999)
                 cleanValue = 999;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -344,7 +344,7 @@ export class SmokeMain
             if (value > 10)
                 cleanValue = 10;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -361,7 +361,7 @@ export class SmokeMain
             if (value > 999)
                 cleanValue = 999;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -378,7 +378,7 @@ export class SmokeMain
             if (value > 360)
                 cleanValue = 360;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -395,7 +395,7 @@ export class SmokeMain
             if (value > 360)
                 cleanValue = 360;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -412,7 +412,7 @@ export class SmokeMain
             if (value > 999)
                 cleanValue = 999;
             const tokensWithVision = torch ? BSCACHE.sceneItems.filter(item => isTokenWithVisionForUI(item)) : BSCACHE.sceneItems.filter(item => !isTorch(item) && isTokenWithVisionForUI(item));
-            await OBR.scene.items.updateItems(tokensWithVision, items =>
+            await OBR.scene.items.updateItems(tokensWithVision.map(x => x.id), items =>
             {
                 for (let item of items)
                 {
@@ -548,7 +548,7 @@ export class SmokeMain
                 target.value = "999";
             if (isNaN(value))
                 target.value = GetVisionRangeDefault();
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionRange`] = target.value;
             });
@@ -580,7 +580,7 @@ export class SmokeMain
             if (isNaN(value))
                 target.value = GetSourceRangeDefault();
 
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = target.value;
             });
@@ -616,7 +616,7 @@ export class SmokeMain
             if (isNaN(value))
                 target.value = GetFalloffRangeDefault();
 
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionFallOff`] = target.value;
             });
@@ -647,7 +647,7 @@ export class SmokeMain
                 target.value = "360";
             if (isNaN(value))
                 target.value = GetInnerAngleDefault();
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionInAngle`] = target.value;
             });
@@ -671,7 +671,7 @@ export class SmokeMain
             if (!event || !event.target) return;
             const target = event.target as HTMLInputElement;
             const thisPlayer = BSCACHE.sceneItems.find(x => x.id === token.id)!;
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionBlind`] = target.checked;
             });
@@ -702,7 +702,7 @@ export class SmokeMain
                 target.value = "360";
             if (isNaN(value))
                 target.value = GetOuterAngleDefault();
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = target.value;
             });
@@ -744,7 +744,7 @@ export class SmokeMain
                     setTimeout(async () =>
                     {
                         thisRow.classList.remove('slide-in');
-                        await OBR.scene.items.updateItems([thisPlayer], items =>
+                        await OBR.scene.items.updateItems([thisPlayer.id], items =>
                         {
                             items[0].metadata[`${Constants.EXTENSIONID}/hiddenToken`] = target.checked;
                         });
@@ -764,7 +764,7 @@ export class SmokeMain
                     setTimeout(async () =>
                     {
                         thisRow.classList.remove('slide-in');
-                        await OBR.scene.items.updateItems([thisPlayer], items =>
+                        await OBR.scene.items.updateItems([thisPlayer.id], items =>
                         {
                             items[0].metadata[`${Constants.EXTENSIONID}/hiddenToken`] = target.checked;
                         });
@@ -795,7 +795,7 @@ export class SmokeMain
                 target.value = "999";
             if (isNaN(value))
                 target.value = GetVisionRangeDefault();
-            await OBR.scene.items.updateItems([thisPlayer], items =>
+            await OBR.scene.items.updateItems([thisPlayer.id], items =>
             {
                 items[0].metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
             });

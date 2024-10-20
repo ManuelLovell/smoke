@@ -1,8 +1,9 @@
-import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2 } from "@owlbear-rodeo/sdk";
+import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2, Path } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
+import { ConvertPathCommands } from "./utilities/bsUtilities";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -68,6 +69,34 @@ export async function SetupContextMenus(): Promise<void>
                         }
                         linesToMake.push(line);
                         linesToDelete.push(baseCurve.id);
+                    }
+                }
+                else if (item.type === "PATH")
+                {
+                    const basePath = item as Path;
+                    if (basePath.commands.length > 2)
+                    {
+                        const line = buildCurve()
+                            .tension(0)
+                            .points(ConvertPathCommands(basePath.commands))
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeWidth(GetToolWidth())
+                            .fillOpacity(0)
+                            .fillColor("#000000")
+                            .layer(Constants.LINELAYER)
+                            .name("Vision Line (Line)")
+                            .closed(false)
+                            .locked(true)
+                            .visible(false)
+                            .metadata({
+                                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                                [`${Constants.EXTENSIONID}/blocking`]: true,
+                                [`${Constants.EXTENSIONID}/doubleSided`]: true
+                            })
+                            .build();
+                        linesToMake.push(line);
+                        linesToDelete.push(basePath.id);
                     }
                 }
                 else if (item.type === "LINE")

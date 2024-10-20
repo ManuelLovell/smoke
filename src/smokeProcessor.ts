@@ -10,6 +10,7 @@ class SmokeProcessor
     wallsToCreate: Wall[] = [];
     wallsToUpdate: any[] = [];
     wallsToDelete: string[] = [];
+    wallsToError: string[] = [];
 
     lightsToCreate: Light[] = [];
     lightsToUpdate: any[] = [];
@@ -775,6 +776,13 @@ class SmokeProcessor
         const sceneVisionLines = BSCACHE.sceneItems.filter(x => (isVisionLineAndEnabled(x))) as Curve[];
         for (const visionLine of sceneVisionLines)
         {
+            // Do an error check to call out bad walls
+            if (visionLine.type !== "CURVE" || visionLine.points === undefined)
+            {
+                this.wallsToError.push(visionLine.id);
+                continue;
+            }
+
             let visionLineDepth = -10;
             for (const mapping of elevationMappings)
             {
@@ -795,11 +803,9 @@ class SmokeProcessor
                 // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
                 const equalPoints = Utilities.ArePointsEqual(visionLine, existingLine);
                 const equalRotation = visionLine.rotation === existingLine.rotation;
-                const equalScale = visionLine.scale === existingLine.scale;
-                const equalPosition = (visionLine.position.x === existingLine.position.x
-                    && visionLine.position.y === existingLine.position.y);
-                const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`]
-                    === existingLine.doubleSided;
+                const equalScale = (visionLine.scale.x === existingLine.scale.x && visionLine.scale.y === existingLine.scale.y);
+                const equalPosition = (visionLine.position.x === existingLine.position.x && visionLine.position.y === existingLine.position.y);
+                const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
                 const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
 
                 let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
@@ -842,10 +848,28 @@ class SmokeProcessor
                     }
                 }
             });
+        if (this.wallsToError.length > 0)
+            await OBR.scene.items.updateItems<Curve>(this.wallsToError, lines =>
+            {
+                for (let line of lines)
+                {
+                    line.style.strokeDash = [10, 30];
+                    line.style.strokeColor = "red";
+                    delete line.metadata[`${Constants.EXTENSIONID}/isDoorLocked`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/doorOpen`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/disabled`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/isDoor`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/doubleSided`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/disabled`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/isVisionLine`];
+                    delete line.metadata[`${Constants.EXTENSIONID}/blocking`];
+                }
+            });
 
         this.wallsToCreate = [];
         this.wallsToUpdate = [];
         this.wallsToDelete = [];
+        this.wallsToError = [];
     }
 
     private CreateWallToQueue(line: Curve, depth: number)

@@ -173,7 +173,7 @@ export function SetupGMInputHandlers(mobile = false)
         for (let i = 0; i < allFogLines.length; i += 64)
         {
             const batch = allFogLines.slice(i, i + 64);
-            await OBR.scene.items.updateItems(batch, (paths) =>
+            await OBR.scene.items.updateItems(batch.map(x => x.id), (paths) =>
             {
                 for (let path of paths)
                 {
@@ -194,7 +194,7 @@ export function SetupGMInputHandlers(mobile = false)
         for (let i = 0; i < allFogLines.length; i += 64)
         {
             const batch = allFogLines.slice(i, i + 64);
-            await OBR.scene.items.updateItems(batch, (paths) =>
+            await OBR.scene.items.updateItems(batch.map(x => x.id), (paths) =>
             {
                 for (let path of paths)
                 {
@@ -217,7 +217,7 @@ export function SetupGMInputHandlers(mobile = false)
         for (let i = 0; i < allFogLines.length; i += 64)
         {
             const batch = allFogLines.slice(i, i + 64);
-            await OBR.scene.items.updateItems(batch, (paths) =>
+            await OBR.scene.items.updateItems(batch.map(x => x.id), (paths) =>
             {
                 for (let path of paths)
                 {
@@ -241,7 +241,7 @@ export function SetupGMInputHandlers(mobile = false)
         for (let i = 0; i < allFogLines.length; i += 64)
         {
             const batch = allFogLines.slice(i, i + 64);
-            await OBR.scene.items.updateItems(batch, (paths) =>
+            await OBR.scene.items.updateItems(batch.map(x => x.id), (paths) =>
             {
                 for (let path of paths)
                 {
@@ -262,7 +262,7 @@ export function SetupGMInputHandlers(mobile = false)
         for (let i = 0; i < allFogLines.length; i += 64)
         {
             const batch = allFogLines.slice(i, i + 64);
-            await OBR.scene.items.updateItems(batch, (paths) =>
+            await OBR.scene.items.updateItems(batch.map(x => x.id), (paths) =>
             {
                 for (let path of paths)
                 {

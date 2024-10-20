@@ -9,7 +9,7 @@ function isIndicatorRing(item: Item)
 
 function isDoor(item: Item)
 {
-    return item.metadata[`${Constants.EXTENSIONID}/isDoor`];
+    return item.type === "CURVE" && item.metadata[`${Constants.EXTENSIONID}/isDoor`];
 }
 
 function isVisionLine(item: Item)

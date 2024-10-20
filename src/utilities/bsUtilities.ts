@@ -25,6 +25,60 @@ export function GetPatreonButton()
     return newImgElement;
 }
 
+export function ConvertPathCommands(pathCommands: number[][]): Vector2[]
+{
+    const vectorArray: Vector2[] = [];
+
+    for (const command of pathCommands)
+    {
+        const commandType = command[0];
+
+        if (commandType === 0)
+        { // MoveTo
+            const [_, x, y] = command;
+            vectorArray.push({ x, y });
+        } else if (commandType === 2)
+        { // LineTo
+            const [_, x1, y1, x2, y2] = command;
+            vectorArray.push({ x: x1, y: y1 });
+            vectorArray.push({ x: x2, y: y2 });
+        } else if (commandType === 4)
+        { // CurveTo (Cubic Bézier)
+            const [_, x1, y1, x2, y2, x3, y3] = command;
+            const lastPoint = vectorArray[vectorArray.length - 1];
+            const p0 = lastPoint;    // The current last point in the array
+            const p1 = { x: x1, y: y1 };
+            const p2 = { x: x2, y: y2 };
+            const p3 = { x: x3, y: y3 };
+
+            // Approximate curve by subdividing the Bézier curve into multiple points (e.g., 10 subdivisions)
+            const numSegments = 10;
+            for (let i = 1; i <= numSegments; i++)
+            {
+                const t = i / numSegments;
+                const point = cubicBezier(t, p0, p1, p2, p3);
+                vectorArray.push(point);
+            }
+        }
+    }
+
+    return vectorArray;
+
+    function cubicBezier(t: number, p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): Vector2
+    {
+        const u = 1 - t;
+        const tt = t * t;
+        const uu = u * u;
+        const uuu = uu * u;
+        const ttt = tt * t;
+
+        const x = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x;
+        const y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
+
+        return { x, y };
+    }
+}
+
 export function TranslateVisionRange(distance: string)
 {
     const distanceNumber = parseInt(distance) ?? 5;
