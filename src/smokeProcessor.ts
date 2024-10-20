@@ -975,6 +975,7 @@ class SmokeProcessor
 
         if (lightType === "PRIMARY")
         {
+            this.CreateTrailingFogRevealer(item);
             this.CreateDarkVisionToQueue(token);
             this.CreateOwnerHighlight(token);
         }
