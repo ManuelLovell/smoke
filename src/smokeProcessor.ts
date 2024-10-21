@@ -538,10 +538,21 @@ class SmokeProcessor
         }
         else
         {
-            const gmIds = BSCACHE.party.filter(x => x.role === "GM").map(x => x.id);
-            const gmOwnedTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)) && gmIds.includes(x.createdUserId));
-            const myOwnedTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVisionIOwn(x)));
-            sceneVisionTokens = [...myOwnedTokens, ...gmOwnedTokens];
+            const tokensWithVision = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+            const myTokensWithVision: Item[] = [];
+            const gmTokenWithVision: Item[] = [];
+            for (const token of tokensWithVision)
+            {
+                if (token.createdUserId === BSCACHE.playerId)
+                    myTokensWithVision.push(token);
+                else
+                {
+                    const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+                    if (owner?.role === "GM")
+                        gmTokenWithVision.push(token);
+                }
+            }
+            sceneVisionTokens = [...myTokensWithVision, ...gmTokenWithVision];
         }
 
         // If we're disabling vision, flush the list so no one can see.
