@@ -170,6 +170,7 @@ class SmokeProcessor
                 const revealerEffect = buildEffect()
                     .position(light.position)
                     .attachedTo(light.id)
+                    .rotation(light.rotation)
                     .scale(light.scale)
                     .width(200)
                     .height(200)
@@ -178,11 +179,13 @@ class SmokeProcessor
                     .sksl(Constants.TRAILINGFOGREVEALSHADER)
                     .uniforms([
                         { name: "radiusRatio", value: 1.0 },
+                        { name: "rotation", value: light.rotation }
                     ])
                     .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
                     .disableHit(true)
                     .build();
                 this.revealersToCreate.push(revealerEffect);
+                console.log(light.rotation);
                 this.trailingFogTokens.push(light.id);
             }
         }
