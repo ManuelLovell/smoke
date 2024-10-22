@@ -8,6 +8,7 @@ import { SMOKEMAIN } from "../smokeMain";
 import { SMOKEMACHINE } from "../smokeProcessor";
 import { SPECTREMACHINE } from "../SpectreTwo";
 import { SetupUnitContextMenu } from "../smokeSetupContextMenus";
+import { ApplyEnhancedFog } from "../smokeEnhancedFog";
 
 class BSCache
 {
@@ -61,6 +62,8 @@ class BSCache
     USER_REGISTERED: boolean;
 
     toolStarted: boolean;
+    expectedFogMapId: string;
+    expectedFogStyle: string;
 
     //handlers
     sceneMetadataHandler?: () => void;
@@ -103,6 +106,8 @@ class BSCache
         this.busy = false;
         this.torchActive = false;
         this.toolStarted = false;
+        this.expectedFogMapId = "";
+        this.expectedFogStyle = "";
 
         this.USER_REGISTERED = false;
         this.caches = caches;
@@ -293,6 +298,13 @@ class BSCache
         const resetPersistence = OBR.broadcast.onMessage(Constants.RESETPERSISTID, async (_data) =>
         {
             await SMOKEMACHINE.ClearPersistence();
+        });
+
+        const enhancedBackgroundHandler = OBR.broadcast.onMessage(`${Constants.EXTENSIONID}/FOGBACKGROUNDEVENT`, async (data) =>
+        {
+            const message = data.data as FogMessage;
+            this.expectedFogMapId = message.MapId;
+            this.expectedFogStyle = message.FogStyle;
         });
 
         await this.CheckRegistration();
@@ -523,9 +535,19 @@ class BSCache
         await SMOKEMAIN.OnDataChange();
     }
 
-
-    public async OnSceneItemsChange(_items: Item[])
+    public async OnSceneItemsChange(items: Item[])
     {
+        if (this.expectedFogMapId !== "")
+        {
+            const foundFogMaps = items.filter(x => x.id === this.expectedFogMapId);
+            if (foundFogMaps.length > 0)
+            {
+                const enhancedFogMap = foundFogMaps[0] as Image;
+                await ApplyEnhancedFog(enhancedFogMap, this.expectedFogStyle);
+                this.expectedFogMapId = "";
+                this.expectedFogStyle = "";
+            }
+        }
         await SMOKEMAIN.OnDataChange();
     }
 

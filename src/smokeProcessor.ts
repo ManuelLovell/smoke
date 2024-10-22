@@ -4,6 +4,7 @@ import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
 import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
+import { ApplyEnhancedFog } from "./smokeEnhancedFog";
 
 class SmokeProcessor
 {
@@ -77,6 +78,18 @@ class SmokeProcessor
                         this.AddPersistentLightToQueue(pLight as any, pLight.zIndex);
                     }
                 }
+            }
+        }
+        const baseMaps = BSCACHE.sceneItems.filter(x => x.metadata[`${Constants.EXTENSIONID}/FogBackgroundId`] !== undefined);
+        for (const baseMap of baseMaps)
+        {
+            const fogMapId = baseMap.metadata[`${Constants.EXTENSIONID}/FogBackgroundId`] as string;
+            const fogMapStyle = baseMap.metadata[`${Constants.EXTENSIONID}/hasFogBackground`] as string;
+            const foundFogMaps = BSCACHE.sceneItems.filter(x => x.id === fogMapId);
+            if (foundFogMaps.length > 0)
+            {
+                const enhancedFogMap = foundFogMaps[0] as Image;
+                await ApplyEnhancedFog(enhancedFogMap, fogMapStyle);
             }
         }
     }

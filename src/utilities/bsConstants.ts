@@ -58,6 +58,185 @@ export class Constants
         [Command.CLOSE]
     ];
 
+    static FOGGYSTYLE = "FOGGY";
+    static SPOOKYSTYLE = "SPOOKY";
+    static COSMICSTYLE = "COSMIC";
+    static ENHANCEDFOGSTYLES: { key: string, value: string }[] = [
+        {
+            key: "NONE",
+            value: "None"
+        },
+        {
+            key: this.FOGGYSTYLE,
+            value: "Foggy"
+        },
+        {
+            key: this.SPOOKYSTYLE,
+            value: "Spooky"
+        },
+        {
+            key: this.COSMICSTYLE,
+            value: "Cosmic"
+        }];
+
+    static COSMICSHADER = `
+        uniform vec2 size;
+        uniform float time;
+        const int iterations = 17;
+        const float formuparam = 0.53;
+
+        const int volsteps = 20;
+        const float stepsize = 0.1;
+
+        const float zoom  = 0.800;
+        const float tile  = 0.850;
+        const float speed = 0.010;
+
+        const float brightness = 0.0015;
+        const float darkmatter = 0.300;
+        const float distfading = 0.730;
+        const float saturation = 0.850;
+
+        half4 main(float2 coord) {
+            //get coords and direction
+            vec2 uv=coord / size;
+            uv.y*=size.y/size.x;
+            vec3 dir=vec3(uv*zoom,1.);
+            float time=time*speed+.25;
+                    
+            vec3 from = vec3(1.0, 0.5, 0.5);
+            from += vec3(time * 2.0, time, -2.0);
+
+            //volumetric rendering
+            float s=0.1,fade=1.;
+            vec3 v=vec3(0.);
+            for (int r=0; r<volsteps; r++) {
+                vec3 p=from+s*dir*.5;
+                p = abs(vec3(tile)-mod(p,vec3(tile*2.))); // tiling fold
+                float pa,a=pa=0.;
+                for (int i=0; i<iterations; i++) { 
+                    p=abs(p)/dot(p,p)-formuparam; // the magic formula
+                    a+=abs(length(p)-pa); // absolute sum of average change
+                    pa=length(p);
+                }
+                float dm=max(0.,darkmatter-a*a*.001); //dark matter
+                a*=a*a; // add contrast
+                if (r>6) fade*=1.-dm; // dark matter, don't render near
+                //v+=vec3(dm,dm*.5,0.);
+                v+=fade;
+                v+=vec3(s,s*s,s*s*s*s)*a*brightness*fade; // coloring based on distance
+                fade*=distfading; // distance fading
+                s+=stepsize;
+            }
+            v=mix(vec3(length(v)),v,saturation); //color adjust
+            return vec4(v*.01, 0.85);
+        }`
+        ;
+
+    static FOGGYSHADER = `
+        uniform vec2 size;
+        uniform float time;
+
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        float noise(vec2 st) {
+            vec2 i = floor(st);
+            vec2 f = fract(st);
+            
+            float a = random(i);
+            float b = random(i + vec2(1.0, 0.0));
+            float c = random(i + vec2(0.0, 1.0));
+            float d = random(i + vec2(1.0, 1.0));
+
+            vec2 u = f * f * (3.0 - 2.0 * f);
+
+            return mix(a, b, u.x) +
+                    (c - a)* u.y * (1.0 - u.x) +
+                    (d - b) * u.x * u.y;
+        }
+
+        float fbm(vec2 st) {
+            float value = 0.0;
+            float amplitude = 0.5;
+            float frequency = 3.0;
+            
+            for (int i = 0; i < 5; i++) {
+                value += amplitude * noise(st * frequency);
+                frequency *= 2.0;
+                amplitude *= 0.5;
+            }
+            
+            return value;
+        }
+
+        half4 main(float2 coord) {
+            vec2 p = coord / size;
+            
+            // Cloud effect
+            float cloudNoise = fbm(p * 8.0 + time * 0.1);
+            cloudNoise = smoothstep(0.3, 0.7, cloudNoise);
+            
+            // white clouds with transparency
+            return half4(0.5, 0.5, 0.5, cloudNoise * 0.3);
+        }
+    `;
+
+    static SPOOKYSHADER = `
+        uniform vec2 size;
+        uniform float time;
+
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+        }
+
+        float noise(vec2 st) {
+            vec2 i = floor(st);
+            vec2 f = fract(st);
+            
+            float a = random(i);
+            float b = random(i + vec2(1.0, 0.0));
+            float c = random(i + vec2(0.0, 1.0));
+            float d = random(i + vec2(1.0, 1.0));
+
+            vec2 u = f * f * (3.0 - 2.0 * f);
+
+            return mix(a, b, u.x) +
+                    (c - a)* u.y * (1.0 - u.x) +
+                    (d - b) * u.x * u.y;
+        }
+
+        float fbm(vec2 st) {
+            float value = 0.0;
+            float amplitude = 0.75;
+            float frequency = 2.5;
+            
+            for (int i = 0; i < 5; i++) {
+                value += amplitude * noise(st * frequency);
+                frequency *= 1.8;
+                amplitude *= 0.5;
+            }
+            
+            return value;
+        }
+
+        half4 main(float2 coord) {
+            vec2 p = coord / size;
+            
+            // Increased movement speed from 0.08 to 0.15
+            float cloudNoise = fbm(p * 1.5 + time * 0.15);
+            
+            cloudNoise = smoothstep(0.2, 0.8, cloudNoise);
+            
+            // Same high base opacity with cloud variation
+            float opacity = 0.85 + (cloudNoise * 0.12);
+            
+            // Darker cloud color (reduced from 0.03, 0.01, 0.05)
+            return half4(0.01, 0.005, 0.02, opacity);
+        }
+    `;
+
     static TRAILINGFOGSHADER = `
         uniform vec3 darknessColor;
         uniform shader scene;

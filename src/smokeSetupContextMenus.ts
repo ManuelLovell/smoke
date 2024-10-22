@@ -1,9 +1,10 @@
-import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2, Path } from "@owlbear-rodeo/sdk";
+import OBR, { buildCurve, Curve, Line, Image, Shape, Vector2, Path, buildImage, buildEffect } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ConvertPathCommands } from "./utilities/bsUtilities";
+import { ApplyEnhancedFog } from "./smokeEnhancedFog";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -442,11 +443,37 @@ export async function SetupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/toggle-fog-background`,
+        id: `${Constants.EXTENSIONID}/auto-fog-background`,
         icons: [
             {
                 icon: "/fog-background.svg",
-                label: "Convert To Fog Background",
+                label: "Auto Fog Map",
+                filter: {
+                    every: [{ key: "layer", value: "MAP" },
+                    { key: "type", value: "IMAGE" },],
+                    max: 1,
+                },
+            }
+        ],
+        async onClick(_ctx, elementId: string)
+        {
+            await OBR.popover.open({
+                id: Constants.CONTEXTID,
+                url: `/pages/mapcontextembed.html`,
+                height: 44,
+                width: 200,
+                anchorElementId: elementId
+            });
+        },
+        embed: { url: `/pages/mapcontextembed.html?contextmenu=true`, height: 44 }
+    });
+
+    await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/toggle-fog-map`,
+        icons: [
+            {
+                icon: "/fog-background.svg",
+                label: "Convert To Fog Map",
                 filter: {
                     every: [{ key: "layer", value: "MAP" },
                     { key: ["metadata", `${Constants.EXTENSIONID}/isFogMap`], value: undefined }]
@@ -454,7 +481,7 @@ export async function SetupContextMenus(): Promise<void>
             },
             {
                 icon: "/fog-background.svg",
-                label: "Convert To Normal Background",
+                label: "Convert To Normal Map",
                 filter: {
                     every: [{ key: "layer", value: "FOG" },
                     { key: ["metadata", `${Constants.EXTENSIONID}/isFogMap`], value: true }]
