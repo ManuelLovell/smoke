@@ -230,7 +230,7 @@ export class Constants
             cloudNoise = smoothstep(0.2, 0.8, cloudNoise);
             
             // Same high base opacity with cloud variation
-            float opacity = 0.85 + (cloudNoise * 0.12);
+            float opacity = 0.75 + (cloudNoise * 0.12);
             
             // Darker cloud color (reduced from 0.03, 0.01, 0.05)
             return half4(0.01, 0.005, 0.02, opacity);
