@@ -1,4 +1,4 @@
-import{C as d,b as be,O as T,a as _t,c as on,d as Gi,e as Wi,f as oa,g as qi,h as Ki,i as $t,j as Yi,k as Qi}from"./bsConstants-Df51WvAn.js";/* empty css              */const He=(()=>{/*!
+import{C as d,b as be,O as T,a as _t,c as on,d as Gi,e as Wi,f as oa,g as qi,h as Ki,i as $t,j as Yi,k as Qi}from"./bsConstants-CSH3-eYD.js";/* empty css              */const He=(()=>{/*!
 * Copyright (c) 2021-2024 Momo Bassit.
 * Licensed under the MIT License (MIT)
 * https://github.com/mdbassit/Coloris
