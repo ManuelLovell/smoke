@@ -66,16 +66,36 @@ export class SmokeMain
     public async Start()
     {
         /// Temporary message for letting people be aware
-        const noticed = localStorage.getItem("NOTICED");
-        if (noticed !== "true")
+        function isLocalStorageEnabled()
         {
-            await OBR.modal.open({
-                id: Constants.EXTENSIONNOTICE,
-                url: `/src/notice/notice.html?subscriber=${BSCACHE.USER_REGISTERED}`,
-                height: 400,
-                width: 500,
-            });
-            localStorage.setItem("NOTICED", "true");
+            const testKey = 'test';
+            try
+            {
+                localStorage.setItem(testKey, '1');
+                localStorage.removeItem(testKey);
+                return true; // localStorage is enabled
+            } catch (error)
+            {
+                return false; // localStorage is disabled or not supported
+            }
+        }
+
+        if (isLocalStorageEnabled())
+        {
+            const noticed = localStorage.getItem("NOTICED");
+            if (noticed !== "true")
+            {
+                await OBR.modal.open({
+                    id: Constants.EXTENSIONNOTICE,
+                    url: `/src/notice/notice.html?subscriber=${BSCACHE.USER_REGISTERED}`,
+                    height: 400,
+                    width: 500,
+                });
+                localStorage.setItem("NOTICED", "true");
+            }
+        } else
+        {
+            console.log("localStorage is disabled, not showing the notice. You should definitely check the Patreon.");
         }
 
         if (BSCACHE.playerRole === "GM")
