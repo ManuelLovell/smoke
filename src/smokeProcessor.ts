@@ -1092,7 +1092,6 @@ class SmokeProcessor
             .metadata({
                 [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id
             })
-            .disableHit(true)
             .build();
 
         this.decalsToCreate.push(item);
