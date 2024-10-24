@@ -9,12 +9,16 @@ export async function ApplyEnhancedFog(fogMap: Image, style: string)
     {
         await OBR.scene.local.deleteItems(oldEffect.map(x => x.id));
     }
-    if (style === "SPOOKY")
+    if (style === Constants.SPOOKYSTYLE)
         await ApplySpookyFog(fogMap);
-    else if (style === "FOGGY")
+    else if (style === Constants.FOGGYSTYLE)
         await ApplyFoggyFog(fogMap);
-    else if (style === "COSMIC")
+    else if (style === Constants.COSMICSTYLE)
         await ApplyCosmicFog(fogMap);
+    else if (style === Constants.WEIRDSTYLE)
+        await ApplyWeirdFog(fogMap);
+    else if (style === Constants.FLESHSTYLE)
+        await ApplyFleshFog(fogMap);
 }
 
 async function ApplyCosmicFog(enhancedFogMap: Image)
@@ -68,6 +72,44 @@ async function ApplyFoggyFog(enhancedFogMap: Image)
             [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
         })
         .sksl(Constants.FOGGYSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyWeirdFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        //.blendMode("SCREEN")
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.WEIRDSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyFleshFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        //.blendMode("SCREEN")
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.FLESHSHADER)
         .disableHit(true)
         .zIndex(-0.5)
         .build();

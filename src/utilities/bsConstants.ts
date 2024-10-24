@@ -61,10 +61,20 @@ export class Constants
     static FOGGYSTYLE = "FOGGY";
     static SPOOKYSTYLE = "SPOOKY";
     static COSMICSTYLE = "COSMIC";
+    static WEIRDSTYLE = "WEIRD";
+    static FLESHSTYLE = "FLESH";
     static ENHANCEDFOGSTYLES: { key: string, value: string }[] = [
         {
             key: "NONE",
             value: "None"
+        },
+        {
+            key: this.COSMICSTYLE,
+            value: "Cosmic"
+        },
+        {
+            key: this.FLESHSTYLE,
+            value: "Flesh"
         },
         {
             key: this.FOGGYSTYLE,
@@ -75,10 +85,88 @@ export class Constants
             value: "Spooky"
         },
         {
-            key: this.COSMICSTYLE,
-            value: "Cosmic"
+            key: this.WEIRDSTYLE,
+            value: "Weird"
         }];
 
+    static FLESHSHADER = `
+        uniform vec2 size; // Uniform variable for size
+        uniform float time; // Uniform variable for time
+
+        mat2 rotate2D(float r) {
+            return mat2(cos(r), sin(r), -sin(r), cos(r)); // Rotation matrix
+        }
+
+        // Main function
+        half4 main(vec2 coord) {
+            half4 o = half4(0); // Initialize output color
+            vec2 n, N, q, p = (coord.xy * 2.0 - size) / size.y; // Fragment coordinates adjusted
+            float S = 5.0, a = 0.0, j = 0.0; // Initialize S, a, and j
+
+            // Rotation matrix
+            mat2 m = rotate2D(5.0);
+
+            // Loop for calculations
+            for (float j = 0.0; j < 30.0; j += 1.0) {
+                S *= 1.2; // Scale S
+                p *= m; // Apply rotation to p
+                n *= m; // Apply rotation to n
+                q = p * S + j + n + time + sin(time) * 0.8; // Update q
+                a += dot(cos(q) / S, size / size); // Accumulate a
+                n += q = sin(q); // Update n and set q to sin(q)
+                N += q / (S + 60.0); // Update N
+            }
+
+            // Final adjustments to output color
+            o += 0.1 - a * 0.1; // Adjust output color based on a
+            o.r *= 5.0; // Enhance the red channel
+            o += min(0.7, 0.001 / length(N)); // Add to output based on N
+            o -= o * dot(p, p) * 0.7; // Modify output color based on p
+            o.a = 0.95;
+            return o; // Return final color
+        }
+        `
+        ;
+    static WEIRDSHADER = `
+        uniform vec2 size;
+        uniform float time;
+
+        mat2 rotate2D(float r) {
+            return mat2(cos(r), sin(r), -sin(r), cos(r));
+        }
+
+        // Main function
+        half4 main(vec2 coord) {
+            half4 o = half4(0); // Initialize output color
+            vec2 p = coord.xy / size.y; // Adjusted fragment coordinates
+            vec2 n = vec2(0.0); // Initialize n
+            vec2 q = vec2(0.0); // Initialize q
+            vec2 N = vec2(0.0); // Declare and initialize N
+            float S = 9.0; // Scaling factor
+            float a = 0.0; // Initialize a
+            float j = 0.0; // Initialize j
+
+            // Rotation matrix
+            mat2 m = rotate2D(5.0);
+
+            // Loop for calculations
+            for (float j = 0.0; j < 30.0; j += 1.0) {
+                p *= m; // Apply rotation to p
+                n *= m; // Apply rotation to n
+                q = p * S + j + n + time; // Update q
+                a += dot(cos(q) / S, size / size); // Accumulate a
+                n += q = sin(q); // Update n and set q to sin(q)
+                N += q / (S + 60.0); // Update N
+                S *= 1.2; // Scale S
+            }
+
+            // Final adjustments to output color
+            o += pow(max(o - o, (a + 0.5) * 0.055 * half4(6, 1, 2, 75) + 0.003 / length(N)), o - o + 0.45); 
+
+            return o; // Return final color
+        }
+        `
+        ;
     static COSMICSHADER = `
         uniform vec2 size;
         uniform float time;
