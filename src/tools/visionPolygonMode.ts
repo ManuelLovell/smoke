@@ -6,10 +6,14 @@ import { GetSnappedCoordinates, GetToolWidth } from "./visionToolUtilities";
 /// There's a bug in here with OBR interaction API, on the player view when
 /// finishing an object it throws an error because the point is supposedly undefined.
 
+const POINTLIMIT = 100;
+let currentPoints = 0;
+
 let interaction: [any, any] | [any] | null = null;
 
 async function cleanUpPopovers()
 {
+    currentPoints = 0;
     await OBR.popover.close(Constants.POLYTOOLID);
 }
 
@@ -64,6 +68,7 @@ export async function undoLastPoint(): Promise<void>
         if (line.points.length > 2)
         {
             line.points.pop();
+            currentPoints--;
         }
     });
 }
@@ -91,6 +96,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
             .build();
 
         interaction = await OBR.interaction.startItemInteraction(polygon);
+        currentPoints = polygon.points.length;
 
         const width = await OBR.viewport.getWidth();
 
@@ -116,10 +122,17 @@ async function onToolClick(_J: ToolContext, event: ToolEvent)
     }
     else
     {
+        if (currentPoints >= POINTLIMIT)
+        {
+            await OBR.notification.show("Maximum line length reached.", "ERROR");
+            return;
+        }
+
         const [update] = interaction;
         update((polygon: Curve) =>
         {
             polygon.points.push(event.pointerPosition);
+            currentPoints++;
         });
     }
 }

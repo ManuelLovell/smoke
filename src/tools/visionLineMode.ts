@@ -3,10 +3,13 @@ import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetSnappedCoordinates, GetToolWidth } from "./visionToolUtilities";
 
+const POINTLIMIT = 100;
+let currentPoints = 0;
 let interaction: [any, any] | [any] | null = null;
 
 async function cleanUpPopovers(): Promise<void>
 {
+    currentPoints = 0;
     await OBR.popover.close(Constants.LINETOOLID);
 }
 
@@ -58,6 +61,7 @@ export async function undoLastPoint(): Promise<void>
         if (line.points.length > 2)
         {
             line.points.pop();
+            currentPoints--;
         }
     });
 }
@@ -86,6 +90,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
             .build();
 
         interaction = await OBR.interaction.startItemInteraction(line);
+        currentPoints = line.points.length;
 
         const width = await OBR.viewport.getWidth();
 
@@ -111,10 +116,17 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
     }
     else
     {
+        if (currentPoints >= POINTLIMIT)
+        {
+            await OBR.notification.show("Maximum line length reached.", "ERROR");
+            return;
+        }
+        
         const [update] = interaction;
         update((line: Curve) =>
         {
             line.points.push(event.pointerPosition);
+            currentPoints++;
         });
     }
 }
