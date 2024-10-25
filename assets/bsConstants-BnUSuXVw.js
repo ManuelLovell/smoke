@@ -74,7 +74,7 @@
             fragColor.rgb = clamp(fragColor.rgb, vec3(0), vec3(1));
             fragColor.rgb = mix(fragColor.rgb, vec3(0), dot(uv, uv)*1.0);
             
-            fragColor.a = 1.0;
+            fragColor.a = 0.5;
 
             return fragColor;
         }
