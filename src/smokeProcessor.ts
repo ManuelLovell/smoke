@@ -1088,6 +1088,7 @@ class SmokeProcessor
             .position(token.position)
             .attachedTo(token.id)
             .layer("FOG")
+            .locked(true)
             .visible(false)
             .metadata({
                 [`${Constants.EXTENSIONID}/isLocalDecal`]: token.id
