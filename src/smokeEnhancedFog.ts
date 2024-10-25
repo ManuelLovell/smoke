@@ -19,6 +19,8 @@ export async function ApplyEnhancedFog(fogMap: Image, style: string)
         await ApplyWeirdFog(fogMap);
     else if (style === Constants.FLESHSTYLE)
         await ApplyFleshFog(fogMap);
+    else if (style === Constants.DRIPSTYLE)
+        await ApplyDripFog(fogMap);
 }
 
 async function ApplyCosmicFog(enhancedFogMap: Image)
@@ -110,6 +112,25 @@ async function ApplyFleshFog(enhancedFogMap: Image)
             [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
         })
         .sksl(Constants.FLESHSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyDripFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        //.blendMode("SCREEN")
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.ANNIHILATIONSHADER)
         .disableHit(true)
         .zIndex(-0.5)
         .build();
