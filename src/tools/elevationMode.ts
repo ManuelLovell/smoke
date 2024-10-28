@@ -187,7 +187,7 @@ async function enterEditMode(context: ToolContext)
             id: Constants.ELEVATIONWARNID,
             url: `/pages/ewarning.html`,
             height: 45,
-            width: 400,
+            width: 430,
             disableClickAway: true,
             anchorPosition: { top: 120, left: width / 2 },
             anchorReference: "POSITION",
