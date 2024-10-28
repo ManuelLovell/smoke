@@ -297,9 +297,10 @@ class SmokeProcessor
                         }, { dpi: 150, offset: { x: 50, y: 50 } }
                     )
                         .scale(({
-                            x: .5, y: .5
+                            x: .75, y: .75
                         }))
-                        .layer("DRAWING")
+                        .layer(BSCACHE.playerRole === "GM" ? Constants.LINELAYER : "DRAWING")
+                        .zIndex(door.zIndex + 10)
                         .locked(true)
                         .name(doorName)
                         .position({ x: doorPosition.x, y: doorPosition.y })
