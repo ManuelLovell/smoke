@@ -574,7 +574,7 @@ class SmokeProcessor
         {
             sceneVisionTokens = [];
         }
-
+        
         const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
         for (const sceneToken of sceneVisionTokens)
         {
@@ -587,7 +587,7 @@ class SmokeProcessor
                     sceneTokenDepth = mapping.Depth;
                 }
             }
-            const existingLight = BSCACHE.sceneLocal.find(x => x.attachedTo === sceneToken.id) as Light;
+            const existingLight = BSCACHE.sceneLocal.find(x => x.attachedTo === sceneToken.id && x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true) as Light;
             if (!existingLight)
             {
                 this.CreateLightToQueue(sceneToken, sceneTokenDepth);
@@ -611,7 +611,7 @@ class SmokeProcessor
                     === existingLight.innerAngle?.toString();
                 const equalOuterAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
                     === existingLight.outerAngle?.toString();
-                const equalBlind = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`]
+                const equalBlind = (sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true)
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
@@ -831,7 +831,7 @@ class SmokeProcessor
                     }
                 }
 
-                const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id) as Wall;
+                const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id && x.metadata[`${Constants.EXTENSIONID}/isVisionLine`] === true) as Wall;
                 if (!existingLine)
                 {
                     this.CreateWallToQueue(visionLine, visionLineDepth);
