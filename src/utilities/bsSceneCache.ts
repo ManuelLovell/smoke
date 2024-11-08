@@ -64,6 +64,7 @@ class BSCache
     toolStarted: boolean;
     expectedFogMapId: string;
     expectedFogStyle: string;
+    expectedFogEffect: string;
 
     //handlers
     sceneMetadataHandler?: () => void;
@@ -108,6 +109,7 @@ class BSCache
         this.toolStarted = false;
         this.expectedFogMapId = "";
         this.expectedFogStyle = "";
+        this.expectedFogEffect = "";
 
         this.USER_REGISTERED = false;
         this.caches = caches;
@@ -305,6 +307,7 @@ class BSCache
             const message = data.data as FogMessage;
             this.expectedFogMapId = message.MapId;
             this.expectedFogStyle = message.FogStyle;
+            this.expectedFogEffect = message.FogEffect;
         });
 
         await this.CheckRegistration();
@@ -543,9 +546,10 @@ class BSCache
             if (foundFogMaps.length > 0)
             {
                 const enhancedFogMap = foundFogMaps[0] as Image;
-                await ApplyEnhancedFog(enhancedFogMap, this.expectedFogStyle);
+                await ApplyEnhancedFog(enhancedFogMap, this.expectedFogEffect);
                 this.expectedFogMapId = "";
                 this.expectedFogStyle = "";
+                this.expectedFogEffect = "";
             }
         }
         await SMOKEMAIN.OnDataChange();

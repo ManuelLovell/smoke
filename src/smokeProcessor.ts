@@ -587,7 +587,7 @@ class SmokeProcessor
                     sceneTokenDepth = mapping.Depth;
                 }
             }
-            const existingLight = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === sceneToken.id) as Light;
+            const existingLight = BSCACHE.sceneLocal.find(x => x.attachedTo === sceneToken.id) as Light;
             if (!existingLight)
             {
                 this.CreateLightToQueue(sceneToken, sceneTokenDepth);
@@ -683,12 +683,12 @@ class SmokeProcessor
         const localVisionLights = BSCACHE.sceneLocal.filter(x => (isLocalVisionLight(x))) as Light[];
         for (const localLight of localVisionLights)
         {
-            const exists = sceneVisionTokens.find(x => x.id === localLight.metadata[`${Constants.EXTENSIONID}/isVisionLight`]);
+            const exists = sceneVisionTokens.find(x => x.id === localLight.attachedTo);
             if (!exists)
             {
                 this.lightsToDelete.push(localLight.id);
                 const ownerRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true
-                    && x.attachedTo === localLight.metadata[`${Constants.EXTENSIONID}/isVisionLight`]);
+                    && x.attachedTo === localLight.attachedTo);
                 if (ownerRing) this.ringsToDelete.push(ownerRing.id);
             }
         }
@@ -831,7 +831,7 @@ class SmokeProcessor
                     }
                 }
 
-                const existingLine = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isVisionWall`] === visionLine.id) as Wall;
+                const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id) as Wall;
                 if (!existingLine)
                 {
                     this.CreateWallToQueue(visionLine, visionLineDepth);
@@ -866,14 +866,14 @@ class SmokeProcessor
         const localVisionWalls = BSCACHE.sceneLocal.filter(x => (isLocalVisionWall(x))) as Wall[];
         for (const localWall of localVisionWalls)
         {
-            const exists = sceneVisionLines.find(x => x.id === localWall.metadata[`${Constants.EXTENSIONID}/isVisionWall`]);
+            const exists = sceneVisionLines.find(x => x.id === localWall.attachedTo);
             if (!exists)
             {
                 this.wallsToDelete.push(localWall.id);
                 continue;
             }
 
-            if (this.wallsNotOwner.includes(localWall.metadata[`${Constants.EXTENSIONID}/isVisionWall`] as string))
+            if (this.wallsNotOwner.includes(localWall.attachedTo as string))
             {
                 this.wallsToDelete.push(localWall.id);
             }
@@ -947,7 +947,7 @@ class SmokeProcessor
             .blocking(blockWall)
             .doubleSided(line.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false)
             .zIndex(this.GetDepth(depth, true))
-            .metadata({ [`${Constants.EXTENSIONID}/isVisionWall`]: line.id })
+            .metadata({ [`${Constants.EXTENSIONID}/isVisionWall`]: true })
             .build();
 
         this.wallsToCreate.push(item);
@@ -1015,7 +1015,7 @@ class SmokeProcessor
             .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
             .metadata({
-                [`${Constants.EXTENSIONID}/isVisionLight`]: token.id,
+                [`${Constants.EXTENSIONID}/isVisionLight`]: true,
                 [`${Constants.EXTENSIONID}/visionBlind`]: token.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false
             })
             .attachedTo(token.id)
@@ -1157,6 +1157,12 @@ class SmokeProcessor
 
     private GetDepth(value: number, wall: boolean)
     {
+        if (value === -10)
+        {
+            const customDefault = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
+            if (typeof customDefault === "string") value = parseInt(customDefault);
+        }
+        
         // -10 is base level.
         switch (value)
         {

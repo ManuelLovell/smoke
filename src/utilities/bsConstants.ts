@@ -64,7 +64,12 @@ export class Constants
     static COSMICSTYLE = "COSMIC";
     static WEIRDSTYLE = "WEIRD";
     static FLESHSTYLE = "FLESH";
-    static ENHANCEDFOGSTYLES: { key: string, value: string }[] = [
+    static ENHANCEDFOGSTYLES: Map<string, string> = new Map(
+        [["0", "Map Fog"],
+        ["100", "Flat Fog"]]
+    );
+
+    static ENHANCEDFOGEFECTS: { key: string, value: string }[] = [
         {
             key: "NONE",
             value: "None"
@@ -677,8 +682,17 @@ export class Constants
                 <tr>
                     <td colspan="2"><label for="toggle_gmwalls" id="tip_gmwalls">Wall Pass (GM)</label></td>
                     <td><input type="checkbox" id="toggle_gmwalls"></td>
-                    <td></td>
-                    <td></td>
+                    <td colspan="2"><label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label></td>
+                    <td><select name="elevationDefault" id="default_elevation_select">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
@@ -823,6 +837,15 @@ export class Constants
             <input type="checkbox" id="toggle_gmwalls">
         </div>
         <div>
+            <label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label>
+            <select name="elevationDefault" id="default_elevation_select">
+                <option value="-10">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+            </select>
         </div>
     </div>
 

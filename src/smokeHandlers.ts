@@ -148,6 +148,15 @@ export function SetupGMInputHandlers(mobile = false)
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/unitContextMenu`]: target.checked });
     };
 
+    // Toggle the default elevation layer for tokens/walls
+    const defaultElevationSelect = document.getElementById('default_elevation_select') as HTMLSelectElement;
+    const savedElevationValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation}`];
+    defaultElevationSelect.value = typeof savedElevationValue === "string" ? savedElevationValue : "0";
+    defaultElevationSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/defaultElevation`]: target.value });
+    };
 
     // Toggles the pass-through of walls for a GM
     const passWallsCheckbox = document.getElementById("toggle_gmwalls") as HTMLInputElement;

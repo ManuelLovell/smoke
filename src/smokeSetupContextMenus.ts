@@ -4,7 +4,6 @@ import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ConvertPathCommands } from "./utilities/bsUtilities";
-import { ApplyEnhancedFog } from "./smokeEnhancedFog";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -460,12 +459,12 @@ export async function SetupContextMenus(): Promise<void>
             await OBR.popover.open({
                 id: Constants.CONTEXTID,
                 url: `/pages/mapcontextembed.html`,
-                height: 44,
+                height: 80,
                 width: 200,
                 anchorElementId: elementId
             });
         },
-        embed: { url: `/pages/mapcontextembed.html?contextmenu=true`, height: 44 }
+        embed: { url: `/pages/mapcontextembed.html?contextmenu=true`, height: 80 }
     });
 
     await OBR.contextMenu.create({

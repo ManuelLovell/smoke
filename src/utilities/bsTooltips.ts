@@ -37,6 +37,7 @@ export function CreateTooltips()
     tooltips.set(`toggle_contextmenu`, "Enable to show the Unit Vision Settings on the Context Menu for tokens");
     tooltips.set(`toggle_trailingfog`, "Enable to 'fog' areas that have been revealed by Persistence, but a token is not currently in.")
     tooltips.set(`tip_gmwalls`, "Toggle to enable/disable the blocking of walls for the GM only.");
+    tooltips.set('tip_defaultelevation', "Toggle the Default Elevation Layer. This is the layer a token/wall is set at when it's not on a specific mapping.");
 
     tooltips.set(`doublewall_button`, "This will change ALL walls within the scene to be double-sided, so they cannot be passed from either side.");
     tooltips.set(`block_button`, "This will set all walls to be Blocking walls, so that tokens cannot move past them.");

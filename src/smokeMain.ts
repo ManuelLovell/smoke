@@ -1077,14 +1077,15 @@ export class SmokeMain
     };
 }
 
-export const SMOKEMAIN = new SmokeMain("3.1");
+export const SMOKEMAIN = new SmokeMain("3.30");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness
     const sceneReady = await OBR.scene.isReady();
 
     const whatsnewpage = document.getElementById('papp');
-    if (whatsnewpage) return;
+    const contextmaps = document.getElementById('contextmenu');
+    if (whatsnewpage || contextmaps) return;
 
     if (sceneReady === false)
     {
