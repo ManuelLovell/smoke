@@ -606,11 +606,11 @@ class SmokeProcessor
                 const equalInnerRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string)
                     === existingLight.sourceRadius;
                 const equalFalloff = sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`]
-                    === existingLight.falloff.toString();
+                    === existingLight.falloff?.toString();
                 const equalInnerAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`]
-                    === existingLight.innerAngle.toString();
+                    === existingLight.innerAngle?.toString();
                 const equalOuterAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
-                    === existingLight.outerAngle.toString();
+                    === existingLight.outerAngle?.toString();
                 const equalBlind = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`]
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
