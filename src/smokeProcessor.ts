@@ -1,7 +1,7 @@
 import OBR, { Curve, Item, Image, Light, Math2, MathM, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
-import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isTokenWithVisionIOwn, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
+import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
 import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ApplyEnhancedFog } from "./smokeEnhancedFog";
@@ -831,7 +831,7 @@ class SmokeProcessor
                     }
                 }
 
-                const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id && x.metadata[`${Constants.EXTENSIONID}/isVisionLine`] === true) as Wall;
+                const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id && x.metadata[`${Constants.EXTENSIONID}/isVisionWall`] === true) as Wall;
                 if (!existingLine)
                 {
                     this.CreateWallToQueue(visionLine, visionLineDepth);
