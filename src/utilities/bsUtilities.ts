@@ -1,7 +1,7 @@
 import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
-import { Constants } from "./bsConstants";
+import { Constants, PathCommands } from "./bsConstants";
 
 export function GetPersistentLocalKey()
 {
@@ -25,59 +25,182 @@ export function GetPatreonButton()
     return newImgElement;
 }
 
-export function ConvertPathCommands(pathCommands: number[][]): Vector2[]
+export function ConvertPathCommands(
+    pathCommands: number[][],
+    currentPosition: Vector2,
+    config: PathConfig = { curveSegments: 10 }
+): Vector2[]
 {
     const vectorArray: Vector2[] = [];
+    const { curveSegments } = config;
+
+    // Pre-allocate array capacity if possible
+    const estimatedPoints = pathCommands.length * curveSegments;
+    vectorArray.length = estimatedPoints;
+    let currentIndex = 0;
+
+    function addPoint(x: number, y: number): void
+    {
+        if (currentIndex < estimatedPoints)
+        {
+            vectorArray[currentIndex] = { x: x + currentPosition.x, y: y + currentPosition.y };
+            currentIndex++;
+        } else
+        {
+            vectorArray.push({ x: x + currentPosition.x, y: y + currentPosition.y });
+        }
+    }
 
     for (const command of pathCommands)
     {
+        if (command.length < 1)
+        {
+            throw new Error(`Invalid command array: empty array`);
+        }
+
         const commandType = command[0];
 
-        if (commandType === 0)
-        { // MoveTo
-            const [_, x, y] = command;
-            vectorArray.push({ x, y });
-        } else if (commandType === 2)
-        { // LineTo
-            const [_, x1, y1, x2, y2] = command;
-            vectorArray.push({ x: x1, y: y1 });
-            vectorArray.push({ x: x2, y: y2 });
-        } else if (commandType === 4)
-        { // CurveTo (Cubic Bézier)
-            const [_, x1, y1, x2, y2, x3, y3] = command;
-            const lastPoint = vectorArray[vectorArray.length - 1];
-            const p0 = lastPoint;    // The current last point in the array
-            const p1 = { x: x1, y: y1 };
-            const p2 = { x: x2, y: y2 };
-            const p3 = { x: x3, y: y3 };
+        // Validate command length based on type
+        const expectedLength = {
+            [PathCommands.MOVE]: 3,  // type, x, y
+            [PathCommands.LINE]: 3,  // type, x, y
+            [PathCommands.QUAD]: 5,  // type, x1, y1, x2, y2
+            [PathCommands.CONIC]: 6, // type, x1, y1, x2, y2, w
+            [PathCommands.CUBIC]: 7, // type, x1, y1, x2, y2, x3, y3
+            [PathCommands.CLOSE]: 1  // type only
+        }[commandType];
 
-            // Approximate curve by subdividing the Bézier curve into multiple points (e.g., 10 subdivisions)
-            const numSegments = 10;
-            for (let i = 1; i <= numSegments; i++)
-            {
-                const t = i / numSegments;
-                const point = cubicBezier(t, p0, p1, p2, p3);
-                vectorArray.push(point);
+        if (expectedLength === undefined)
+        {
+            throw new Error(`Unknown command type: ${commandType}`);
+        }
+
+        if (command.length !== expectedLength)
+        {
+            throw new Error(`Invalid command length for type ${commandType}: expected ${expectedLength}, got ${command.length}`);
+        }
+
+        switch (commandType)
+        {
+            case PathCommands.MOVE: {
+                const [_, x, y] = command;
+                addPoint(x, y);
+                break;
+            }
+
+            case PathCommands.LINE: {
+                const [_, x, y] = command;
+                addPoint(x, y);
+                break;
+            }
+
+            case PathCommands.QUAD: {
+                const [_, x1, y1, x2, y2] = command;
+                const lastPoint = vectorArray[currentIndex - 1];
+                if (!lastPoint) throw new Error('No starting point for QUAD command');
+
+                const p0 = { x: lastPoint.x - currentPosition.x, y: lastPoint.y - currentPosition.y };
+                const p1 = { x: x1, y: y1 };
+                const p2 = { x: x2, y: y2 };
+
+                for (let i = 1; i <= curveSegments; i++)
+                {
+                    const t = i / curveSegments;
+                    const point = quadraticBezier(t, p0, p1, p2);
+                    addPoint(point.x, point.y);
+                }
+                break;
+            }
+
+            case PathCommands.CONIC: {
+                const [_, x1, y1, x2, y2, w] = command;
+                const lastPoint = vectorArray[currentIndex - 1];
+                if (!lastPoint) throw new Error('No starting point for CONIC command');
+
+                const p0 = { x: lastPoint.x - currentPosition.x, y: lastPoint.y - currentPosition.y };
+                const p1 = { x: x1, y: y1 };
+                const p2 = { x: x2, y: y2 };
+
+                for (let i = 1; i <= curveSegments; i++)
+                {
+                    const t = i / curveSegments;
+                    const point = conicBezier(t, p0, p1, p2, w);
+                    addPoint(point.x, point.y);
+                }
+                break;
+            }
+
+            case PathCommands.CUBIC: {
+                const [_, x1, y1, x2, y2, x3, y3] = command;
+                const lastPoint = vectorArray[currentIndex - 1];
+                if (!lastPoint) throw new Error('No starting point for CUBIC command');
+
+                const p0 = { x: lastPoint.x - currentPosition.x, y: lastPoint.y - currentPosition.y };
+                const p1 = { x: x1, y: y1 };
+                const p2 = { x: x2, y: y2 };
+                const p3 = { x: x3, y: y3 };
+
+                for (let i = 1; i <= curveSegments; i++)
+                {
+                    const t = i / curveSegments;
+                    const point = cubicBezier(t, p0, p1, p2, p3);
+                    addPoint(point.x, point.y);
+                }
+                break;
+            }
+
+            case PathCommands.CLOSE: {
+                if (currentIndex > 0)
+                {
+                    const firstPoint = vectorArray[0];
+                    addPoint(firstPoint.x - currentPosition.x, firstPoint.y - currentPosition.y);
+                }
+                break;
             }
         }
     }
 
+    // Trim any unused pre-allocated space
+    vectorArray.length = currentIndex;
     return vectorArray;
-
-    function cubicBezier(t: number, p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): Vector2
-    {
-        const u = 1 - t;
-        const tt = t * t;
-        const uu = u * u;
-        const uuu = uu * u;
-        const ttt = tt * t;
-
-        const x = uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x;
-        const y = uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y;
-
-        return { x, y };
-    }
 }
+
+// Helper functions remain the same but are marked as pure functions
+const quadraticBezier = (t: number, p0: Vector2, p1: Vector2, p2: Vector2): Vector2 =>
+{
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+
+    return {
+        x: uu * p0.x + 2 * u * t * p1.x + tt * p2.x,
+        y: uu * p0.y + 2 * u * t * p1.y + tt * p2.y
+    };
+};
+
+const conicBezier = (t: number, p0: Vector2, p1: Vector2, p2: Vector2, w: number): Vector2 =>
+{
+    const u = 1 - t;
+    const denom = u * u + 2 * u * t * w + t * t;
+    return {
+        x: (u * u * p0.x + 2 * u * t * w * p1.x + t * t * p2.x) / denom,
+        y: (u * u * p0.y + 2 * u * t * w * p1.y + t * t * p2.y) / denom
+    };
+};
+
+const cubicBezier = (t: number, p0: Vector2, p1: Vector2, p2: Vector2, p3: Vector2): Vector2 =>
+{
+    const u = 1 - t;
+    const tt = t * t;
+    const uu = u * u;
+    const uuu = uu * u;
+    const ttt = tt * t;
+
+    return {
+        x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+        y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y
+    };
+};
 
 export function TranslateVisionRange(distance: string)
 {

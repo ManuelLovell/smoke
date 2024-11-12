@@ -14,15 +14,16 @@ export async function SetupContextMenus(): Promise<void>
                 icon: "/opendoor.svg",
                 label: "Convert to Obstruction",
                 filter: {
-                    every: [{ key: "layer", value: "DRAWING" },
-                    {
-                        key: ["metadata", `${Constants.EXTENSIONID}/elevation`],
-                        value: undefined,
-                    },
-                    {
-                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
-                        value: undefined,
-                    }],
+                    every: [
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/elevation`],
+                            value: undefined,
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                            value: undefined,
+                        }],
+                    some: [{ key: "layer", value: "DRAWING", coordinator: "||" }, { key: "layer", value: "FOG" }],
                     roles: ["GM"]
                 },
             }
@@ -63,7 +64,7 @@ export async function SetupContextMenus(): Promise<void>
                                 [`${Constants.EXTENSIONID}/doubleSided`]: true
                             })
                             .build();
-                        if (baseCurve.style.closed)
+                        if (baseCurve.style.closed || baseCurve.style.fillOpacity === 1)
                         {
                             line.points.push(baseCurve.points[0]);
                         }
@@ -78,7 +79,7 @@ export async function SetupContextMenus(): Promise<void>
                     {
                         const line = buildCurve()
                             .tension(0)
-                            .points(ConvertPathCommands(basePath.commands))
+                            .points(ConvertPathCommands(basePath.commands, basePath.position))
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
                             .strokeWidth(GetToolWidth())
@@ -178,6 +179,7 @@ export async function SetupContextMenus(): Promise<void>
 
                     if (points.length > 0)
                     {
+                        points.push(points[0]);
                         const line = buildCurve()
                             .tension(0)
                             .points(adjustPoints(points, { x: 1, y: 1 }))
@@ -199,8 +201,6 @@ export async function SetupContextMenus(): Promise<void>
                                 [`${Constants.EXTENSIONID}/doubleSided`]: true
                             })
                             .build();
-
-                        line.points.push(points[0]);
 
                         linesToMake.push(line);
                         linesToDelete.push(baseShape.id);
@@ -748,8 +748,9 @@ export async function SetupContextMenus(): Promise<void>
                 filter: {
                     every: [
                         { key: ["metadata", `${Constants.EXTENSIONID}/isTorch`], operator: "==", value: undefined },
-                        { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined },
-                        { key: "layer", value: "PROP" }],
+                        { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined }],
+                    some: [
+                        { key: "layer", value: "PROP", coordinator: "||" }, { key: "layer", value: "ATTACHMENT" }]
                 },
             },
             {
@@ -758,8 +759,9 @@ export async function SetupContextMenus(): Promise<void>
                 filter: {
                     every: [
                         { key: ["metadata", `${Constants.EXTENSIONID}/isTorch`], operator: "==", value: true },
-                        { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined },
-                        { key: "layer", value: "PROP" }],
+                        { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined }],
+                    some: [
+                        { key: "layer", value: "PROP", coordinator: "||" }, { key: "layer", value: "ATTACHMENT" }]
                 },
             },
         ],

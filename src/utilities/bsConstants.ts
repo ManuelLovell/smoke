@@ -1,5 +1,15 @@
 import { Command, Layer, PathCommand } from "@owlbear-rodeo/sdk";
 
+export enum PathCommands
+{
+    MOVE = 0,
+    LINE = 1,
+    QUAD = 2,
+    CONIC = 3,
+    CUBIC = 4,
+    CLOSE = 5
+}
+
 export class Constants
 {
     static EXTENSIONID = "com.battle-system.smoke";
