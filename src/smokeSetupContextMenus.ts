@@ -66,7 +66,7 @@ export async function SetupContextMenus(): Promise<void>
                             .build();
                         if (baseCurve.style.closed || baseCurve.style.fillOpacity === 1)
                         {
-                            line.points.push(baseCurve.points[0]);
+                            line.points.push(line.points[0]);
                         }
                         linesToMake.push(line);
                         linesToDelete.push(baseCurve.id);

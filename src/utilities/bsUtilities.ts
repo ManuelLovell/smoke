@@ -34,7 +34,6 @@ export function ConvertPathCommands(
     const vectorArray: Vector2[] = [];
     const { curveSegments } = config;
 
-    // Pre-allocate array capacity if possible
     const estimatedPoints = pathCommands.length * curveSegments;
     vectorArray.length = estimatedPoints;
     let currentIndex = 0;
@@ -160,12 +159,10 @@ export function ConvertPathCommands(
         }
     }
 
-    // Trim any unused pre-allocated space
     vectorArray.length = currentIndex;
     return vectorArray;
 }
 
-// Helper functions remain the same but are marked as pure functions
 const quadraticBezier = (t: number, p0: Vector2, p1: Vector2, p2: Vector2): Vector2 =>
 {
     const u = 1 - t;
