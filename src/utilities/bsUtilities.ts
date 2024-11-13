@@ -2,6 +2,7 @@ import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
 import { Constants, PathCommands } from "./bsConstants";
+import simplify from "simplify-js";
 
 export function GetPersistentLocalKey()
 {
@@ -160,7 +161,7 @@ export function ConvertPathCommands(
     }
 
     vectorArray.length = currentIndex;
-    return vectorArray;
+    return simplify(vectorArray);
 }
 
 const quadraticBezier = (t: number, p0: Vector2, p1: Vector2, p2: Vector2): Vector2 =>

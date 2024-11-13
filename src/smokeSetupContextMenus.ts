@@ -4,6 +4,7 @@ import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ConvertPathCommands } from "./utilities/bsUtilities";
+import { TensionHelper } from "./obr/tensionhelper";
 
 export async function SetupContextMenus(): Promise<void>
 {
@@ -45,18 +46,24 @@ export async function SetupContextMenus(): Promise<void>
                     const baseCurve = item as Curve;
                     if (baseCurve.points.length > 2)
                     {
+                        const tension = baseCurve.style.tension ?? 0;
+                        const closedShape = baseCurve.style.closed === true || baseCurve.style.fillOpacity !== 0;
+                        if (closedShape) { baseCurve.points.push(baseCurve.points[0]); }
+                        const curvedPath = TensionHelper.CreateSkPath(baseCurve.points, tension, closedShape);
+                        const adjustedPoints = ConvertPathCommands(curvedPath, { x: 0, y: 0 }, { curveSegments: 20 });
+
                         const line = buildCurve()
                             .tension(0)
-                            .points(adjustPoints(baseCurve.points, baseCurve.position))
+                            .points(adjustedPoints)
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
                             .strokeWidth(GetToolWidth())
-                            .tension(baseCurve.style.tension ?? 0)
+                            .tension(tension)
                             .fillOpacity(0)
                             .fillColor("#000000")
                             .layer(Constants.LINELAYER)
                             .name("Vision Line (Line)")
-                            .closed(false)
+                            .closed(closedShape)
                             .locked(true)
                             .visible(false)
                             .metadata({
@@ -65,10 +72,7 @@ export async function SetupContextMenus(): Promise<void>
                                 [`${Constants.EXTENSIONID}/doubleSided`]: true
                             })
                             .build();
-                        if (baseCurve.style.closed || baseCurve.style.fillOpacity === 1)
-                        {
-                            line.points.push(line.points[0]);
-                        }
+
                         linesToMake.push(line);
                         linesToDelete.push(baseCurve.id);
                     }
@@ -181,9 +185,17 @@ export async function SetupContextMenus(): Promise<void>
                     if (points.length > 0)
                     {
                         points.push(points[0]);
+
+                        let adjustedPoints = points;
+                        if (baseShape.shapeType === "CIRCLE")
+                        {
+                            const curvedPath = TensionHelper.CreateSkPath(points, .25, true);
+                            adjustedPoints = ConvertPathCommands(curvedPath, { x: 0, y: 0 }, { curveSegments: 20 });
+                        }
+
                         const line = buildCurve()
                             .tension(0)
-                            .points(adjustPoints(points, { x: 1, y: 1 }))
+                            .points(adjustedPoints)
                             .position(baseShape.position)
                             .rotation(baseShape.rotation)
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
@@ -202,8 +214,6 @@ export async function SetupContextMenus(): Promise<void>
                                 [`${Constants.EXTENSIONID}/doubleSided`]: true
                             })
                             .build();
-
-                        if (baseShape.shapeType === "CIRCLE") line.style.tension = .5;
 
                         linesToMake.push(line);
                         linesToDelete.push(baseShape.id);
