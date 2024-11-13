@@ -51,6 +51,7 @@ export async function SetupContextMenus(): Promise<void>
                             .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
                             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
                             .strokeWidth(GetToolWidth())
+                            .tension(baseCurve.style.tension ?? 0)
                             .fillOpacity(0)
                             .fillColor("#000000")
                             .layer(Constants.LINELAYER)
@@ -201,6 +202,8 @@ export async function SetupContextMenus(): Promise<void>
                                 [`${Constants.EXTENSIONID}/doubleSided`]: true
                             })
                             .build();
+
+                        if (baseShape.shapeType === "CIRCLE") line.style.tension = .5;
 
                         linesToMake.push(line);
                         linesToDelete.push(baseShape.id);
