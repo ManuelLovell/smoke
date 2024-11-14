@@ -536,14 +536,14 @@
                     <td><label for="toggle_persistence" id="tip_persistence">Persistence</label></td>
                     <td><button id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button></td>
                     <td><input type="checkbox" id="toggle_persistence"></td>
-                    <td colspan="2">Trailing Fog (Beta)</td>
+                    <td colspan="2"><label for="toggle_trailingfog" id="tip_trailingfog">Trailing Fog (Beta)</label></td>
                     <td><input type="checkbox" id="toggle_trailingfog"></td>
                 </tr>
                 <tr>
                     <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
                     <td><input type="checkbox" id="toggle_ownerlines"></td>
-                    <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
-                    <td><input type="checkbox" id="snap_checkbox"></td>
+                    <td colspan="2"><label for="toggle_autohide" id="tip_autohide">Autohide (Beta)</label></td>
+                    <td><input type="checkbox" id="toggle_autohide"></td>
                 </tr>
                 <tr>
                     <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
@@ -554,6 +554,10 @@
                 <tr>
                     <td colspan="2"><label for="toggle_gmwalls" id="tip_gmwalls">Wall Pass (GM)</label></td>
                     <td><input type="checkbox" id="toggle_gmwalls"></td>
+                    <td colspan="2"><label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label></td>
+                    <td><input type="checkbox" id="snap_checkbox"></td>
+                </tr>
+                <tr>
                     <td colspan="2"><label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label></td>
                     <td><select name="elevationDefault" id="default_elevation_select">
                         <option value="0">0</option>
@@ -565,6 +569,8 @@
                         <option value="6">6</option>
                     </select>
                     </td>
+                    <td></td>
+                    <td></td>
                 </tr>
                 <tr>
                     <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
@@ -669,24 +675,24 @@
 
     <div class="grid-container">
         <div>
+            <label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label>
+            <input type="checkbox" id="snap_checkbox">
+        </div>
+        <div>
             <label for="toggle_persistence" id="tip_persistence">Persistence</label>
             <button class="mobile-presistence"id="reset_persistence"><img class="setting_svg" src="./reset.svg"></button>
             <input type="checkbox" id="toggle_persistence">
-        </div>
-        <div>
-            <label for="toggle_trailingfog" id="tip_trailingfog">Trailing Fog (Beta)</label>
-            <input type="checkbox" id="toggle_trailingfog">
         </div>
     </div>
 
     <div class="grid-container">
         <div>
-            <label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label>
-            <input type="checkbox" id="toggle_ownerlines">
+            <label for="toggle_trailingfog" id="tip_trailingfog">Trailing Fog (Beta)</label>
+            <input type="checkbox" id="toggle_trailingfog">
         </div>
         <div>
-            <label for="snap_checkbox" id="tip_gridsnap">Grid Snap</label>
-            <input type="checkbox" id="snap_checkbox">
+            <label for="toggle_autohide" id="tip_autohide">Autohide (Beta)</label>
+            <input type="checkbox" id="toggle_autohide">
         </div>
     </div>
 
@@ -707,8 +713,14 @@
             <input type="checkbox" id="toggle_gmwalls">
         </div>
         <div>
+            <label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label>
+            <input type="checkbox" id="toggle_ownerlines">
+        </div>
+    </div>
+    <div class="grid-container">
+        <div>
             <label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label>
-            <select name="elevationDefault" id="default_elevation_select">
+            <select name="elevationDefault" id="default_elevation_select" style="width: 50px;">
                 <option value="-10">0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -717,7 +729,9 @@
                 <option value="5">5</option>
             </select>
         </div>
+        <div></div>
     </div>
+
 
     <div class="grid-container">
         <div>
