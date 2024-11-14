@@ -861,6 +861,73 @@ export async function SetupContextMenus(): Promise<void>
     {
         await SetupUnitContextMenu(true);
     }
+
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true)
+    {
+        await SetupAutoHideMenu(true);
+    }
+}
+
+export async function SetupAutoHideMenu(enable: boolean)
+{
+    if (enable)
+    {
+        await OBR.contextMenu.create({
+            id: `${Constants.EXTENSIONID}/autohide-toggle`,
+            icons: [
+                {
+                    icon: "/autohide-off.svg",
+                    label: "Enable Autohide",
+                    filter: {
+                        every: [
+                            { key: ["metadata", `${Constants.EXTENSIONID}/hasVision`], operator: "==", value: undefined, coordinator: "&&" },
+                            { key: ["metadata", `${Constants.EXTENSIONID}/isAutoHidden`], operator: "==", value: undefined, coordinator: "&&" },
+                            { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], operator: "==", value: undefined }],
+                        some: [
+                            { key: "layer", value: "CHARACTER", coordinator: "||" },
+                            { key: "layer", value: "PROP", coordinator: "||" },
+                            { key: "layer", value: "ATTACHMENT" }],
+                    },
+                },
+                {
+                    icon: "/autohide-on.svg",
+                    label: "Disable Autohide",
+                    filter: {
+                        every: [
+                            { key: ["metadata", `${Constants.EXTENSIONID}/isAutoHidden`], operator: "==", value: true, coordinator: "&&" }],
+                        some: [
+                            { key: "layer", value: "CHARACTER", coordinator: "||" },
+                            { key: "layer", value: "PROP", coordinator: "||" },
+                            { key: "layer", value: "ATTACHMENT" }],
+                    },
+                },
+            ],
+            async onClick(ctx)
+            {
+                const enableAutohide = ctx.items.every(
+                    (item) => item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === undefined);
+
+                await OBR.scene.items.updateItems(ctx.items, items =>
+                {
+                    for (const item of items)
+                    {
+                        if (!enableAutohide)
+                        {
+                            delete item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`];
+                        }
+                        else
+                        {
+                            item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] = true;
+                        }
+                    }
+                });
+            },
+        });
+    }
+    else
+    {
+        await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/autohide-toggle`);
+    }
 }
 
 export async function SetupUnitContextMenu(enable: boolean)
@@ -911,55 +978,3 @@ function adjustPoints(points: Vector2[], adjustment: Vector2): Vector2[]
         y: point.y + adjustment.y
     }));
 }
-// export async function SetupAutohideMenus(show: boolean): Promise<void>
-// {
-//     if (show)
-//     {
-//         await OBR.contextMenu.create({
-//             id: `${Constants.EXTENSIONID}/toggle-autohide-menu`,
-//             icons: [
-//                 {
-//                     icon: "/autohide-off.svg",
-//                     label: "Enable Autohide",
-//                     filter: {
-//                         every: [{ key: "layer", value: "CHARACTER" }, { key: ["metadata", `${Constants.EXTENSIONID}/hasAutohide`], value: undefined, coordinator: "&&" },
-//                         { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], value: undefined, operator: "==" }],
-//                         roles: ["GM"]
-//                     },
-//                 },
-//                 {
-//                     icon: "/autohide-on.svg",
-//                     label: "Disable Autohide",
-//                     filter: {
-//                         every: [{ key: "layer", value: "CHARACTER", coordinator: "&&" },
-//                         { key: ["metadata", `${Constants.SPECTREID}/isSpectre`], value: undefined, operator: "==" }],
-//                         roles: ["GM"]
-//                     },
-//                 },
-//             ],
-//             async onClick(ctx)
-//             {
-//                 const enableFog = ctx.items.every(
-//                     (item) => item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] === undefined);
-
-//                 await OBR.scene.items.updateItems(ctx.items, items =>
-//                 {
-//                     for (const item of items)
-//                     {
-//                         if (!enableFog)
-//                         {
-//                             delete item.metadata[`${Constants.EXTENSIONID}/hasAutohide`];
-//                         }
-//                         else
-//                         {
-//                             item.metadata[`${Constants.EXTENSIONID}/hasAutohide`] = true;
-//                         }
-//                     }
-//                 });
-//             },
-//         });
-//     } else
-//     {
-//         await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/toggle-autohide-menu`);
-//     }
-// }

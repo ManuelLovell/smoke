@@ -5,9 +5,11 @@ import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineA
 import { Constants } from "./utilities/bsConstants";
 import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ApplyEnhancedFog } from "./smokeEnhancedFog";
+import { VisibilityChecker } from "./smokeVisibilityChecker";
 
 class SmokeProcessor
 {
+    VisibilityChecker: VisibilityChecker;
     wallsToCreate: Wall[] = [];
     wallsToUpdate: any[] = [];
     wallsToDelete: string[] = [];
@@ -49,7 +51,7 @@ class SmokeProcessor
 
     constructor()
     {
-
+        this.VisibilityChecker = new VisibilityChecker();
     }
 
     public async Initialize()
@@ -103,16 +105,30 @@ class SmokeProcessor
 
     public async Run()
     {
+        if (!BSCACHE.fogFilled) return;
+        
         await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
         await this.UpdateWalls();
         await this.UpdateDoors();
         await this.UpdateLights();
         await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
         await this.UpdateTrailingFogTokens();
+        await this.UpdateAutoHideTokens();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
             localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
+        }
+    }
+
+    private async UpdateAutoHideTokens()
+    {
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true && BSCACHE.playerRole === "GM")
+        {
+            const players = await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true
+                && x.metadata[`${Constants.EXTENSIONID}/isTorch`] === undefined);
+            const enemies = await OBR.scene.items.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === true);
+            await this.VisibilityChecker.HideEnemies(players, enemies);
         }
     }
 
@@ -574,7 +590,7 @@ class SmokeProcessor
         {
             sceneVisionTokens = [];
         }
-        
+
         const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
         for (const sceneToken of sceneVisionTokens)
         {
@@ -879,12 +895,20 @@ class SmokeProcessor
             }
         }
 
+        let updateCache = false;
         // Add, Update and Delete
         if (this.wallsToCreate.length > 0)
+        {
             await OBR.scene.local.addItems(this.wallsToCreate);
+            updateCache = true;
+        }
         if (this.wallsToDelete.length > 0)
+        {
             await OBR.scene.local.deleteItems(this.wallsToDelete);
+            updateCache = true;
+        }
         if (this.wallsToUpdate.length > 0)
+        {
             await OBR.scene.local.updateItems(localVisionWalls.filter(x => !this.wallsToDelete.includes(x.id)), (lines) =>
             {
                 for (let line of lines)
@@ -902,7 +926,10 @@ class SmokeProcessor
                     }
                 }
             });
+            updateCache = true;
+        }
         if (this.wallsToError.length > 0)
+        {
             await OBR.scene.items.updateItems<Curve>(this.wallsToError, lines =>
             {
                 for (let line of lines)
@@ -919,12 +946,20 @@ class SmokeProcessor
                     delete line.metadata[`${Constants.EXTENSIONID}/blocking`];
                 }
             });
+            updateCache = true;
+        }
 
         this.wallsToCreate = [];
         this.wallsToUpdate = [];
         this.wallsToDelete = [];
         this.wallsToError = [];
         this.wallsNotOwner = [];
+
+        if (BSCACHE.playerRole === "GM" && updateCache)
+        {
+            await this.VisibilityChecker.UpdateWallSegments();
+            updateCache = false;
+        }
     }
 
     private CreateWallToQueue(line: Curve, depth: number)
@@ -1162,7 +1197,7 @@ class SmokeProcessor
             const customDefault = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
             if (typeof customDefault === "string") value = parseInt(customDefault);
         }
-        
+
         // -10 is base level.
         switch (value)
         {

@@ -79,6 +79,17 @@ export function SetupGMInputHandlers(mobile = false)
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/trailingFog`]: target.checked });
     };
 
+    // Toggles auto-hide, allowing tokens out of vision range to be 'invisible'.
+    const autoHideCheckbox = document.getElementById("toggle_autohide") as HTMLInputElement;
+    autoHideCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true;
+    autoHideCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autoHide`]: target.checked });
+    };
+
     // Toggles the colored ownership lines
     const togglPersistence = document.getElementById("toggle_persistence") as HTMLInputElement;
     togglPersistence.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true;
@@ -151,7 +162,7 @@ export function SetupGMInputHandlers(mobile = false)
     // Toggle the default elevation layer for tokens/walls
     const defaultElevationSelect = document.getElementById('default_elevation_select') as HTMLSelectElement;
     const savedElevationValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation}`];
-    defaultElevationSelect.value = typeof savedElevationValue === "string" ? savedElevationValue : "0";
+    defaultElevationSelect.value = typeof savedElevationValue === "string" ? savedElevationValue : "-10";
     defaultElevationSelect.onchange = async (event) =>
     {
         const target = event.currentTarget as HTMLSelectElement;

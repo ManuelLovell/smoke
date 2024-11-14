@@ -34,8 +34,9 @@ export function CreateTooltips()
     tooltips.set(`tip_playerdoors`, "Toggle to enable/disable players being able to see and use doors on their own.");
     tooltips.set(`tip_ownerrings`, "Toggle to enable/disable the colored rings seen around a player to indicate their vision radius. GM-Only.");
     tooltips.set(`tip_gridsnap`, "Toggle to enable/disable grid snapping when drawing Obstruction Lines and Objects. This is separate from the default OBR Snap setting.");
-    tooltips.set(`toggle_contextmenu`, "Enable to show the Unit Vision Settings on the Context Menu for tokens");
-    tooltips.set(`toggle_trailingfog`, "Enable to 'fog' areas that have been revealed by Persistence, but a token is not currently in.")
+    tooltips.set(`tip_contextmenu`, "Enable to show the Unit Vision Settings on the Context Menu for tokens");
+    tooltips.set(`tip_autohide`, "Enable to show the Autohide Option on tokens as well as enable Autohide functionality");
+    tooltips.set(`tip_trailingfog`, "Enable to 'fog' areas that have been revealed by Persistence, but a token is not currently in.")
     tooltips.set(`tip_gmwalls`, "Toggle to enable/disable the blocking of walls for the GM only.");
     tooltips.set('tip_defaultelevation', "Toggle the Default Elevation Layer. This is the layer a token/wall is set at when it's not on a specific mapping.");
 

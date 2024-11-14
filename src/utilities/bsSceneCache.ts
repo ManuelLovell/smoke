@@ -7,7 +7,7 @@ import { finishDrawing as FinishElevationDrawing, cancelDrawing as CancelElevati
 import { SMOKEMAIN } from "../smokeMain";
 import { SMOKEMACHINE } from "../smokeProcessor";
 import { SPECTREMACHINE } from "../SpectreTwo";
-import { SetupUnitContextMenu } from "../smokeSetupContextMenus";
+import { SetupAutoHideMenu, SetupUnitContextMenu } from "../smokeSetupContextMenus";
 import { ApplyEnhancedFog } from "../smokeEnhancedFog";
 
 class BSCache
@@ -368,6 +368,18 @@ class BSCache
                             && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
                         {
                             await SetupUnitContextMenu(false);
+                        }
+
+                        // Handle Autohide turning on and off
+                        if (this.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] !== true
+                            && metadata[`${Constants.EXTENSIONID}/autoHide`] === true)
+                        {
+                            await SetupAutoHideMenu(true);
+                        }
+                        else if (this.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true
+                            && metadata[`${Constants.EXTENSIONID}/autoHide`] !== true)
+                        {
+                            await SetupAutoHideMenu(false);
                         }
                     }
 
