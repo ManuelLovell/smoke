@@ -161,7 +161,7 @@ export function SetupGMInputHandlers(mobile = false)
 
     // Toggle the default elevation layer for tokens/walls
     const defaultElevationSelect = document.getElementById('default_elevation_select') as HTMLSelectElement;
-    const savedElevationValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation}`];
+    const savedElevationValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
     defaultElevationSelect.value = typeof savedElevationValue === "string" ? savedElevationValue : "-10";
     defaultElevationSelect.onchange = async (event) =>
     {
