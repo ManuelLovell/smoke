@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Image, Light, Math2, MathM, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Image, Light, Math2, MathM, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape, Uniform } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
@@ -29,7 +29,7 @@ class SmokeProcessor
     decalsToDelete: string[] = [];
 
     darkVisionToCreate: Effect[] = [];
-    darkVisionToUpdate: { id: string, size: number }[] = [];
+    darkVisionToUpdate: { id: string, size: number, position: Vector2, uniforms: Uniform[] }[] = [];
     darkVisionToDelete: string[] = [];
 
     revealersToCreate: Effect[] = [];
@@ -106,7 +106,7 @@ class SmokeProcessor
     public async Run()
     {
         if (!BSCACHE.fogFilled) return;
-        
+
         await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
         await this.UpdateWalls();
         await this.UpdateDoors();
@@ -125,8 +125,7 @@ class SmokeProcessor
     {
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true && BSCACHE.playerRole === "GM")
         {
-            const players = await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true
-                && x.metadata[`${Constants.EXTENSIONID}/isTorch`] === undefined);
+            const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
             const enemies = await OBR.scene.items.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === true);
             await this.VisibilityChecker.HideEnemies(players, enemies);
         }
@@ -214,7 +213,6 @@ class SmokeProcessor
                     .disableHit(true)
                     .build();
                 this.revealersToCreate.push(revealerEffect);
-                console.log(light.rotation);
                 this.trailingFogTokens.push(light.id);
             }
         }
@@ -410,7 +408,8 @@ class SmokeProcessor
 
     public async ClearPersistence()
     {
-        await OBR.scene.local.deleteItems(this.persistentLights.map(x => x.id));
+        const persistentLights = await OBR.scene.local.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isPersistentLight`] !== undefined);
+        await OBR.scene.local.deleteItems(persistentLights.map(x => x.id));
         this.persistentLights = [];
         localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
     }
@@ -483,14 +482,29 @@ class SmokeProcessor
 
     private UpdateDarkVision(token: Item)
     {
-        const darkVisionSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
-        const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
+        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
+        const darkVisionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
+        const clearView = ((visionDistance * .9) / darkVisionDistance) / 2; // This cuts the vision back slightly to fuzz the edge easier
 
+        const newPosition: Vector2 = {
+            x: token.position.x - (darkVisionDistance / 2),
+            y: token.position.y - (darkVisionDistance / 2)
+        };
+        const newUniforms = [
+            { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
+            { name: "radius", value: .5 }, // Radius of the circle in normalized units
+            { name: "clear", value: clearView },
+            { name: "smoothwidth", value: 0.075 }
+        ];
+
+        const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
         if (thisDarkVision)
         {
             const update = {
                 id: thisDarkVision.id,
-                size: darkVisionSize,
+                size: darkVisionDistance,
+                position: newPosition,
+                uniforms: newUniforms
             };
             this.darkVisionToUpdate.push(update);
         }
@@ -616,8 +630,12 @@ class SmokeProcessor
                 if (parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
                     > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
                 {
-                    equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-                        === existingLight.attenuationRadius;
+                    // If this is false, we don't want to set it back to True if it passes the next check
+                    if (equalOuterRadius)
+                    {
+                        equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                            === existingLight.attenuationRadius;
+                    }
                 }
                 const equalInnerRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string)
                     === existingLight.sourceRadius;
@@ -631,17 +649,19 @@ class SmokeProcessor
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
+                let forceUpdateDarkvision = false;
                 if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalBlind || !equalDepth)
                 {
                     this.UpdateLightToQueue(sceneToken, existingLight, sceneTokenDepth);
+                    forceUpdateDarkvision = true;
                 }
 
-                const existingDarkVision = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === sceneToken.id && x.attachedTo === sceneToken.id) as Effect;
+                const existingDarkVision = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true && x.attachedTo === sceneToken.id) as Effect;
                 if (existingDarkVision)
                 {
-                    const equalRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
+                    const equalRange = (this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2)
                         === existingDarkVision.width;
-                    if (!equalRange)
+                    if (!equalRange || forceUpdateDarkvision)
                     {
                         this.UpdateDarkVision(sceneToken);
                     }
@@ -732,7 +752,7 @@ class SmokeProcessor
         const localDarkVisions = BSCACHE.sceneLocal.filter(x => isDarkVision(x)) as Effect[];
         for (const darkvision of localDarkVisions)
         {
-            const exists = sceneVisionTokens.find(x => x.id === darkvision.metadata[`${Constants.EXTENSIONID}/isDarkVision`]) as Image;
+            const exists = sceneVisionTokens.find(x => darkvision.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true && darkvision.attachedTo === x.id) as Image;
             if (!exists) this.decalsToDelete.push(darkvision.id);
             else
             {
@@ -800,6 +820,8 @@ class SmokeProcessor
                     {
                         dark.width = mine.size;
                         dark.height = mine.size;
+                        dark.position = mine.position;
+                        dark.uniforms = mine.uniforms;
                     }
                 }
             });
