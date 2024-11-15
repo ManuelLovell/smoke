@@ -211,6 +211,8 @@ class SmokeProcessor
                     ])
                     .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
                     .disableHit(true)
+                    .disableAutoZIndex(true)
+                    .zIndex(200) // Revealer Above Overlay
                     .build();
                 this.revealersToCreate.push(revealerEffect);
                 this.trailingFogTokens.push(light.id);
@@ -244,6 +246,8 @@ class SmokeProcessor
                     ])
                     .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogger`]: map.id })
                     .disableHit(true)
+                    .disableAutoZIndex(true)
+                    .zIndex(100) // Overlay at Base
                     .build();
                 trailFoggersToCreate.push(trailingFogEffect);
                 this.trailingFoggedMaps.push(map.id);
@@ -408,7 +412,7 @@ class SmokeProcessor
 
     public async ClearPersistence()
     {
-        const persistentLights = await OBR.scene.local.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isPersistentLight`] !== undefined);
+        const persistentLights = await OBR.scene.local.getItems(x => x.metadata[`${Constants.EXTENSIONID}/getPersistentLight`] === true);
         await OBR.scene.local.deleteItems(persistentLights.map(x => x.id));
         this.persistentLights = [];
         localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
@@ -1030,7 +1034,10 @@ class SmokeProcessor
             .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
             .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
-            .metadata({ [`${Constants.EXTENSIONID}/isPersistentLight`]: token.id })
+            .metadata({
+                [`${Constants.EXTENSIONID}/isPersistentLight`]: token.id,
+                [`${Constants.EXTENSIONID}/getPersistentLight`]: true
+            })
             .build();
 
         this.lightsToCreate.push(persistenceItem);

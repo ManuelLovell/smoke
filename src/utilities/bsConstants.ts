@@ -454,10 +454,8 @@ export class Constants
         half4 main(float2 coord) {
             vec2 sceneCoord = (vec3(coord, 1) * modelView).xy;
 
-            // Sample the color from the scene
             half4 sceneColor = scene.eval(sceneCoord);
 
-            // Precompute values
             vec2 center = size * 0.5;
             float aspectRatioInv = size.y / size.x; // Precompute inverse of aspect ratio
             vec2 diff = coord - center;
@@ -466,7 +464,6 @@ export class Constants
 
             float radiusSquared = (min(size.x, size.y) * 0.5) * (min(size.x, size.y) * 0.5);
 
-            // Use a step function to avoid branching
             float mask = step(distSquared, radiusSquared);
 
             // Interpolate between scene color and black
