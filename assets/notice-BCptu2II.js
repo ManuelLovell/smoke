@@ -1,4 +1,4 @@
-import{O as e,C as n}from"./bsConstants-DGhg8OOo.js";const i=document.querySelector("#bs-notice"),l=document.querySelector("#bs-notice-notes");i.innerHTML=`
+import{O as e,C as n}from"./bsConstants-DQ62a_ZN.js";const i=document.querySelector("#bs-notice"),l=document.querySelector("#bs-notice-notes");i.innerHTML=`
   <div id="newsContainer">
     <h1>Smoke & Spectre! 3.0</h1>
     Large thank you to the OBR Devs for all of the development that let these changes be possible.
