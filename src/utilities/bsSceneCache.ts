@@ -7,7 +7,7 @@ import { finishDrawing as FinishElevationDrawing, cancelDrawing as CancelElevati
 import { SMOKEMAIN } from "../smokeMain";
 import { SMOKEMACHINE } from "../smokeProcessor";
 import { SPECTREMACHINE } from "../SpectreTwo";
-import { SetupAutoHideMenu, SetupUnitContextMenu } from "../smokeSetupContextMenus";
+import { SetupAutoHideMenu, SetupUnitContextMenu, SetupWallContextMenu } from "../smokeSetupContextMenus";
 import { ApplyEnhancedFog } from "../smokeEnhancedFog";
 
 class BSCache
@@ -358,7 +358,7 @@ class BSCache
 
                     if (BSCACHE.playerRole === "GM") 
                     {
-                        // Handle ContextMenu turning on and off
+                        // Handle Unit ContextMenu turning on and off
                         if (this.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true
                             && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
                         {
@@ -368,6 +368,18 @@ class BSCache
                             && metadata[`${Constants.EXTENSIONID}/unitContextMenu`] !== true)
                         {
                             await SetupUnitContextMenu(false);
+                        }
+                        
+                        // Handle Wall ContextMenu turning on and off
+                        if (this.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] !== true
+                            && metadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true)
+                        {
+                            await SetupWallContextMenu(true);
+                        }
+                        else if (this.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true
+                            && metadata[`${Constants.EXTENSIONID}/wallContextMenu`] !== true)
+                        {
+                            await SetupWallContextMenu(false);
                         }
 
                         // Handle Autohide turning on and off

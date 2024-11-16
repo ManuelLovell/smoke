@@ -616,7 +616,13 @@ class SmokeProcessor
             for (const mapping of elevationMappings)
             {
                 const withinMap = Utilities.isPointInPolygon(sceneToken.position, mapping.Points);
-                if (withinMap && (mapping.Depth > sceneTokenDepth))
+
+                const customValue = sceneToken.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string;
+                if (customValue)
+                {
+                    sceneTokenDepth = parseInt(customValue);
+                }
+                else if (withinMap && (mapping.Depth > sceneTokenDepth))
                 {
                     sceneTokenDepth = mapping.Depth;
                 }
@@ -866,8 +872,15 @@ class SmokeProcessor
                 let visionLineDepth = -10;
                 for (const mapping of elevationMappings)
                 {
-                    const withinMap = Utilities.isPointInPolygon(visionLine.points[0], mapping.Points);
-                    if (withinMap && (mapping.Depth > visionLineDepth))
+                    const truePosition = { x: visionLine.points[0].x + visionLine.position.x, y: visionLine.points[0].y + visionLine.position.y };
+                    const withinMap = Utilities.isPointInPolygon(truePosition, mapping.Points);
+                    const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
+
+                    if (customValue)
+                    {
+                        visionLineDepth = parseInt(customValue);
+                    }
+                    else if (withinMap && (mapping.Depth > visionLineDepth))
                     {
                         visionLineDepth = mapping.Depth;
                     }
@@ -1221,27 +1234,55 @@ class SmokeProcessor
 
     private GetDepth(value: number, wall: boolean)
     {
+        // -10 is base level.
         if (value === -10)
         {
             const customDefault = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
             if (typeof customDefault === "string") value = parseInt(customDefault);
         }
 
-        // -10 is base level.
-        switch (value)
+        const elevationComplex = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
+        if (elevationComplex === true)
         {
-            case 1:
-                return !wall ? -5 : -4;
-            case 2:
-                return !wall ? -6 : -5;
-            case 3:
-                return !wall ? -7 : -6;
-            case 4:
-                return !wall ? -8 : -7;
-            case 5:
-                return !wall ? -9 : -8;
-            default:
-                return -1;
+            // Elevation Complex keeps the Walls consistent on levels 0-6.
+            switch (value)
+            {
+                case 1:
+                    return -5;
+                case 2:
+                    return -6;
+                case 3:
+                    return -7;
+                case 4:
+                    return -8;
+                case 5:
+                    return -9;
+                case 6:
+                    return -10;
+                default:
+                    return -1;
+            }
+        }
+        else
+        {
+            // Elevation Simple let's a token see over a wall on levels above 0.
+            switch (value)
+            {
+                case 1:
+                    return !wall ? -5 : -4;
+                case 2:
+                    return !wall ? -6 : -5;
+                case 3:
+                    return !wall ? -7 : -6;
+                case 4:
+                    return !wall ? -8 : -7;
+                case 5:
+                    return !wall ? -9 : -8;
+                case 6:
+                    return !wall ? -10 : -9;
+                default:
+                    return -1;
+            }
         }
     }
 

@@ -14,6 +14,7 @@ OBR.onReady(async () =>
     const visionInnerInput = document.getElementById('innerContext') as HTMLInputElement;
     const visionOuterInput = document.getElementById('outerContext') as HTMLInputElement;
     const visionOwnerSelect = document.getElementById('visionOwnerSelect') as HTMLSelectElement;
+    const unitDepthSelect = document.getElementById('unitDepthSelect') as HTMLSelectElement;
 
     const unitItems = await OBR.scene.items.getItems(item => unitsIds?.includes(item.id));
     const party = await OBR.party.getPlayers();
@@ -63,6 +64,10 @@ OBR.onReady(async () =>
         visionDarkInput.value = token.metadata[`${Constants.EXTENSIONID}/visionDark`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string
             : GetVisionDefault('visionDarkDefault');
+
+        unitDepthSelect.value = token.metadata[`${Constants.EXTENSIONID}/unitDepth`] !== undefined
+            ? token.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string
+            : "0";
     }
 
     visionOwnerSelect.onchange = async (event) =>
@@ -201,6 +206,25 @@ OBR.onReady(async () =>
             for (let item of items)
             {
                 item.metadata[`${Constants.EXTENSIONID}/visionDark`] = target.value;
+            }
+        });
+    };
+
+    unitDepthSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
+        {
+            for (const item of items)
+            {
+                if (target.value === "0")
+                {
+                    delete item.metadata[`${Constants.EXTENSIONID}/unitDepth`];
+                }
+                else
+                {
+                    item.metadata[`${Constants.EXTENSIONID}/unitDepth`] = target.value;
+                }
             }
         });
     };

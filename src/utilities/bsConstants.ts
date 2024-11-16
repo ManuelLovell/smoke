@@ -681,10 +681,10 @@ export class Constants
                     <td><input type="checkbox" id="toggle_autohide"></td>
                 </tr>
                 <tr>
-                    <td colspan="2"><label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label></td>
-                    <td><input type="checkbox" id="toggle_contextmenu"></td>
-                    <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
-                    <td><input type="checkbox" id="door_checkbox"></td>
+                    <td colspan="2"><label for="toggle_unitcontextmenu" id="tip_unitcontextmenu">Show Unit Menu</label></td>
+                    <td><input type="checkbox" id="toggle_unitcontextmenu"></td>
+                    <td colspan="2"><label for="toggle_wallcontextmenu" id="tip_wallcontextmenu">Show Wall Menu</label></td>
+                    <td><input type="checkbox" id="toggle_wallcontextmenu"></td>
                 </tr>
                 <tr>
                     <td colspan="2"><label for="toggle_gmwalls" id="tip_gmwalls">Wall Pass (GM)</label></td>
@@ -693,9 +693,9 @@ export class Constants
                     <td><input type="checkbox" id="snap_checkbox"></td>
                 </tr>
                 <tr>
-                    <td colspan="2"><label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label></td>
-                    <td><select name="elevationDefault" id="default_elevation_select">
-                        <option value="0">0</option>
+                    <td><label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label></td>
+                    <td colspan="2"><select name="elevationDefault" id="default_elevation_select">
+                        <option value="-10">0</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -704,8 +704,18 @@ export class Constants
                         <option value="6">6</option>
                     </select>
                     </td>
-                    <td></td>
-                    <td></td>
+                    <td><label for="toggle_elevationstyle" id="tip_elevationstyle">Elevation Style</label></td>
+                    <td colspan="2"><select name="elevationStyle" id="elevation_style_select">
+                        <option value="false">Mesa</option>
+                        <option value="true">City</option>
+                    </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
+                    <td><input type="checkbox" id="door_checkbox"></td>
+                    <td colspan="2">
+                    </td>
                 </tr>
                 <tr>
                     <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
@@ -835,12 +845,12 @@ export class Constants
 
     <div class="grid-container">
         <div>
-            <label for="toggle_contextmenu" id="tip_ownerrings">Show Unit Menu</label>
-            <input type="checkbox" id="toggle_contextmenu">
+            <label for="toggle_unitcontextmenu" id="tip_unitcontextmenu">Show Unit Menu</label>
+            <input type="checkbox" id="toggle_unitcontextmenu">
         </div>
         <div>
-            <label for="door_checkbox" id="tip_playerdoors">Players See Doors</label>
-            <input type="checkbox" id="door_checkbox">
+            <label for="toggle_wallcontextmenu" id="tip_wallcontextmenu">Show Wall Menu</label>
+            <input type="checkbox" id="toggle_wallcontextmenu">
         </div>
     </div>
 
@@ -854,10 +864,11 @@ export class Constants
             <input type="checkbox" id="toggle_ownerlines">
         </div>
     </div>
+
     <div class="grid-container">
         <div>
             <label for="toggle_defaultelevation" id="tip_defaultelevation">Default Elevation</label>
-            <select name="elevationDefault" id="default_elevation_select" style="width: 50px;">
+            <select name="elevationDefault" id="default_elevation_select" style="width: 80px;">
                 <option value="-10">0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -866,9 +877,23 @@ export class Constants
                 <option value="5">5</option>
             </select>
         </div>
-        <div></div>
+        <div>
+            <label for="toggle_elevationstyle" id="tip_elevationstyle">Elevation Style</label>
+            <select name="elevationStyle" id="elevation_style_select" style="width: 80px;">
+                        <option value="false">Mesa</option>
+                        <option value="true">City</option>
+            </select>
+        </div>
     </div>
 
+    <div class="grid-container">
+        <div>
+            <label for="door_checkbox" id="tip_playerdoors">Players See Doors</label>
+            <input type="checkbox" id="door_checkbox">
+        </div>
+        <div>
+        </div>
+    </div>
 
     <div class="grid-container">
         <div>

@@ -56,13 +56,29 @@
                 <td colspan="2">
                     <div class="context-embed-cell">
                         <div>Owner:</div>
-                        <select style="width: 140px; margin-left: 0 !important" id="visionOwnerSelect"></select>
+                        <select style="width: 140px; margin-right: 0 !important" id="visionOwnerSelect"></select>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="context-embed-cell">
+                        <div>Elevation:</div>
+                        <select style="width: 140px; margin-right: 0 !important" id="unitDepthSelect">
+                            <option value="0">Auto</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                        </select>
                     </div>
                 </td>
             </tr>
         </table>
     </div>
-    <script type="module" src="/src/smokeContextEmbed.ts"></script>
+    <script type="module" src="/src/smokeUnitContextEmbed.ts"></script>
 </body>
 
 </html>

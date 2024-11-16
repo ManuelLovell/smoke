@@ -149,7 +149,7 @@ export function SetupGMInputHandlers(mobile = false)
     };
 
     // Toggles showing the unit vision settings context menu
-    const unitContextMenuCheckbox = document.getElementById("toggle_contextmenu") as HTMLInputElement;
+    const unitContextMenuCheckbox = document.getElementById("toggle_unitcontextmenu") as HTMLInputElement;
     unitContextMenuCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true;
     unitContextMenuCheckbox!.onclick = async (event: MouseEvent) =>
     {
@@ -157,6 +157,18 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/unitContextMenu`]: target.checked });
+    };
+    //wallContextMenu
+
+    // Toggles showing the unit vision settings context menu
+    const wallContextMenuCheckbox = document.getElementById("toggle_wallcontextmenu") as HTMLInputElement;
+    wallContextMenuCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true;
+    wallContextMenuCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/wallContextMenu`]: target.checked });
     };
 
     // Toggle the default elevation layer for tokens/walls
@@ -167,6 +179,16 @@ export function SetupGMInputHandlers(mobile = false)
     {
         const target = event.currentTarget as HTMLSelectElement;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/defaultElevation`]: target.value });
+    };
+
+    // Toggle the elevation style between tokens see over walls, and consistent levels (0 - 6 all work the same);
+    const elevationStyleSelect = document.getElementById('elevation_style_select') as HTMLSelectElement;
+    const savedElevationStyle = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
+    elevationStyleSelect.value = savedElevationStyle === "true" ? "true" : "false";
+    elevationStyleSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationComplex`]: target.value === "true" });
     };
 
     // Toggles the pass-through of walls for a GM

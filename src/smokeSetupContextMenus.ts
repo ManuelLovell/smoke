@@ -31,9 +31,6 @@ export async function SetupContextMenus(): Promise<void>
         ],
         async onClick(ctx)
         {
-            const DEFAULTCOLOR = "#000000";
-            const DEFAULTWIDTH = 8;
-            const DEFAULTSTROKE: number[] = [];
             const linesToMake = [];
             const linesToDelete = [];
 
@@ -55,8 +52,8 @@ export async function SetupContextMenus(): Promise<void>
                         const line = buildCurve()
                             .tension(0)
                             .points(adjustedPoints)
-                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
                             .strokeWidth(GetToolWidth())
                             .tension(tension)
                             .fillOpacity(0)
@@ -85,8 +82,8 @@ export async function SetupContextMenus(): Promise<void>
                         const line = buildCurve()
                             .tension(0)
                             .points(ConvertPathCommands(basePath.commands, basePath.position))
-                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
                             .strokeWidth(GetToolWidth())
                             .fillOpacity(0)
                             .fillColor("#000000")
@@ -111,8 +108,8 @@ export async function SetupContextMenus(): Promise<void>
                     const line = buildCurve()
                         .tension(0)
                         .points(adjustPoints([baseLine.startPosition, baseLine.endPosition], baseLine.position))
-                        .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-                        .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                        .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+                        .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
                         .strokeWidth(GetToolWidth())
                         .fillOpacity(0)
                         .fillColor("#000000")
@@ -198,8 +195,8 @@ export async function SetupContextMenus(): Promise<void>
                             .points(adjustedPoints)
                             .position(baseShape.position)
                             .rotation(baseShape.rotation)
-                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? DEFAULTCOLOR)
-                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? DEFAULTSTROKE)
+                            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+                            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
                             .strokeWidth(GetToolWidth())
                             .fillOpacity(0)
                             .fillColor("#000000")
@@ -219,11 +216,17 @@ export async function SetupContextMenus(): Promise<void>
                         linesToDelete.push(baseShape.id);
                     }
                 }
-                if (linesToMake.length > 0)
+            }
+            if (linesToMake.length > 0)
+            {
+                const batchSize = 5;
+                for (let i = 0; i < linesToMake.length; i += batchSize)
                 {
-                    await OBR.scene.items.addItems(linesToMake);
-                    await OBR.scene.items.deleteItems(linesToDelete);
+                    const batch = linesToMake.slice(i, i + batchSize);
+                    await OBR.scene.items.addItems(batch);
                 }
+
+                await OBR.scene.items.deleteItems(linesToDelete);
             }
         }
     });
@@ -389,30 +392,6 @@ export async function SetupContextMenus(): Promise<void>
                 }
             });
         }
-    });
-
-    await OBR.contextMenu.create({
-        id: `${Constants.EXTENSIONID}/switch-player-wall`,
-        icons: [
-            {
-                icon: "/person.svg",
-                label: "Change Wall Viewer",
-                filter: {
-                    every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }]
-                },
-            }
-        ],
-        async onClick(_ctx, elementId: string)
-        {
-            await OBR.popover.open({
-                id: Constants.CONTEXTID,
-                url: `/pages/wallcontextembed.html`,
-                height: 44,
-                width: 200,
-                anchorElementId: elementId
-            });
-        },
-        embed: { url: `/pages/wallcontextembed.html?contextmenu=true`, height: 44 }
     });
 
     await OBR.contextMenu.create({
@@ -862,6 +841,11 @@ export async function SetupContextMenus(): Promise<void>
         await SetupUnitContextMenu(true);
     }
 
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true)
+    {
+        await SetupWallContextMenu(true);
+    }
+
     if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true)
     {
         await SetupAutoHideMenu(true);
@@ -930,6 +914,42 @@ export async function SetupAutoHideMenu(enable: boolean)
     }
 }
 
+export async function SetupWallContextMenu(enable: boolean)
+{
+    if (enable)
+    {
+
+
+        await OBR.contextMenu.create({
+            id: `${Constants.EXTENSIONID}/switch-advanced-wall`,
+            icons: [
+                {
+                    icon: "/advancedwall.svg",
+                    label: "Advanced Settings",
+                    filter: {
+                        every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true }]
+                    },
+                }
+            ],
+            async onClick(_ctx, elementId: string)
+            {
+                await OBR.popover.open({
+                    id: Constants.CONTEXTID,
+                    url: `/pages/wallcontextembed.html`,
+                    height: 80,
+                    width: 200,
+                    anchorElementId: elementId
+                });
+            },
+            embed: { url: `/pages/wallcontextembed.html?contextmenu=true`, height: 80 }
+        });
+    }
+    else
+    {
+        await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/switch-advanced-wall`);
+    }
+}
+
 export async function SetupUnitContextMenu(enable: boolean)
 {
     if (enable)
@@ -956,13 +976,13 @@ export async function SetupUnitContextMenu(enable: boolean)
             {
                 await OBR.popover.open({
                     id: Constants.CONTEXTID,
-                    url: `/pages/contextembed.html`,
-                    height: 140,
+                    url: `/pages/unitcontextembed.html`,
+                    height: 170,
                     width: 200,
                     anchorElementId: elementId
                 });
             },
-            embed: { url: `/pages/contextembed.html?contextmenu=true`, height: 140 }
+            embed: { url: `/pages/unitcontextembed.html?contextmenu=true`, height: 170 }
         });
     }
     else
