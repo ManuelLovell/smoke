@@ -23,6 +23,10 @@ export async function SetupContextMenus(): Promise<void>
                         {
                             key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
                             value: undefined,
+                        },
+                        {
+                            key: ["metadata", `${Constants.EXTENSIONID}/isFogEffect`],
+                            value: undefined,
                         }],
                     some: [{ key: "layer", value: "DRAWING", coordinator: "||" }, { key: "layer", value: "FOG" }],
                     roles: ["GM"]
@@ -491,14 +495,14 @@ export async function SetupContextMenus(): Promise<void>
                     if (!turnToFogMaps)
                     {
                         item.layer = "MAP";
-                        item.zIndex = -1;
+                        item.zIndex = -1.00000001;
                         item.disableAutoZIndex = false;
                         delete item.metadata[`${Constants.EXTENSIONID}/isFogMap`];
                     }
                     else
                     {
                         item.layer = "FOG";
-                        item.zIndex = -1;
+                        item.zIndex = -1.00000001;
                         item.disableAutoZIndex = true;
                         item.metadata[`${Constants.EXTENSIONID}/isFogMap`] = true;
                     }
