@@ -369,7 +369,7 @@ class BSCache
                         {
                             await SetupUnitContextMenu(false);
                         }
-                        
+
                         // Handle Wall ContextMenu turning on and off
                         if (this.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] !== true
                             && metadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true)
@@ -526,9 +526,9 @@ class BSCache
             {
                 this.fogHandler = OBR.scene.fog.onChange(async (fog) =>
                 {
-                    await this.OnFogChange(fog);
                     this.fogColor = fog.style.color;
                     this.fogFilled = fog.filled;
+                    await this.OnFogChange(fog);
                 });
             }
         }
@@ -722,6 +722,8 @@ class BSCache
             // If the color has changed, we need to update the uniforms on our effects.
             await SMOKEMACHINE.UpdateTrailingFogColor(fog.style.color);
         }
+
+        await SMOKEMACHINE.Run(true);
     }
 
     public async OnRoomMetadataChange(_metadata: Metadata)

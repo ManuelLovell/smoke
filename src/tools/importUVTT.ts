@@ -113,7 +113,11 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
             .closed(false)
             .locked(true)
             .visible(false)
-            .metadata({ [`${Constants.EXTENSIONID}/isVisionLine`]: true })
+            .metadata({
+                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                [`${Constants.EXTENSIONID}/blocking`]: true,
+                [`${Constants.EXTENSIONID}/doubleSided`]: true
+            })
             .build();
 
         newItems.push(line);
@@ -146,6 +150,8 @@ function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
             .visible(false)
             .metadata({
                 [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                [`${Constants.EXTENSIONID}/blocking`]: true,
+                [`${Constants.EXTENSIONID}/doubleSided`]: true,
                 [`${Constants.EXTENSIONID}/isDoor`]: true
             })
             .build();
@@ -177,6 +183,22 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
         // Create Torches
         if (importData.lights?.length > 0)
         {
+            function translateIntensity(inputValue: number): string
+            {
+                if (!inputValue) return "0";
+                // First, normalize the input from the original scale
+                const originalMin = 1.0;
+                const originalMax = 5.0;
+                const targetMin = 2.0;
+                const targetMax = 0.1;
+
+                // Linear interpolation formula
+                const normalizedValue = (inputValue - originalMin) / (originalMax - originalMin);
+                const translatedValue = targetMin + (targetMax - targetMin) * (1 - normalizedValue);
+
+                return translatedValue.toString();
+            }
+
             const newItems = [];
             for (const light of importData.lights)
             {
@@ -196,6 +218,7 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
                     .metadata({
                         [`${Constants.EXTENSIONID}/hasVision`]: true,
                         [`${Constants.EXTENSIONID}/isTorch`]: true,
+                        [`${Constants.EXTENSIONID}/visionFallOff`]: translateIntensity(light.intensity),
                         [`${Constants.EXTENSIONID}/hiddenToken`]: true,
                         [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
                     })
@@ -209,23 +232,35 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
         // Create Map
         const imageBinary = atob(importData.image);
         const uint8Array = new Uint8Array(imageBinary.length);
+        const imageResolution = importData.resolution.map_size.x * importData.resolution.map_size.y;
+        const imageSize = imageResolution * Math.pow(importData.resolution.pixels_per_grid, 2);
+
         for (let i = 0; i < imageBinary.length; i++)
         {
             uint8Array[i] = imageBinary.charCodeAt(i);
         }
-        const blob = new Blob([uint8Array], { type: 'image/png' });
+        const preBlob = new Blob([uint8Array], { type: 'image/png' });
 
-        const image = buildImageUpload(blob).grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } }).build();
+        const blob = imageSize > 60000000 ? await convertToWebP(preBlob, 0.8, true) : await convertToWebP(preBlob, 0.8);
+        if (!blob) throw new Error("Unable to convert to WebP");
+
+        const image = buildImageUpload(blob)
+            .grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } })
+            .build();
+
+        if (imageSize > 60000000) image.scale = { x: 2, y: 2 };
+
         const scene = buildSceneUpload()
             .baseMap(image)
+            .fogFilled(true)
             .name("New UVTT Scene")
             .items(importedObjects)
             .build();
         await OBR.assets.uploadScenes([scene], true);
     }
-    catch (error)
+    catch (error: any)
     {
-        await OBR.notification.show("There was an error: " + error, "ERROR");
+        await OBR.notification.show("There was an error: " + error.error.message, "ERROR");
     }
 }
 
@@ -258,9 +293,7 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
         // Chonk
         if (points.length > 128)
         {
-            let x = points.length;
-            // tolerance should be related to the image dpi
-            const factor = 8;//importDpi / 16;
+            const factor = 8;
             points = simplify(points, factor, false);
         }
 
@@ -277,12 +310,16 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
                 .fillColor("#000000")
                 .layer(Constants.LINELAYER)
                 .name("Vision Line (Import)")
+                .metadata({
+                    [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                    [`${Constants.EXTENSIONID}/blocking`]: true,
+                    [`${Constants.EXTENSIONID}/doubleSided`]: true
+                })
                 .closed(false)
+                .visible(false)
                 .locked(true)
                 .build();
 
-            line.visible = false;
-            line.metadata[`${Constants.EXTENSIONID}/isVisionLine`] = true;
             if (door)
             {
                 line.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
@@ -353,3 +390,30 @@ function importFoundry(importData: any, dpiRatio: number, offset: number[], erro
 
     importWalls(walls, 1, dpiRatio, offset, errorElement);
 };
+
+async function convertToWebP(blob: Blob, quality = 0.8, shrink = false): Promise<Blob | null>
+{
+    const img = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+
+    // If shrink is true, halve the dimensions
+    canvas.width = shrink ? Math.floor(img.width / 2) : img.width;
+    canvas.height = shrink ? Math.floor(img.height / 2) : img.height;
+
+    const ctx = canvas.getContext('2d')!;
+
+    // Draw the image, scaling it down if shrink is true
+    ctx.drawImage(
+        img,
+        0, 0, img.width, img.height,  // Source rectangle
+        0, 0, canvas.width, canvas.height  // Destination rectangle
+    );
+
+    return new Promise((resolve) =>
+    {
+        canvas.toBlob((webpBlob) =>
+        {
+            resolve(webpBlob);
+        }, 'image/webp', quality);
+    });
+}

@@ -103,9 +103,9 @@ class SmokeProcessor
         this.trailingFoggedMaps = [];
     }
 
-    public async Run()
+    public async Run(override = false)
     {
-        if (!BSCACHE.fogFilled) return;
+        if (!BSCACHE.fogFilled && override === false) return;
 
         await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
         await this.UpdateWalls();
@@ -133,7 +133,7 @@ class SmokeProcessor
 
     private async UpdateTrailingFogMaps()
     {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled)
         {
             // If our trailing fog setting is on, we'll process
             await this.CreateTrailingFogOverlay();
@@ -142,7 +142,7 @@ class SmokeProcessor
 
     private async UpdateTrailingFogTokens()
     {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true)
+        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled)
         {
             if (this.revealersToCreate.length > 0)
             {
@@ -264,7 +264,7 @@ class SmokeProcessor
     {
         if (BSCACHE.playerRole !== "PLAYER") return;
 
-        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/localDoor`] === true);
         await OBR.scene.local.deleteItems(localDoors.map(x => x.id));
     }
 
@@ -272,14 +272,14 @@ class SmokeProcessor
     {
         if (BSCACHE.playerRole === "PLAYER" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
 
-        const sceneDoors = BSCACHE.sceneItems.filter(x => isDoor(x)) as Curve[];
-        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined) as Image[];
+        const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
+        const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/localDoor`] === true) as Image[];
         if (sceneDoors.length > 0)
         {
             const createLocalDoors: Item[] = [];
             for (const door of sceneDoors)
             {
-                if (!localDoors.some(x => x.metadata[`${Constants.EXTENSIONID}/doorId`] === door.id))
+                if (!localDoors.some(x => x.attachedTo === door.id))
                 {
                     // No door exists, create the door.
                     const doorOpen = door.metadata[`${Constants.EXTENSIONID}/doorOpen`] === true;
@@ -317,12 +317,13 @@ class SmokeProcessor
                         .scale(({
                             x: .75, y: .75
                         }))
+                        .attachedTo(door.id)
                         .layer(BSCACHE.playerRole === "GM" ? Constants.LINELAYER : "DRAWING")
                         .zIndex(door.zIndex + 10)
                         .locked(true)
                         .name(doorName)
                         .position({ x: doorPosition.x, y: doorPosition.y })
-                        .metadata({ [`${Constants.EXTENSIONID}/doorId`]: door.id })
+                        .metadata({ [`${Constants.EXTENSIONID}/localDoor`]: true })
                         .build());
                 }
             }
@@ -343,14 +344,10 @@ class SmokeProcessor
             const deletedDoorWalls: string[] = [];
             for (const local of localDoors)
             {
-                const pairedDoorWall = BSCACHE.sceneItems.find(x => x.id === local.metadata[`${Constants.EXTENSIONID}/doorId`] as string);
+                const pairedDoorWall = BSCACHE.sceneItems.find(x => x.id === local.attachedTo);
                 if (pairedDoorWall)
                 {
-                    if (pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoor`] === undefined)
-                    {
-                        deletedDoorWalls.push(local.id);
-                    }
-                    else if (BSCACHE.playerRole === "GM" && local.image.url !== Constants.DOORLOCKED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true)
+                    if (BSCACHE.playerRole === "GM" && local.image.url !== Constants.DOORLOCKED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true)
                     {
                         lockedDoors.push(local.id);
                     }
@@ -1318,10 +1315,10 @@ class SmokeProcessor
 
     public async ToggleDoor(toggleDoorId: string)
     {
-        const localDoor = BSCACHE.sceneLocal.filter((item) => item.id === toggleDoorId && item.metadata[`${Constants.EXTENSIONID}/doorId`] !== undefined);
+        const localDoor = BSCACHE.sceneLocal.filter((item) => item.id === toggleDoorId && item.metadata[`${Constants.EXTENSIONID}/localDoor`] === true);
         if (localDoor.length === 1)
         {
-            const foundDoors = BSCACHE.sceneItems.filter((item) => item.id === localDoor[0].metadata[`${Constants.EXTENSIONID}/doorId`]);
+            const foundDoors = BSCACHE.sceneItems.filter((item) => item.id === localDoor[0].attachedTo);
             if (foundDoors.length === 1)
             {
                 const thisDoor = foundDoors[0];

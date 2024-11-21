@@ -527,10 +527,6 @@ export async function SetupContextMenus(): Promise<void>
                         value: undefined
                     },
                     {
-                        key: ["metadata", `${Constants.EXTENSIONID}/doorId`],
-                        value: undefined
-                    },
-                    {
                         key: ["metadata", `${Constants.EXTENSIONID}/grid`],
                         value: undefined
                     }],
@@ -549,8 +545,8 @@ export async function SetupContextMenus(): Promise<void>
                         value: true,
                     },
                     {
-                        key: ["metadata", `${Constants.EXTENSIONID}/doorId`],
-                        value: undefined
+                        key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
+                        value: true
                     },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/grid`],
