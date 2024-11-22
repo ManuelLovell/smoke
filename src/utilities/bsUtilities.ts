@@ -441,9 +441,8 @@ export function HexToRgbShader(hex: string): Vector3
     };
 }
 
-export function InvertColor(hex: any)
+export function InvertColor(hex: any, blackwhite = false)
 {
-    const bw = true;
     if (hex.indexOf('#') === 0)
     {
         hex = hex.slice(1);
@@ -460,7 +459,7 @@ export function InvertColor(hex: any)
     var r: any = parseInt(hex.slice(0, 2), 16),
         g: any = parseInt(hex.slice(2, 4), 16),
         b: any = parseInt(hex.slice(4, 6), 16);
-    if (bw)
+    if (blackwhite)
     {
         // https://stackoverflow.com/a/3943023/112731
         return (r * 0.299 + g * 0.587 + b * 0.114) > 186

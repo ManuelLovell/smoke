@@ -341,6 +341,10 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Swap to Double-sided",
                 filter: {
                     every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: undefined
+                    },
                     { key: ["metadata", `${Constants.EXTENSIONID}/doubleSided`], value: undefined }]
                 },
             },
@@ -349,6 +353,10 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Swap to One-sided",
                 filter: {
                     every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: undefined
+                    },
                     { key: ["metadata", `${Constants.EXTENSIONID}/doubleSided`], value: true }]
                 },
             }
@@ -406,6 +414,10 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Swap to Unpassable",
                 filter: {
                     every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: undefined
+                    },
                     { key: ["metadata", `${Constants.EXTENSIONID}/blocking`], value: undefined }]
                 },
             },
@@ -414,6 +426,10 @@ export async function SetupContextMenus(): Promise<void>
                 label: "Swap to Passable",
                 filter: {
                     every: [{ key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`], value: true, coordinator: "&&" },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: undefined
+                    },
                     { key: ["metadata", `${Constants.EXTENSIONID}/blocking`], value: true }]
                 },
             }
@@ -512,6 +528,72 @@ export async function SetupContextMenus(): Promise<void>
     });
 
     await OBR.contextMenu.create({
+        id: `${Constants.EXTENSIONID}/create-window`,
+        icons: [
+            {
+                icon: "/window.svg",
+                label: "Enable Window",
+                filter: {
+                    every: [{
+                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                        value: true,
+                    },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: undefined
+                    }],
+                    some: [
+                        { key: "layer", value: Constants.LINELAYER, coordinator: "||" },
+                        { key: "layer", value: "DRAWING" }],
+                    roles: ["GM"]
+                },
+            },
+            {
+                icon: "/window.svg",
+                label: "Disable Window",
+                filter: {
+                    every: [{
+                        key: ["metadata", `${Constants.EXTENSIONID}/isVisionLine`],
+                        value: true,
+                    },
+                    {
+                        key: ["metadata", `${Constants.EXTENSIONID}/isWindow`],
+                        value: true
+                    }],
+                    some: [
+                        { key: "layer", value: Constants.LINELAYER, coordinator: "||" },
+                        { key: "layer", value: "DRAWING" }],
+                    roles: ["GM"]
+                },
+            },
+        ],
+        async onClick(ctx)
+        {
+            const enableDoor = ctx.items.every(
+                (item) => item.metadata[`${Constants.EXTENSIONID}/isWindow`] === undefined);
+
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
+            {
+                for (const item of items)
+                {
+                    if (!enableDoor)
+                    {
+                        delete item.metadata[`${Constants.EXTENSIONID}/isWindow`];
+                        //item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
+                        item.style.strokeDash = Constants.DEFAULTLINESTROKE;
+                    }
+                    else
+                    {
+                        item.metadata[`${Constants.EXTENSIONID}/isWindow`] = true;
+                        //item.style.strokeColor = Constants.WINDOWCOLOR;
+                        item.style.strokeDash = [20, 20];
+                    }
+                }
+            });
+        },
+    });
+
+    await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/create-door`,
         icons: [
             {
@@ -524,10 +606,6 @@ export async function SetupContextMenus(): Promise<void>
                     },
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
-                        value: undefined
-                    },
-                    {
-                        key: ["metadata", `${Constants.EXTENSIONID}/grid`],
                         value: undefined
                     }],
                     some: [
@@ -547,10 +625,6 @@ export async function SetupContextMenus(): Promise<void>
                     {
                         key: ["metadata", `${Constants.EXTENSIONID}/isDoor`],
                         value: true
-                    },
-                    {
-                        key: ["metadata", `${Constants.EXTENSIONID}/grid`],
-                        value: undefined
                     }],
                     some: [
                         { key: "layer", value: Constants.LINELAYER, coordinator: "||" },
@@ -586,6 +660,7 @@ export async function SetupContextMenus(): Promise<void>
             });
         },
     });
+
     await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/open-door`,
         icons: [

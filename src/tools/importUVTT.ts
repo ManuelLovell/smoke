@@ -156,6 +156,12 @@ function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
             })
             .build();
 
+        if (!uvttDoor.closed)
+        {
+            line.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
+            line.metadata[`${Constants.EXTENSIONID}/doorOpen`] = true;
+        }
+
         newItems.push(line);
     }
     return newItems;

@@ -33,6 +33,7 @@ export class Constants
     static DEFAULTLINESTROKE: number[] = [];
     static LINELAYER: Layer = "POINTER";
     static DOORCOLOR = "#4000ff";
+    static WINDOWCOLOR = "#ADD8E6";
 
     static ATTENUATIONDEFAULT = "30";
     static SOURCEDEFAULT = "0";
@@ -786,13 +787,13 @@ export class Constants
                     <td colspan="2">
                         <div class="custom-file-input">
                             <label for="import_file" id="import_file_name">Choose File...</label>
-                            <input id="import_file" type="file">
+                            <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt">
                         </div>
                     </td>
                     <td colspan="2"><input type="button" id="import_button" value="Import" disabled></td>
                 </tr>
                 <tr>
-                    <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
+                    <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT/DDVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
                     <td colspan="2">Alignment</br><select id="map_align"><option selected>Loading..</option></select></td>
                 </tr>
                 <tr>
@@ -986,7 +987,7 @@ export class Constants
         <div class="grid-container">
             <div class="custom-file-input">
                 <label for="import_file" id="import_file_name">Choose File...</label>
-                <input id="import_file" type="file">
+                <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt">
             </div>
             <div>
                 <input type="button" id="import_button" value="Import" disabled>
@@ -997,7 +998,7 @@ export class Constants
             <div>
                 <label>Format</label>
                 <select id="import_format">
-                    <option value="scene">UVTT Scene</option>
+                    <option value="scene">UVTT/DDVTT Scene</option>
                     <option value="foundry">Foundry</option>
                     <option value="uvtt">Universal VTT</option>
                 </select>

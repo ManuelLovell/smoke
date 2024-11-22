@@ -897,11 +897,12 @@ class SmokeProcessor
                     const equalPosition = (visionLine.position.x === existingLine.position.x && visionLine.position.y === existingLine.position.y);
                     const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
                     const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
+                    const equalWindow = visionLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === existingLine.metadata[`${Constants.EXTENSIONID}/isWindow`];
 
                     let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
                         === existingLine.blocking;
 
-                    if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth)
+                    if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth || !equalWindow)
                     {
                         this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
                     }
@@ -957,6 +958,7 @@ class SmokeProcessor
                         line.rotation = mine.rotation;
                         line.scale = mine.scale;
                         line.blocking = mine.blocking;
+                        line.visible = mine.visible;
                         line.doubleSided = mine.doubleSided;
                         line.zIndex = mine.zIndex;
                     }
@@ -1003,7 +1005,10 @@ class SmokeProcessor
         if (!line.points) return; //Let's just avoid any issues of this not being a line
 
         // We are making a mirror of the wall, that we can identify which one it's replicating
-        let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
+        let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
+        const window = line.metadata[`${Constants.EXTENSIONID}/isWindow`] === true;
+        const doubleSide = line.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true;
+
         if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
         {
             blockWall = false;
@@ -1016,7 +1021,9 @@ class SmokeProcessor
             .locked(true)
             .scale(line.scale)
             .blocking(blockWall)
-            .doubleSided(line.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false)
+            .doubleSided(doubleSide)
+            .visible(!window)
+            .disableAttachmentBehavior(["VISIBLE"])
             .zIndex(this.GetDepth(depth, true))
             .metadata({ [`${Constants.EXTENSIONID}/isVisionWall`]: true })
             .build();
@@ -1090,10 +1097,10 @@ class SmokeProcessor
             .zIndex(this.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isVisionLight`]: true,
-                [`${Constants.EXTENSIONID}/visionBlind`]: token.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false
+                [`${Constants.EXTENSIONID}/visionBlind`]: token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true
             })
             .attachedTo(token.id)
-            .disableAttachmentBehavior(["SCALE"])
+            .disableAttachmentBehavior(["SCALE", "VISIBLE"])
             .build();
 
         this.lightsToCreate.push(item);
@@ -1173,11 +1180,11 @@ class SmokeProcessor
         this.decalsToCreate.push(item);
     }
 
-    private UpdateWallToQueue(scenelLine: Curve, localWall: Wall, depth: number)
+    private UpdateWallToQueue(sceneLine: Curve, localWall: Wall, depth: number)
     {
-        if (!scenelLine.points) return; //Let's just avoid any issues of this not being a line
+        if (!sceneLine.points) return; //Let's just avoid any issues of this not being a line
 
-        let blockWall = scenelLine.metadata[`${Constants.EXTENSIONID}/blocking`] as boolean ?? false;
+        let blockWall = sceneLine.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
         if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
         {
             blockWall = false;
@@ -1185,12 +1192,13 @@ class SmokeProcessor
 
         const update = {
             id: localWall.id,
-            points: scenelLine.points,
-            rotation: scenelLine.rotation,
-            position: scenelLine.position,
-            scale: scenelLine.scale,
+            points: sceneLine.points,
+            rotation: sceneLine.rotation,
+            position: sceneLine.position,
+            scale: sceneLine.scale,
             blocking: blockWall,
-            doubleSided: scenelLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] as boolean ?? false,
+            visible: !sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === true,
+            doubleSided: sceneLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true,
             zIndex: this.GetDepth(depth, true)
         };
         this.wallsToUpdate.push(update);
@@ -1212,7 +1220,7 @@ class SmokeProcessor
             falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()),
             innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()),
             outerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()),
-            blind: sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] as boolean ?? false,
+            blind: sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true,
             zIndex: this.GetDepth(depth, false)
         };
         this.lightsToUpdate.push(update);

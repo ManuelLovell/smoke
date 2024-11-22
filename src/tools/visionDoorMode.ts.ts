@@ -2,6 +2,7 @@ import OBR, { Curve, KeyEvent, Pointer, ToolContext, ToolEvent, Vector2, buildCu
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetToolWidth, SplitLines } from "./visionToolUtilities";
+import { InvertColor } from "../utilities/bsUtilities";
 
 let newSegment: Vector2[] = [];
 let newPlaceholder: string = "";
@@ -28,7 +29,7 @@ export async function finishDrawing(oldLine: Curve): Promise<void>
     const line = buildCurve()
         .tension(0)
         .points(newLines.extracted)
-        .strokeColor("red")
+        .strokeColor(InvertColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR))
         .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
         .strokeWidth(GetToolWidth())
         .fillOpacity(0)
