@@ -344,7 +344,7 @@ class SmokeProcessor
             const deletedDoorWalls: string[] = [];
             for (const local of localDoors)
             {
-                const pairedDoorWall = BSCACHE.sceneItems.find(x => x.id === local.attachedTo);
+                const pairedDoorWall = BSCACHE.sceneItems.find(x => x.id === local.attachedTo && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
                 if (pairedDoorWall)
                 {
                     if (BSCACHE.playerRole === "GM" && local.image.url !== Constants.DOORLOCKED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true)
