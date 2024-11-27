@@ -21,6 +21,8 @@ export async function ApplyEnhancedFog(fogMap: Image, style: string)
         await ApplyFleshFog(fogMap);
     else if (style === Constants.DRIPSTYLE)
         await ApplyDripFog(fogMap);
+    else if (style === Constants.WATERSTYLE)
+        await ApplyWaterFog(fogMap);
 }
 
 async function ApplyCosmicFog(enhancedFogMap: Image)
@@ -126,6 +128,24 @@ async function ApplyDripFog(enhancedFogMap: Image)
             [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
         })
         .sksl(Constants.ANNIHILATIONSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyWaterFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.WATERSHADER)
         .disableHit(true)
         .zIndex(-0.5)
         .build();
