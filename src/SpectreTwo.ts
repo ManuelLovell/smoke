@@ -114,6 +114,7 @@ class Spectre
             })
             .position(token.position)
             .scale(token.scale)
+            .text(token.text)
             .rotation(token.rotation)
             .attachedTo(token.id)
             .layer(token.layer)
