@@ -1,5 +1,4 @@
 import OBR, { buildImage, Image, Item, Player, Vector2 } from "@owlbear-rodeo/sdk";
-import * as Utilities from "./utilities/bsUtilities";
 import { Constants } from "./utilities/bsConstants";
 import TomSelect from "tom-select";
 import "tom-select/dist/css/tom-select.css";
@@ -215,13 +214,32 @@ class Spectre
 
         const selectButton = document.getElementById(`select-${ghost.id}`) as HTMLSelectElement;
 
-        for (const player of BSCACHE.party)
+        const playerMetadataKeys = Object.keys(BSCACHE.sceneMetadata)
+            .filter(key => key.startsWith(`${Constants.EXTENSIONID}/USER-`));
+
+        const playerMetadatas = playerMetadataKeys.map(key => 
         {
+            const playerData = BSCACHE.sceneMetadata[key] as Player;
+            playerData.id = key.replace(`${Constants.EXTENSIONID}/USER-`, '');
+            return playerData;
+        });
+
+        for (const player of playerMetadatas)
+        {
+            if (player.id === BSCACHE.playerId) continue; // Don't need to add yourself
+
             const option = document.createElement('option');
             option.value = player.id;
             option.text = player.name;
             selectButton.appendChild(option);
         }
+
+        // Needed
+        let currentViewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
+        if (!currentViewers) currentViewers = [BSCACHE.playerId];
+
+        let selectedViewers = currentViewers.filter(x => x !== BSCACHE.playerId);
+        console.log("CurrentViewers: " + currentViewers.toString())
 
         const settings = {
             plugins: {
@@ -230,8 +248,9 @@ class Spectre
                 }
             },
             allowEmptyOption: true,
-            placeholder: BSCACHE.party.length == 0 ? "No Players Present" : "Choose..",
+            placeholder: BSCACHE.party.length === 0 ? "No Players Present" : "Choose..",
             maxItems: null,
+            items: selectedViewers,
             create: false,
             onDelete: async function (id: string, element: any) 
             {
@@ -242,7 +261,7 @@ class Spectre
                 await OBR.scene.items.updateItems([ghostId], ghosties =>
                 {
                     const metadata = ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
-                    const index = metadata.findIndex(x => x == id);
+                    const index = metadata.findIndex(x => x === id);
                     metadata.splice(index, 1);
                     ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] = metadata;
                 });
@@ -261,26 +280,7 @@ class Spectre
             }
         };
 
-        // Needed
-        let currentViewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
-        if (!currentViewers) currentViewers = [];
-
         const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
-        if (currentViewers.length > 1)
-        {
-            for (const playerId of currentViewers)
-            {
-                const playerInRoom = BSCACHE.party.find(x => x.id === playerId);
-                if (!playerInRoom)
-                {
-                    const userInfo = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${playerId}`] as Player;
-                    const newOptions = [];
-                    newOptions.push({ value: playerId, text: userInfo.name });
-                    ghostSelect.addOption(newOptions);
-                }
-                ghostSelect.addItem(playerId, true);
-            }
-        }
 
         const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
         deleteButton.onclick = async () =>
@@ -317,7 +317,6 @@ class Spectre
                     newOptions.push({ value: player.id, text: player.name });
                 }
 
-                tomSelectInstance.clearOptions();
                 tomSelectInstance.addOption(newOptions);
 
                 if (newOptions.length === 0)

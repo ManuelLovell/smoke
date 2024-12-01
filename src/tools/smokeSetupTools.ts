@@ -18,6 +18,7 @@ export async function SetupTools(): Promise<void>
                 label: "Setup Vision",
             },
         ],
+        //shortcut: "A",
         defaultMetadata: { [`${Constants.EXTENSIONID}/elevationEditor`]: false },
         async onClick()
         {
