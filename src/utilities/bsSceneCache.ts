@@ -38,7 +38,8 @@ class BSCache
     gridDpi: number;
     gridScale: number; // IE; 5   ft
     gridSnap: number;
-    gridType: string; // IE; ft (of 5ft)
+    gridUnit: string; // IE; ft (of 5ft)
+    gridType: string;
 
     storedMetaItems: Item[];
 
@@ -99,7 +100,8 @@ class BSCache
         this.gridDpi = 0;
         this.gridScale = 5;
         this.gridSnap = 10;
-        this.gridType = "ft";
+        this.gridUnit = "ft";
+        this.gridType = "SQUARE";
         this.sceneReady = false;
         this.theme = {} as any;
         this.roomMetadata = {};
@@ -172,9 +174,10 @@ class BSCache
             if (this.sceneReady)
             {
                 this.gridDpi = await OBR.scene.grid.getDpi();
+                this.gridType = await OBR.scene.grid.getType();
                 const gridScale = await OBR.scene.grid.getScale();
                 this.gridScale = gridScale.parsed?.multiplier ?? 5;
-                this.gridType = gridScale.parsed.unit;
+                this.gridUnit = gridScale.parsed.unit;
             }
         }
 
@@ -241,9 +244,10 @@ class BSCache
             if (this.sceneReady)
             {
                 this.gridDpi = await OBR.scene.grid.getDpi();
+                this.gridType = await OBR.scene.grid.getType();
                 const gridScale = await OBR.scene.grid.getScale();
                 this.gridScale = gridScale.parsed?.multiplier ?? 5;
-                this.gridType = gridScale.parsed.unit;
+                this.gridUnit = gridScale.parsed.unit;
             }
         }
 
@@ -441,6 +445,7 @@ class BSCache
                 {
                     // Store the items first, as subsequent calls throughout will check the cache.
                     this.sceneItems = items;
+                    
                     await this.OnSceneItemsChange(items);
                 });
 
@@ -461,6 +466,7 @@ class BSCache
                 {
                     await this.OnSceneGridChange(grid);
                     this.gridDpi = grid.dpi;
+                    this.gridType = await OBR.scene.grid.getType();
                     this.gridScale = parseInt(grid.scale);
                 });
             }

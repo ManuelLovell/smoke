@@ -214,7 +214,7 @@ export class SmokeMain
                 if (visionRange) visionRange.textContent = token.metadata[`${Constants.EXTENSIONID}/visionRange`] !== undefined
                     ? token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string
                     : GetVisionRangeDefault();
-                if (distanceType) distanceType.textContent = BSCACHE.gridType;
+                if (distanceType) distanceType.textContent = BSCACHE.gridUnit;
             }
             else
             {
@@ -234,7 +234,7 @@ export class SmokeMain
                 tokenRow.appendChild(distanceCell);
 
                 const distanceTypeCell = document.createElement('td');
-                distanceTypeCell.textContent = BSCACHE.gridType;
+                distanceTypeCell.textContent = BSCACHE.gridUnit;
                 tokenRow.appendChild(distanceTypeCell);
 
                 playerTable.appendChild(tokenRow);
@@ -1077,7 +1077,7 @@ export class SmokeMain
     };
 }
 
-export const SMOKEMAIN = new SmokeMain("3.30");
+export const SMOKEMAIN = new SmokeMain("3.60");
 OBR.onReady(async () =>
 {
     // Startup Handler code for delayed Scene Readiness
