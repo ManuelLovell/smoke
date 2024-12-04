@@ -153,8 +153,8 @@ OBR.onReady(async () =>
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
+        if (value < -360)
+            target.value = "-360";
         if (value > 360)
             target.value = "360";
         if (isNaN(value))
@@ -174,8 +174,8 @@ OBR.onReady(async () =>
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
+        if (value < -360)
+            target.value = "-360";
         if (value > 360)
             target.value = "360";
         if (isNaN(value))
