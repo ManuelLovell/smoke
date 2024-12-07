@@ -1,4 +1,4 @@
-/* empty css              */import{C as d,P as me,c as Ne,O as w,d as Qe,b as pa,a as dr,e as lr,f as vn,g as cr,h as ur,i as ze,j as rn,k as fr}from"./bsConstants-6VmLKWN5.js";const Ge=(()=>{/*!
+/* empty css              */import{C as d,P as me,c as Ne,O as w,d as Qe,b as pa,a as dr,e as lr,f as vn,g as cr,h as ur,i as ze,j as rn,k as fr}from"./bsConstants-CsbWmK8i.js";const Ge=(()=>{/*!
 * Copyright (c) 2021-2024 Momo Bassit.
 * Licensed under the MIT License (MIT)
 * https://github.com/mdbassit/Coloris

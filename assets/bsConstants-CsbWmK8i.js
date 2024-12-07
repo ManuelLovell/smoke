@@ -849,7 +849,7 @@
                     <td colspan="2">
                         <div class="custom-file-input">
                             <label for="import_file" id="import_file_name">Choose File...</label>
-                            <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt">
+                            <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt, .json">
                         </div>
                     </td>
                     <td colspan="2"><input type="button" id="import_button" value="Import" disabled></td>
@@ -1047,7 +1047,7 @@
         <div class="grid-container">
             <div class="custom-file-input">
                 <label for="import_file" id="import_file_name">Choose File...</label>
-                <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt">
+                <input id="import_file" type="file" accept=".dd2vtt, .ddvtt, .uvtt, .fvtt, .json">
             </div>
             <div>
                 <input type="button" id="import_button" value="Import" disabled>
