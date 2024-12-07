@@ -445,7 +445,7 @@ class BSCache
                 {
                     // Store the items first, as subsequent calls throughout will check the cache.
                     this.sceneItems = items;
-                    
+
                     await this.OnSceneItemsChange(items);
                 });
 
@@ -581,6 +581,10 @@ class BSCache
                 this.expectedFogStyle = "";
                 this.expectedFogEffect = "";
             }
+        }
+        if (this.playerRole === "GM")
+        {
+            SPECTREMACHINE.CheckForRemovedTokens();
         }
         await SMOKEMAIN.OnDataChange();
     }

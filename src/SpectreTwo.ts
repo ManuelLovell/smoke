@@ -217,21 +217,24 @@ class Spectre
         const playerMetadataKeys = Object.keys(BSCACHE.sceneMetadata)
             .filter(key => key.startsWith(`${Constants.EXTENSIONID}/USER-`));
 
-        const playerMetadatas = playerMetadataKeys.map(key => 
+        if (playerMetadataKeys && playerMetadataKeys.length > 0)
         {
-            const playerData = BSCACHE.sceneMetadata[key] as Player;
-            playerData.id = key.replace(`${Constants.EXTENSIONID}/USER-`, '');
-            return playerData;
-        });
+            const playerMetadatas = playerMetadataKeys.map(key => 
+            {
+                const playerData = BSCACHE.sceneMetadata[key] as Player;
+                playerData.id = key.replace(`${Constants.EXTENSIONID}/USER-`, '');
+                return playerData;
+            });
 
-        for (const player of playerMetadatas)
-        {
-            if (player.id === BSCACHE.playerId) continue; // Don't need to add yourself
+            for (const player of playerMetadatas)
+            {
+                if (player.id === BSCACHE.playerId) continue; // Don't need to add yourself
 
-            const option = document.createElement('option');
-            option.value = player.id;
-            option.text = player.name;
-            selectButton.appendChild(option);
+                const option = document.createElement('option');
+                option.value = player.id;
+                option.text = player.name;
+                selectButton.appendChild(option);
+            }
         }
 
         // Needed
@@ -239,7 +242,6 @@ class Spectre
         if (!currentViewers) currentViewers = [BSCACHE.playerId];
 
         let selectedViewers = currentViewers.filter(x => x !== BSCACHE.playerId);
-        console.log("CurrentViewers: " + currentViewers.toString())
 
         const settings = {
             plugins: {
@@ -248,7 +250,7 @@ class Spectre
                 }
             },
             allowEmptyOption: true,
-            placeholder: BSCACHE.party.length === 0 ? "No Players Present" : "Choose..",
+            placeholder: "Choose..",
             maxItems: null,
             items: selectedViewers,
             create: false,
@@ -319,17 +321,26 @@ class Spectre
 
                 tomSelectInstance.addOption(newOptions);
 
-                if (newOptions.length === 0)
-                {
-                    tomSelectInstance.settings.placeholder = "No Players Present";
-                    tomSelectInstance.inputState();
-                }
-                else
-                {
-                    tomSelectInstance.settings.placeholder = "Choose..";
-                    tomSelectInstance.inputState();
-                }
+                tomSelectInstance.settings.placeholder = "Choose..";
+                tomSelectInstance.inputState();
             }
+        }
+    }
+
+    public RemoveGhostSelect(ghostId: string)
+    {
+        const targetRow = document.getElementById(`tr-${ghostId}`);
+        targetRow?.remove();
+    }
+
+    public CheckForRemovedTokens()
+    {
+        const existingSpectreRows = document.getElementsByClassName("ghost-table-entry");
+        const spectreIds = Array.from(existingSpectreRows).map(row => row.id.slice(3));
+        for (const sId of spectreIds)
+        {
+            const found = BSCACHE.sceneItems.find(x => x.id === sId);
+            if (!found) this.RemoveGhostSelect(sId);
         }
     }
 }

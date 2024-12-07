@@ -901,11 +901,19 @@ export async function SetupContextMenus(): Promise<void>
                     }
                 }
             });
+
             if (!spectre)
             {
                 for (const ghost of context.items)
                 {
                     await SPECTREMACHINE.SetupGhostSelect(ghost as Image);
+                }
+            }
+            else
+            {
+                for (const ghost of context.items)
+                {
+                    SPECTREMACHINE.RemoveGhostSelect(ghost.id);
                 }
             }
         }
