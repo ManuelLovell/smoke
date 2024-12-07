@@ -5,6 +5,7 @@ import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetToolWidth } from "./visionToolUtilities";
 
 type ImportVector2 = Vector2 & { door: boolean };
+const CHUNK_SIZE = 25;
 
 export function UpdateMaps()
 {
@@ -273,7 +274,6 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
 async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: number, offset: number[], errorElement: HTMLDivElement) 
 {
     let totalImported = 0, totalPoints = 0;
-    let currentPoints = 0;
 
     const lines = [];
 
@@ -296,61 +296,48 @@ async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio
             }
         }
 
-        // Chonk
+        // Too many points on this line, Simplify to ease burden
         if (points.length > 128)
         {
             const factor = 8;
             points = simplify(points, factor, false);
         }
 
-        for (let chunk = 0; chunk < points.length; chunk += 256)
+        const line = buildCurve()
+            .tension(0)
+            .points(points)
+            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
+            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
+            .strokeWidth(GetToolWidth())
+            .fillOpacity(0)
+            .fillColor("#000000")
+            .layer(Constants.LINELAYER)
+            .name("Vision Line (Import)")
+            .metadata({
+                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
+                [`${Constants.EXTENSIONID}/blocking`]: true,
+                [`${Constants.EXTENSIONID}/doubleSided`]: true
+            })
+            .closed(false)
+            .visible(false)
+            .locked(true)
+            .build();
+
+        if (door)
         {
-            const chunkPoints = points.slice(chunk > 0 ? chunk - 1 : 0, chunk + 256);
-            const line = buildCurve()
-                .tension(0)
-                .points(chunkPoints)
-                .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
-                .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-                .strokeWidth(GetToolWidth())
-                .fillOpacity(0)
-                .fillColor("#000000")
-                .layer(Constants.LINELAYER)
-                .name("Vision Line (Import)")
-                .metadata({
-                    [`${Constants.EXTENSIONID}/isVisionLine`]: true,
-                    [`${Constants.EXTENSIONID}/blocking`]: true,
-                    [`${Constants.EXTENSIONID}/doubleSided`]: true
-                })
-                .closed(false)
-                .visible(false)
-                .locked(true)
-                .build();
-
-            if (door)
-            {
-                line.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
-            }
-
-            lines.push(line);
-            currentPoints += chunkPoints.length;
-
-            // Batch our add calls otherwise OBR is unhappy.
-            // Is there a recommended way to do this?
-            if (currentPoints > 512 || lines.length > 64)
-            {
-                totalImported += lines.length;
-                await OBR.scene.items.addItems(lines);
-
-                lines.length = 0;
-                currentPoints = 0;
-            }
+            line.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
         }
+
+        lines.push(line);
     }
 
-    if (lines.length > 0)
+    // Batch our add calls otherwise OBR is unhappy.
+
+    for (let i = 0; i < lines.length; i += CHUNK_SIZE)
     {
-        totalImported += lines.length;
-        await OBR.scene.items.addItems(lines);
+        const chunkArray = lines.slice(i, i + CHUNK_SIZE);
+
+        await OBR.scene.items.addItems(chunkArray);
     }
 
     errorElement.innerText = 'Finished importing ' + totalImported + ' walls, ' + totalPoints + " points.";
@@ -391,7 +378,14 @@ function importFoundry(importData: any, dpiRatio: number, offset: number[], erro
 
     for (var i = 0; i < importData.walls.length; i++)
     {
-        walls.push([{ x: importData.walls[i].c[0], y: importData.walls[i].c[1], door: importData.walls[i].door ? true : false }, { x: importData.walls[i].c[2], y: importData.walls[i].c[3], door: importData.walls[i].door ? true : false }])
+        walls.push([{
+            x: importData.walls[i].c[0], y: importData.walls[i].c[1],
+            door: importData.walls[i].door ? true : false
+        },
+        {
+            x: importData.walls[i].c[2], y: importData.walls[i].c[3],
+            door: importData.walls[i].door ? true : false
+        }])
     }
 
     importWalls(walls, 1, dpiRatio, offset, errorElement);
