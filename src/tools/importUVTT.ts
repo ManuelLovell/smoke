@@ -17,16 +17,21 @@ export function UpdateMaps()
 
     for (let i = 0; i < maps.length; i++)
     {
-        let mapOption = mapAlign.querySelector('#map-' + maps[i].id) as HTMLOptionElement;
+        const cMap = maps[i];
+        let mapOption = mapAlign.querySelector('#map-' + cMap.id) as HTMLOptionElement;
         if (mapOption === null)
         {
             mapOption = document.createElement('option');
-            mapOption.id = 'map-' + maps[i].id;
-            mapOption.value = maps[i].id;
-            mapOption.innerText = maps[i].name;
+            mapOption.id = 'map-' + cMap.id;
+            mapOption.value = cMap.id;
+            mapOption.innerText = cMap.name;
             mapAlign.appendChild(mapOption);
         }
-        existingMaps[maps[i].id] = maps[i].name;
+        else if (mapOption.innerText !== cMap.name)
+        {
+            mapOption.innerText = cMap.name;
+        }
+        existingMaps[cMap.id] = cMap.name;
     }
 
     let mapOptions = mapAlign.querySelectorAll('option');
