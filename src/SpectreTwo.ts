@@ -70,7 +70,7 @@ class Spectre
                 await OBR.scene.local.deleteItems(this.spectresToDelete);
             if (this.spectresToUpdate.length > 0)
             {
-                await OBR.scene.local.updateItems(localSpectres.filter(x => !this.spectresToDelete.includes(x.id)), (spectres) =>
+                await OBR.scene.items.updateItems(localSpectres.filter(x => !this.spectresToDelete.includes(x.id)), (spectres) =>
                 {
                     for (let spectre of spectres)
                     {
@@ -111,6 +111,7 @@ class Spectre
                 dpi: token.grid.dpi,
                 offset: token.grid.offset
             })
+            .id(token.id)
             .position(token.position)
             .scale(token.scale)
             .text(token.text)
@@ -124,8 +125,8 @@ class Spectre
         {
             // We are doing this so the GM can select the token directly
             // and still influence it's base
-            item.attachedTo = token.id;
-            item.disableHit = true;
+            //item.attachedTo = token.id;
+            //item.disableHit = true;
         }
 
         this.spectresToCreate.push(item);
