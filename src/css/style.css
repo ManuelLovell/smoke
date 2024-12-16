@@ -954,3 +954,19 @@ select {
 .ts-control {
     background-color: var(--OBR-dark-blue);
 }
+
+/* Drag and Drop Styling */
+.dragging {
+    opacity: 0.5;
+    outline: 1px solid plum;
+}
+
+.drop-target {
+    outline: 2px dashed #000;
+}
+
+.linked-row {
+    font-style: italic;
+    font-weight: 100;
+    color: lightgrey;
+}

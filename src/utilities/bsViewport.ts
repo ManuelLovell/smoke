@@ -1,13 +1,14 @@
 import OBR, { isCurve, isImage } from "@owlbear-rodeo/sdk";
+import { BSCACHE } from "./bsSceneCache";
 
 export class ViewportFunctions
 {
     /**
      * Center the current OBR viewport on an image
-     * @param {import("@owlbear-rodeo/sdk").Image} item - The image item
      */
-    static async CenterViewportOnImage(ctu: any)
+    static async CenterViewportOnImage(tokenId: any)
     {
+        const ctu = BSCACHE.sceneItems.find(x => x.id === tokenId);
         const dpi = await OBR.scene.grid.getDpi();
         const scale = await OBR.viewport.getScale();
         const viewportWidth = await OBR.viewport.getWidth();

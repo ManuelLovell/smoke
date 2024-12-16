@@ -46,6 +46,9 @@ export class SmokeMain
     public hiddenList?: HTMLTableSectionElement;
 
     public version: string;
+
+    private draggedRow: HTMLTableRowElement | null = null;
+
     constructor(version: string)
     {
         this.version = `SMOKEANDSPECTRE-${version}`;
@@ -155,7 +158,7 @@ export class SmokeMain
             await SetupContextMenus()
             this.SetupHelpDocuments();
             this.SetupGMPanelHandlers();
-            this.UpdateVisionList();
+            await this.UpdateVisionList();
             SetupGMInputHandlers(useMobile);
             UpdateMaps();
             SetupTools();
@@ -301,7 +304,7 @@ export class SmokeMain
 
         if (BSCACHE.playerRole === "GM")
         {
-            this.UpdateVisionList();
+            await this.UpdateVisionList();
             UpdateMaps();
         }
         else
@@ -317,7 +320,7 @@ export class SmokeMain
         await SPECTREMACHINE.Run();
     }
 
-    public UpdateVisionList()
+    public async UpdateVisionList()
     {
         const tokenTable = document.getElementById('token_list') as HTMLTableSectionElement;
         if (!tokenTable) return;
@@ -327,7 +330,25 @@ export class SmokeMain
 
         this.CleanVisionList(tokensWithVision, tokenTableEntries);
 
-        for (const token of tokensWithVision)
+        // Single filter loop for speed
+        const [linkedTokens, unlinkedTokens] = tokensWithVision.reduce(
+            ([linked, unlinked], token) =>
+            {
+                const isLinked = token.metadata[`${Constants.EXTENSIONID}/linkedTo`] !== undefined;
+                if (isLinked)
+                {
+                    linked.push(token);
+                } else
+                {
+                    unlinked.push(token);
+                }
+                return [linked, unlinked];
+            },
+            [[], []] as [typeof tokensWithVision, typeof tokensWithVision]
+        );
+
+        // Linked first so the parents show up
+        for (const token of unlinkedTokens)
         {
             const tableRow = document.getElementById(`tr-${token.id}`) as HTMLTableRowElement;
             if (tableRow)
@@ -335,6 +356,159 @@ export class SmokeMain
             else
                 this.AddTokenToVisionList(token);
         }
+
+        // Unlinked after
+        const orphanedIds: string[] = [];
+        for (const token of linkedTokens)
+        {
+            const tableRow = document.getElementById(`tr-${token.id}`) as HTMLTableRowElement;
+            if (tableRow)
+                this.UpdateTokenOnVisionList(token, tableRow, true);
+            else
+                this.AddTokenToVisionList(token, true);
+
+            const parentToken = BSCACHE.sceneItems.find(x => x.id === token.metadata[`${Constants.EXTENSIONID}/linkedTo`]);
+            if (!parentToken) orphanedIds.push(token.id);
+        }
+
+        // Cleanup expired links
+        if (orphanedIds.length > 0)
+            await OBR.scene.items.updateItems<Item>(orphanedIds, tokens =>
+            {
+                for (let token of tokens)
+                {
+                    delete token.metadata[`${Constants.EXTENSIONID}/linkedTo`];
+                }
+            });
+    }
+
+    private SetupDragAndDrop(tableElement: HTMLTableElement)
+    {
+        if (!tableElement) return;
+        tableElement.ondragstart = (e) =>
+        {
+            const target = e.target as HTMLElement;
+            const isTokenNameCell = target.closest('td')?.classList.contains('token-name');
+
+            if (isTokenNameCell)
+            {
+                const row = target.closest('tr') as HTMLTableRowElement;
+
+                if (row && row.tagName === 'TR')
+                {
+                    this.draggedRow = row;
+
+                    // If it's a parent, dont let it get nested
+                    const nextRow = row.nextElementSibling as HTMLTableRowElement;
+                    if (nextRow && nextRow.dataset.linkedto && !this.draggedRow.dataset.linkedto)
+                    {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    row.classList.add('dragging');
+                    e.dataTransfer?.setData('text/plain', row.outerHTML);
+                }
+            } else
+            {
+                // Prevent dragging if not on the 'name' cell
+                e.preventDefault();
+            }
+        };
+
+
+        tableElement.ondragend = () =>
+        {
+            if (this.draggedRow)
+            {
+                this.draggedRow.classList.remove('dragging');
+                this.draggedRow = null;
+            }
+        };
+
+        tableElement.ondragover = (e) =>
+        {
+            e.preventDefault(); // Allow drop
+            const target = e.target as HTMLElement;
+
+            if (target.tagName === 'TD' || target.tagName === 'TR')
+            {
+                const row = target.closest('tr') as HTMLTableRowElement;
+                if (row && this.draggedRow !== row)
+                {
+                    row.classList.add('drop-target');
+                }
+            }
+        };
+
+        tableElement.ondragleave = (e) =>
+        {
+            const target = e.target as HTMLElement;
+            const row = target.closest('tr') as HTMLTableRowElement;
+
+            if (row)
+            {
+                row.classList.remove('drop-target');
+            }
+        };
+
+        tableElement.ondrop = async (e) =>
+        {
+            e.preventDefault();
+            if (!tableElement) return;
+
+            const target = e.target as HTMLElement;
+            const targetRow = target.closest('tr') as HTMLTableRowElement;
+            if (targetRow && this.draggedRow !== targetRow)
+            {
+                const targetId = targetRow.id.slice(3);
+                let targetToken = BSCACHE.sceneItems.find(x => x.id === targetId);
+
+                if (targetToken && targetToken.metadata[`${Constants.EXTENSIONID}/linkedTo`])
+                {
+                    // If the target is already linked, we want to link to the same parent
+                    const existingLink = targetToken.metadata[`${Constants.EXTENSIONID}/linkedTo`] as string;
+                    targetToken = BSCACHE.sceneItems.find(x => x.id === existingLink);
+                }
+
+                if (this.draggedRow && targetToken && targetRow && this.draggedRow !== targetRow)
+                {
+                    targetRow.classList.remove('drop-target');
+
+                    const tbody = tableElement.querySelector('tbody')!;
+                    const tokenId = this.draggedRow.id.slice(3);
+
+                    // Always insert after for psuedo-nesting
+                    tbody.insertBefore(this.draggedRow, targetRow.nextSibling);
+                    this.toggleRowVisibility(this.draggedRow, true);
+                    this.draggedRow.dataset.linkedto = targetToken.id;
+                    await OBR.scene.items.updateItems([tokenId], (tokens) =>
+                    {
+                        for (let token of tokens)
+                        {
+                            // This is now a child of the target row
+                            token.metadata[`${Constants.EXTENSIONID}/linkedTo`] = targetToken.id;
+                            token.metadata[`${Constants.EXTENSIONID}/hiddenToken`] = targetToken.metadata[`${Constants.EXTENSIONID}/hiddenToken`];
+                        }
+                    });
+                }
+            }
+            else if (this.draggedRow)
+            {
+                const tokenId = this.draggedRow.id.slice(3);
+                this.toggleRowVisibility(this.draggedRow, false);
+                delete this.draggedRow.dataset.linkedto;
+
+                //Unlink Code
+                await OBR.scene.items.updateItems([tokenId], (tokens) =>
+                {
+                    for (let token of tokens)
+                    {
+                        delete token.metadata[`${Constants.EXTENSIONID}/linkedTo`];
+                    }
+                });
+            }
+        };
     }
 
     private SetupMassEditors()
@@ -458,6 +632,8 @@ export class SmokeMain
         this.smokeUnitTableSub = document.getElementById('smokeUnitTableSub') as HTMLTableElement;
 
         this.SetupMassEditors();
+        this.SetupDragAndDrop(this.smokeUnitTablePrime);
+        this.SetupDragAndDrop(this.smokeUnitTableSub);
 
         const viewPanelToggle = document.createElement('input');
         viewPanelToggle.type = 'button';
@@ -488,7 +664,7 @@ export class SmokeMain
         viewPanelToggleContainer.appendChild(viewPanelToggle);
     }
 
-    private AddTokenToVisionList(token: Item)
+    private AddTokenToVisionList(token: Item, linked = false)
     {
         // Set Ownership Stylings
         let owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
@@ -501,6 +677,7 @@ export class SmokeMain
             ownerText = "This tokens owner is not in the room currently.";
         }
 
+        // References to the unique tbody of the respective tables
         const tokenTable = document.getElementById('token_list') as HTMLTableSectionElement;
         const hiddenTable = document.getElementById('hidden_list') as HTMLTableSectionElement;
 
@@ -509,6 +686,7 @@ export class SmokeMain
         newTableRow.id = `tr-${token.id}`;
         newTableRow.className = "token-table-entry";
         newTableRow.classList.add('slide-row');
+        newTableRow.draggable = true;
 
         // Name Block
         const nameCell = document.createElement('td');
@@ -535,10 +713,11 @@ export class SmokeMain
             nameCell.style.color = "black !important";
             nameCell.style.fontStyle = "italic";
         }
+        nameCell.draggable = true;
 
         nameCell.onclick = async () =>
         {
-            ViewportFunctions.CenterViewportOnImage(token);
+            ViewportFunctions.CenterViewportOnImage(token.id);
             await OBR.player.select([token.id]);
         };
 
@@ -553,6 +732,7 @@ export class SmokeMain
         aRadiusInput.classList.add("token-aradius");
         aRadiusInput.classList.add("vision-panel-main-input");
         aRadiusInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
+        aRadiusInput.draggable = false;
 
         aRadiusInput.onchange = async (event: Event) =>
         {
@@ -584,6 +764,7 @@ export class SmokeMain
         sRadiusInput.classList.add("token-sradius");
         sRadiusInput.classList.add("vision-panel-sub-input");
         sRadiusInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
+        sRadiusInput.draggable = false;
 
         sRadiusInput.onchange = async (event: Event) =>
         {
@@ -620,6 +801,7 @@ export class SmokeMain
         falloffInput.classList.add("token-falloff");
         falloffInput.classList.add("vision-panel-main-input");
         falloffInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
+        falloffInput.draggable = false;
 
         falloffInput.onchange = async (event: Event) =>
         {
@@ -652,6 +834,7 @@ export class SmokeMain
         innerAngInput.classList.add("token-innerang");
         innerAngInput.classList.add("vision-panel-sub-input");
         innerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
+        innerAngInput.draggable = false;
 
         innerAngInput.onchange = async (event: Event) =>
         {
@@ -686,6 +869,8 @@ export class SmokeMain
         blindUnitInput.classList.add("token-blind");
         blindUnitInput.classList.add("vision-panel-main-input");
         blindUnitInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
+        blindUnitInput.draggable = false;
+
         blindUnitInput.onchange = async (event: Event) =>
         {
             if (!event || !event.target) return;
@@ -707,6 +892,7 @@ export class SmokeMain
         outerAngInput.classList.add("token-outerang");
         outerAngInput.classList.add("vision-panel-sub-input");
         outerAngInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
+        outerAngInput.draggable = false;
 
         outerAngInput.onchange = async (event: Event) =>
         {
@@ -742,6 +928,8 @@ export class SmokeMain
         hideUnitInput.classList.add("token-hide");
         hideUnitInput.classList.add("vision-panel-main-input");
         hideUnitInput.style.display = this.onVisionPanelMain ? "inline-block" : "none";
+        hideUnitInput.draggable = false;
+
         hideUnitInput.onclick = async (event: Event) =>
         {
             if (!event || !event.target) return;
@@ -756,10 +944,23 @@ export class SmokeMain
                 thisRow.classList.add('slide-out');
                 setTimeout(() =>
                 {
-                    SMOKEMAIN.hiddenList!.prepend(thisRow);
+                    // If this is a linked child, it came with a parent, set it after
+                    thisRow.dataset.linkedto ? SMOKEMAIN.hiddenList!.appendChild(thisRow) : SMOKEMAIN.hiddenList!.prepend(thisRow);
 
                     thisRow.classList.remove('slide-out');
                     thisRow.classList.add('slide-in');
+
+                    // Hide child rows
+                    const tableRows = SMOKEMAIN.tokenList!.querySelectorAll<HTMLTableRowElement>('tr');
+                    if (tableRows.length > 0 && !thisRow.dataset.linkedto)
+                    {
+                        const linkedRows = Array.from(tableRows).filter(row => row.dataset.linkedto === token.id);
+                        for (const row of linkedRows)
+                        {
+                            const hideRowButton = row.querySelector<HTMLInputElement>(".token-hide");
+                            if (hideRowButton) hideRowButton.click();
+                        }
+                    }
 
                     setTimeout(async () =>
                     {
@@ -781,6 +982,17 @@ export class SmokeMain
                     thisRow.classList.remove('slide-out');
                     thisRow.classList.add('slide-in');
 
+                    // Show child rows
+                    const tableRows = SMOKEMAIN.hiddenList!.querySelectorAll<HTMLTableRowElement>('tr');
+                    if (tableRows.length > 0 && !thisRow.dataset.linkedto)
+                    {
+                        const linkedRows = Array.from(tableRows).filter(row => row.dataset.linkedto === token.id);
+                        for (const row of linkedRows)
+                        {
+                            const hideRowButton = row.querySelector<HTMLInputElement>(".token-hide");
+                            if (hideRowButton) hideRowButton.click();
+                        }
+                    }
                     setTimeout(async () =>
                     {
                         thisRow.classList.remove('slide-in');
@@ -801,6 +1013,8 @@ export class SmokeMain
         darkVisionInput.classList.add("token-darkvision");
         darkVisionInput.classList.add("vision-panel-sub-input");
         darkVisionInput.style.display = !this.onVisionPanelMain ? "inline-block" : "none";
+        darkVisionInput.draggable = false;
+
         darkVisionInput.onchange = async (event: Event) =>
         {
             if (!event || !event.target) return;
@@ -831,15 +1045,41 @@ export class SmokeMain
         newTableRow.appendChild(cellThree);
         newTableRow.appendChild(cellFour);
 
-        // Add to either table
-        if (token.metadata[`${Constants.EXTENSIONID}/hiddenToken`] === true)
+        if (linked)
         {
-            hiddenTable!.prepend(newTableRow);
+            const parentId = token.metadata[`${Constants.EXTENSIONID}/linkedTo`] as string;
+            const parentTable = tokenTable.querySelector(`#tr-${parentId}`) ? tokenTable : hiddenTable;
+            const targetRow = parentTable.querySelector(`#tr-${parentId}`);
+            newTableRow.dataset.linkedto = parentId;
+            newTableRow.classList.add('linked-row');
+            if (targetRow)
+            {
+                // Always insert after for psuedo-nesting
+                parentTable.insertBefore(newTableRow, targetRow.nextSibling);
+                this.toggleRowVisibility(newTableRow, true);
+            }
         }
         else
         {
-            tokenTable!.appendChild(newTableRow);
+            // Add to either table
+            if (token.metadata[`${Constants.EXTENSIONID}/hiddenToken`] === true)
+            {
+                hiddenTable!.prepend(newTableRow);
+            }
+            else
+            {
+                tokenTable!.appendChild(newTableRow);
+            }
         }
+
+        const inputs = newTableRow.querySelectorAll('input');
+        inputs.forEach(input =>
+        {
+            input.addEventListener('dragstart', event =>
+            {
+                event.stopPropagation(); // Prevent drag from activating
+            });
+        });
 
         function HideMenu()
         {
@@ -948,8 +1188,20 @@ export class SmokeMain
         }
     }
 
-    private UpdateTokenOnVisionList(token: Item, tableRow: HTMLTableRowElement)
+    private UpdateTokenOnVisionList(token: Item, tableRow: HTMLTableRowElement, linked = false)
     {
+        this.toggleRowVisibility(tableRow, linked);
+        if (linked)
+        {
+            if (!tableRow.dataset.linkedto) tableRow.dataset.linkedto = token.metadata[`${Constants.EXTENSIONID}/linkedTo`] as string;
+            if (!tableRow.classList.contains('linked-row')) tableRow.classList.add('linked-row');
+        }
+        else
+        {
+            if (tableRow.dataset.linkedto) delete tableRow.dataset.linkedto;
+            if (tableRow.classList.contains('linked-row')) tableRow.classList.remove('linked-row');
+        }
+
         // Update Ownership Stylings
         const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
         let ownerColor = owner?.color;
@@ -1075,6 +1327,18 @@ export class SmokeMain
             element.style.opacity = '1';
         }, 10);
     };
+
+    private toggleRowVisibility = (row: HTMLTableRowElement, nested: boolean) =>
+    {
+        nested ? row.classList.add("linked-row") : row.classList.remove("linked-row");
+        const cells = row.querySelectorAll('td');
+        cells.forEach((cell) =>
+        {
+            cell.classList.contains('token-name') ?
+                (cell.style.textIndent = nested ? "20px" : "0px") :
+                (cell.style.visibility = nested ? 'hidden' : "visible");
+        });
+    }
 }
 
 export const SMOKEMAIN = new SmokeMain("3.60");

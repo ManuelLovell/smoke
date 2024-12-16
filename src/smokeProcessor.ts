@@ -438,21 +438,23 @@ class SmokeProcessor
         if (BSCACHE.playerRole !== "GM" || BSCACHE.fogFilled === false) return;
 
         const sceneVisionTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
-        for (const scenetoken of sceneVisionTokens)
+        for (const sceneToken of sceneVisionTokens)
         {
-            this.CreateOwnerHighlight(scenetoken, true);
+            const linkedParent = BSCACHE.sceneItems.find(x => x.id === sceneToken.metadata[`${Constants.EXTENSIONID}/linkedTo`]);
+            this.CreateOwnerHighlight(sceneToken, linkedParent, true);
         }
     }
 
-    private CreateOwnerHighlight(token: Item, override = false)
+    private CreateOwnerHighlight(token: Item, linkedParent?: Item, override = false)
     {
+        const tokenSettings = linkedParent ?? token;
         if ((BSCACHE.playerRole !== "GM"
             || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true)
             && !override) return;
 
-        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
         const existingRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true && x.attachedTo === token.id);
         if (existingRing)
@@ -462,7 +464,7 @@ class SmokeProcessor
         else
         {
             const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
-            const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+            const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
             const playerRing = buildShape()
                 .strokeColor(owner.color)
                 .fillOpacity(0)
@@ -481,10 +483,11 @@ class SmokeProcessor
         }
     }
 
-    private UpdateDarkVision(token: Item)
+    private UpdateDarkVision(token: Item, linkedParent?: Item)
     {
-        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
-        const darkVisionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
+        const tokenSettings = linkedParent ?? token;
+        const visionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
+        const darkVisionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
         const clearView = ((visionDistance * .9) / darkVisionDistance) / 2; // This cuts the vision back slightly to fuzz the edge easier
 
         const newPosition: Vector2 = {
@@ -511,15 +514,16 @@ class SmokeProcessor
         }
     }
 
-    private UpdateOwnerHightlight(token: Item)
+    private UpdateOwnerHightlight(token: Item, linkedParent?: Item)
     {
+        const tokenSettings = linkedParent ?? token;
         if (BSCACHE.playerRole !== "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
 
-        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
-        const ringSize = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+        const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
         const thisRing = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true);
 
         if (thisRing)
@@ -610,6 +614,8 @@ class SmokeProcessor
         for (const sceneToken of sceneVisionTokens)
         {
             let sceneTokenDepth = -10;
+            const linkedParent = BSCACHE.sceneItems.find(x => x.id === sceneToken.metadata[`${Constants.EXTENSIONID}/linkedTo`]);
+
             for (const mapping of elevationMappings)
             {
                 const withinMap = Utilities.isPointInPolygon(sceneToken.position, mapping.Points);
@@ -627,39 +633,41 @@ class SmokeProcessor
             const existingLight = BSCACHE.sceneLocal.find(x => x.attachedTo === sceneToken.id && x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true) as Light;
             if (!existingLight)
             {
-                this.CreateLightToQueue(sceneToken, sceneTokenDepth);
+                this.CreateLightToQueue(sceneToken, sceneTokenDepth, linkedParent);
             }
             else
             {
+                const tokenSettings = linkedParent ?? sceneToken;
                 // We need to see if it changed in POSITION or POINTS or BLOCK or DOUBLESIDED status
-                let equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
+                let equalOuterRadius = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string)
                     === existingLight.attenuationRadius;
-                if (parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-                    > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
+                if (parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                    > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
                 {
                     // If this is false, we don't want to set it back to True if it passes the next check
                     if (equalOuterRadius)
                     {
-                        equalOuterRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                        equalOuterRadius = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
                             === existingLight.attenuationRadius;
                     }
                 }
-                const equalInnerRadius = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string)
+                const equalInnerRadius = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string)
                     === existingLight.sourceRadius;
-                const equalFalloff = sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`]
+                const equalFalloff = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`]
                     === existingLight.falloff?.toString();
-                const equalInnerAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`]
+                const equalInnerAngle = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`]
                     === existingLight.innerAngle?.toString();
-                const equalOuterAngle = sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
+                const equalOuterAngle = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`]
                     === existingLight.outerAngle?.toString();
-                const equalBlind = (sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true)
+                const equalBlind = (tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true)
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
+
                 const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
                 let forceUpdateDarkvision = false;
                 if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalBlind || !equalDepth)
                 {
-                    this.UpdateLightToQueue(sceneToken, existingLight, sceneTokenDepth);
+                    this.UpdateLightToQueue(sceneToken, existingLight, sceneTokenDepth, linkedParent);
                     forceUpdateDarkvision = true;
                 }
 
@@ -670,12 +678,12 @@ class SmokeProcessor
                         === existingDarkVision.width;
                     if (!equalRange || forceUpdateDarkvision)
                     {
-                        this.UpdateDarkVision(sceneToken);
+                        this.UpdateDarkVision(sceneToken, linkedParent);
                     }
                 }
                 else
                 {
-                    this.CreateDarkVisionToQueue(sceneToken);
+                    this.CreateDarkVisionToQueue(sceneToken, linkedParent);
                 }
 
                 if (existingLight.lightType === "PRIMARY")
@@ -707,7 +715,7 @@ class SmokeProcessor
                     // This checks to see if there is any token in a small radius, as to avoid doubling up
                     if (this.IsPositionClear(sceneToken.position))
                     {
-                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth)
+                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
                     }
                 }
                 else
@@ -717,7 +725,7 @@ class SmokeProcessor
                         || sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== 360)
                         && this.IsPositionAndRotationClear(sceneToken.rotation, sceneToken.position))
                     {
-                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth)
+                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
                     }
                 }
             }
@@ -729,7 +737,10 @@ class SmokeProcessor
             const exists = sceneVisionTokens.find(x => x.id === localLight.attachedTo);
             if (!exists)
             {
+                //Cleanup old lights
                 this.lightsToDelete.push(localLight.id);
+
+                // Cleanup old rings
                 const ownerRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true
                     && x.attachedTo === localLight.attachedTo);
                 if (ownerRing) this.ringsToDelete.push(ownerRing.id);
@@ -1031,25 +1042,26 @@ class SmokeProcessor
         this.wallsToCreate.push(item);
     }
 
-    private AddPersistentLightToQueue(token: Item, depth: number)
+    private AddPersistentLightToQueue(token: Item, depth: number, linkedParent?: Item)
     {
+        const tokenSettings = linkedParent ?? token;
         // The trade off issue is, PRIMARY Persistent lights will re-trigger Secondary.
         // AUXILIARY Persisent lights will not re-trigger.
         // If a torch is in a CLOSED room, and the player walks by the door and leaves - a PRIMARY persistent light will trigger the torch when the door is open. (When the player is not there.)
         // If a torch is in an OPEN room, and the walks by the door - the AUXILIARY persistent light will trigger, but when they leave, the vision will be lost.
         // Both types have their issues and there is no current path to having a properly cut light persist in the right way.
-        const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
+        const lightType = tokenSettings.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
         if (lightType === "SECONDARY") return;
 
         const persistenceItem = buildLight()
             .position(token.position)
             .lightType("AUXILIARY")
             .rotation(token.rotation)
-            .attenuationRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault()))
-            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
-            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
-            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
-            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
+            .attenuationRadius(this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault()))
+            .sourceRadius(this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
+            .falloff(parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
+            .innerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
+            .outerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isPersistentLight`]: token.id,
@@ -1074,30 +1086,31 @@ class SmokeProcessor
         }
     }
 
-    private CreateLightToQueue(token: Item, depth: number)
+    private CreateLightToQueue(token: Item, depth: number, linkedParent?: Item)
     {
+        const tokenSettings = linkedParent ?? token;
         // We are 'light' to follow the token around, that we can identify which one it's replicating
-        const lightType = token.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
-        const visionRange = token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            0 : this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+        const lightType = tokenSettings.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
+        const visionRange = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
+            0 : this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
 
-        const useDarkVision = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
         const item = buildLight()
             .position(token.position)
             .rotation(token.rotation)
             .lightType(lightType)
             .attenuationRadius(useDarkVision ? darkVisionRange : visionRange)
-            .sourceRadius(this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
-            .falloff(parseFloat(token.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
-            .innerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
-            .outerAngle(parseInt(token.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
+            .sourceRadius(this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true))
+            .falloff(parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
+            .innerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
+            .outerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isVisionLight`]: true,
-                [`${Constants.EXTENSIONID}/visionBlind`]: token.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true
+                [`${Constants.EXTENSIONID}/visionBlind`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true
             })
             .attachedTo(token.id)
             .disableAttachmentBehavior(["SCALE", "VISIBLE"])
@@ -1108,19 +1121,20 @@ class SmokeProcessor
         if (lightType === "PRIMARY")
         {
             this.CreateTrailingFogRevealer(item);
-            this.CreateDarkVisionToQueue(token);
-            this.CreateOwnerHighlight(token);
+            this.CreateDarkVisionToQueue(token, linkedParent);
+            this.CreateOwnerHighlight(token, linkedParent);
         }
     }
 
-    private CreateDarkVisionToQueue(token: Item)
+    private CreateDarkVisionToQueue(token: Item, parentToken?: Item)
     {
-        const darkMeta = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
-        const visionMeta = parseInt(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const tokenSettings = parentToken ?? token;
+        const darkMeta = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const visionMeta = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
         if (!darkMeta || !visionMeta || (darkMeta < visionMeta)) return;
 
-        const visionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
-        const darkVisionDistance = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
+        const visionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
+        const darkVisionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) * 2;
         const clearView = ((visionDistance * .9) / darkVisionDistance) / 2; // This cuts the vision back slightlyh to fuzz the edge easier
 
         const darkVision = buildEffect()
@@ -1134,8 +1148,6 @@ class SmokeProcessor
             .height(darkVisionDistance)
             .blendMode("SATURATION")
             .effectType("STANDALONE")
-            //.layer("POST_PROCESS") - This seems to cause the square to render black, unsure how to use yet.
-            .attachedTo(token.id)
             .sksl(Constants.DARKVISIONSHADER)
             .metadata({ [`${Constants.EXTENSIONID}/isDarkVision`]: true })
             .disableHit(true)
@@ -1204,29 +1216,31 @@ class SmokeProcessor
         this.wallsToUpdate.push(update);
     }
 
-    private UpdateLightToQueue(sceneToken: Item, localLight: Light, depth: number)
+    private UpdateLightToQueue(sceneToken: Item, localLight: Light, depth: number, linkedParent?: Item)
     {
-        const lightType = sceneToken.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
-        const visionRange = sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
-            0 : this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
-        const useDarkVision = parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+        const tokenSettings = linkedParent ?? sceneToken;
+
+        const lightType = tokenSettings.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
+        const visionRange = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
+            0 : this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string ?? GetVisionRangeDefault());
+        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
         const update = {
             id: localLight.id,
             attenuationRadius: useDarkVision ? darkVisionRange : visionRange,
-            sourceRadius: this.GetLightRange(sceneToken.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true),
-            falloff: parseFloat(sceneToken.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()),
-            innerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()),
-            outerAngle: parseInt(sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()),
-            blind: sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true,
+            sourceRadius: this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] as string ?? GetSourceRangeDefault(), true),
+            falloff: parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()),
+            innerAngle: parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()),
+            outerAngle: parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()),
+            blind: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true,
             zIndex: this.GetDepth(depth, false)
         };
         this.lightsToUpdate.push(update);
         if (lightType === "PRIMARY")
         {
-            this.UpdateOwnerHightlight(sceneToken);
+            this.UpdateOwnerHightlight(sceneToken, linkedParent);
         }
     }
 
