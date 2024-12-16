@@ -945,7 +945,17 @@ export class SmokeMain
                 setTimeout(() =>
                 {
                     // If this is a linked child, it came with a parent, set it after
-                    thisRow.dataset.linkedto ? SMOKEMAIN.hiddenList!.appendChild(thisRow) : SMOKEMAIN.hiddenList!.prepend(thisRow);
+                    //thisRow.dataset.linkedto ? SMOKEMAIN.hiddenList!.appendChild(thisRow) : SMOKEMAIN.hiddenList!.prepend(thisRow);
+                    if (thisRow.dataset.linkedto)
+                    {
+                        const parentLink = SMOKEMAIN.hiddenList!.querySelector<HTMLTableRowElement>(`#tr-${thisRow.dataset.linkedto}`);
+                        if (parentLink)
+                        {
+                            parentLink.parentNode!.insertBefore(thisRow, parentLink.nextSibling);
+                        }
+                    }
+                    else
+                        SMOKEMAIN.hiddenList!.prepend(thisRow);
 
                     thisRow.classList.remove('slide-out');
                     thisRow.classList.add('slide-in');
