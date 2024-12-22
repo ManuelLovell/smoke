@@ -236,6 +236,12 @@ class BSCache
                 {
                     this.storedMetaItems = savedItems as Item[];
                 }
+                this.sceneId = this.sceneMetadata[`${Constants.EXTENSIONID}/sceneId`] as string;
+                // Init scene id
+                if (this.sceneId === "" || this.sceneId === undefined)
+                {
+                    await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID() });
+                }
             }
         }
 
