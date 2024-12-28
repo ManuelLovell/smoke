@@ -1259,12 +1259,14 @@ export class Constants
       <ul>
         <li><a href="#smoke-vision">Changing a token's vision range</a></li>
         <li><a href="#smoke-player">Who can see this token's view?</a></li>
+        <li><a href="#smoke-linked">Linked Vision</a></li>
       </ul></li>
       <li><a href="#smoke-advanced">Smoke: Advanced Features</a>
       <ul>
         <li><a href="#smoke-light">Using Light Sources</a></li>
-        <li><a href="#smoke-doors"> Using Doors</a></li>
+        <li><a href="#smoke-doors"> Using Doors & Windows</a></li>
         <li><a href="#smoke-customfog"> Using Custom Fog Backgrounds</a></li>
+        <li><a href="#smoke-fogeffects"> Using Fog Effects</a></li>
       </ul></li>
       <li><a href="#smoke-elevation">Smoke: Elevation Mapping</a>
       <ul>
@@ -1337,40 +1339,58 @@ The options next to a token's name are;
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 #### <a id="ui-settings"></a>3. Settings Panel
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-settings.webp)
+
 The settings for smoke are generally saved to the Scene, as each scene might have different needs to make it work.  The options are as follows;
 1. Fog Fill: This will enable/disable the Fog Fill in the Owlbear Rodeo Fog settings.  S&S3.0 requires fog fill in order  to do dynamic fog processing (but does not require it for collision detection). This is a  deviation from S&S2.0 where fog could be calculated in a small area via the bounding grid - which is no longer possible.
 2. Disable Vision: This will disable vision for ALL tokens that have vision enabled.  Useful if you need to blind the entire group, but do not wish to click each individual token.
 3. Persistence/Reset: This will enable/disable Persistence on your map. Persistence will keep areas that a token has stopped as 'discovered', and it will not be covered in fog when the token moves away.  The 'reset' button next to the toggle will reset the uncovered areas for everyone currently in the room.
-4. Player-Visible Doors: This will allow player's to see and interact with doors that have been created.
+4. Trailing Fog (Beta): Trailing fog puts an 'overlay' over the entire map that darkens it further. When an area is visited by a token with vision, this area is left 'revealed' but slightly darker than the area the token is currently in.  This is to show that an area was explored, but no one is present. Trailing fog REQUIRES Persistence to be enabled to work. As for it's BETA status, it currently does not check collision data so will always show a full radius around the token.
 5. Owner Highlight: This will enable/disable the colored rings that indicate a player's viewable range as a GM.
-6. Grid Snap: This will enable/disable the custom grid snapping used for drawing Obstruction Lines/Objects in S&S (Note: You can hold CTRL while drawing to temporarily disable this.). <i>This is independent of the default Snap setting in OBR.</i>
-7. Double-Side Walls: This will change all walls on the map to be double-sided walls. This can be useful if an imported map lacked the information, and you do not wish to set each wall individually.
-8. Block/Unblock Walls: By default, when you draw an obstruction it will be passable (with the exception of the Obstruction Brush tool).  This will block/unblock all walls so that tokens ability to pass them is changed.
-9. Lock/Unlock Lines: By default, when you draw an obstruction it will be auto-locked to make sure they are not moved on accident.  Use these buttons to lock/unlock all lines so that they can be manipulated again. 
-11. Tool Options: This is for customizing the style of the lines that are created when drawing with the Obstruction Tools.
-12. Import: Smoke is able to accept the UVTT format for building a scene for you. Select the map and Import, and the map image, obstructions, doors and light sources will be created in a new scene.
+6. Autohide (Beta): Autohide adds a new context menu option for tokens (Enable Autohide).  When this is toggled on for a token, that token will AUTOMATICALLY be changed to 'Hidden' when a token with vision is not in visible range of it. As for it's BETA status, it currently does not check collision data so will always show a full radius around the token.
+7. Show Unit Menu: This enables the 'Unit Context Menu' where you can change a unit's vision parameters directly on the token.  It will also show the 'Advanced' options for a unit, allowing you to change it's owner or assign it a dedicated elevation level to be at (a case for flying units).
+8. Show Wall Menu: This enables the 'Wall Context Menu' where you can see the 'Advanced' options for a wall.  This includes assigning it a SPECIFIC viewer to interact with and assigning a dedicated elevation level.
+9. Wall Pass (GM): When enabled, allows a GM the ability to drag a token through walls - even if the walls have blocking enabled.
+10. Grid Snap: This will enable/disable the custom grid snapping used for drawing Obstruction Lines/Objects in S&S (Note: You can hold CTRL while drawing to temporarily disable this.). <i>This is independent of the default Snap setting in OBR.</i>
+11. Default Elevation:  This will assign the default elevation for all areas where an Elevation Mapping does not exist.
+12. Elevation Style: This will swap between the Mesa and City wall styles, which change how elevation layers above 0 interact.
+13. Players-See-Doors: This will allow player's to see and interact with doors that have been created.
+
+14. Double-Side Walls: This will change all walls on the map to be double-sided walls. This can be useful if an imported map lacked the information, and you do not wish to set each wall individually.
+15. Block/Unblock Walls: By default, when you draw an obstruction it will be passable (with the exception of the Obstruction Brush tool).  This will block/unblock all walls so that tokens ability to pass them is changed.
+16. Lock/Unlock Lines: By default, when you draw an obstruction it will be auto-locked to make sure they are not moved on accident.  Use these buttons to lock/unlock all lines so that they can be manipulated again. 
+17. Tool Options: This is for customizing the style of the lines that are created when drawing with the Obstruction Tools
+18. Vision Defaults: This allows you to set the defaults for a token when their vision is enabled.
+19. Import: Smoke is able to accept the UVTT format for building a scene for you. Select the map and Import, and the map image, obstructions, doors and light sources will be created in a new scene.
 
 #### <a id="ui-tools"></a>7. Drawing Tools
 Added to the OBR Toolbar are Smoke's drawing tools.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-tools.webp)
 
 1. Obstruction Polygon: This tool is slightly different, in that it will create a closed shape - but the inside will be visible.  This is useful for items like 'Large Boulders' on a map, where the player can see that it's a boulder, but they cannot see past it.
 2. Obstruction Line: This is your default tool for making an obstruction. Just click in your scene to create points for the line, and select Finish (or push Enter) when you're done.
 3. Obstruction Paintbrush: This tool creates obstructions by the grid. Click and drag to fill in the desired area, and when you let go walls will be created around the shape you have painted. This is useful for maps that are blocky and/or very square with angular hallways.
+    - This brush should reflect what the currently selected grid option is in Owlbear Rodeo, and supports Square, Hexagon and Isometric grids.
+4. Trim Tool: This tool will allow you to click two points on a line, and 'cut' it from the base line. Allowing you to easily lop off a section you didn't intend on, or add a door/window.
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 #### <a id="ui-convert"></a>8. Drawing Conversions
-If you prefer to use the base Owlbear Rodeo drawing tools, you can.  All shapes created via the default tools can be converted into an Obstruction.  Just right-click the shape and select 'Convert to Obstruction'.
+If you prefer to use the base Owlbear Rodeo drawing tools, you can.  All shapes and lines created via the default tools can be converted into an Obstruction.  Just right-click the shape and select 'Convert to Obstruction'.
 This will remove the shape/line/drawing as it was, and recreate it as an Obstruction object.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-convert.webp)
+
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 #### <a id="ui-convert"></a>9. Elevation Tools
 Also on the Smoke Toolbar are the Elevation Mapping tools;
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-tools.webp)
-1. Elevation Layers: Elevation Mapping Layers 1-5 let you draw a shape at that elevation level, and all points (from obstructions or tokens) when processed will be drawn with that depth in mind.  A quick example, if you draw an obstruction around a house on your map - and then draw around the house with Elevation 1 - you won't be able to see around/above the house when on the ground, but if you put the token on the house it will be able to see everywhere.
+
+1. Elevation Layers: Elevation Mapping Layers 1-5 let you draw a shape at that elevation level, and all points (from obstructions or tokens) when processed will be drawn with that depth in mind.  A quick example (with Mesa style), if you draw an obstruction around a house on your map - and then draw around the house with Elevation 1 - you won't be able to see around/above the house when on the ground, but if you put the token on the house it will be able to see everywhere.
 2. Elevation Selection Tool: This let's you select your Elevation Layers.
 3. Elevation View Toggle: This toggles on/off the visibility of the Elevation Layers, as they should be hidden away when not being configured. (They still take effect when not seen.)
 
@@ -1386,7 +1406,9 @@ When drawing obstructions, you have some options in the form of buttons...
 #### <a id="obstruct-line"></a>1. The Obstruction Line
 The line tool is the basic building block for scenes, and likely will be the most used when creating a scene.
 By default, they block vision no matter what side of the line you are on. (The 'hidden' area is seen from the GM view in this screenshot, so it's only lightly obscured by darkness.)
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-line.webp)
+
 <i> Note: You are able to change how the default vision works for a line by going to the context-menu for a line and changing between Two-Sided, and One-sided.</i>
 
 You can also toggle an Obstruction Line's ability to block vision by clicking 'Disable/Enable Vision Line' in the context menu.
@@ -1397,10 +1419,12 @@ You can change how an obstruction behaves in several ways:
 	A. (When on One-sided) Swap Obstructing Side: This will change what side of the line you are able to see through.
 3. Swap to Passable/Unpassable: This will change how this line behaves as a collider.  A passable line will not stop a token's movement, but an unpassable one will.
 4. Enable Door: This will change the line to have 'Door' functionality. A line that has Door functionable has a few more buttons to improve flow.
-	A. Disable Door: This will disable the line behaving as a door.
-	B. Open/Close Door: This will change if a token can see through, and pass through this line.
-	C.  Lock Door: This will lock the door, so that players are unable to open it.
-	<i>Note: The 'Door' picture that appears can be double-clicked in order to open the door. It only serves the purposes of showing a door though. In order to manipulate the obstruction line that is the door - select the line.</i>
+	- A. Disable Door: This will disable the line behaving as a door.
+	- B. Open/Close Door: This will change if a token can see through, and pass through this line.
+	- C.  Lock Door: This will lock the door, so that players are unable to open it.
+	- <i>Note: The 'Door' picture that appears can be double-clicked in order to open the door. It only serves the purposes of showing a door though. In order to manipulate the obstruction line that is the door - select the line.</i>
+5. Enable Window: This will change the line to have 'Window' functionality. A Window line will be shown as a dashed line, and will also NOT block vision. It will block movement though.
+    - <i>Note: If you want a window that can be opened, also Enable Door on the Windowed line.</i>
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -1408,7 +1432,9 @@ You can change how an obstruction behaves in several ways:
 The polygon tool is more of a special case, it creates a closed shape where the INSIDE is visible from the outside. The area 'behind' that shape though, you are unable to see.
 
 The use-case for this is generally with objects that are large (and the player would know what it is on sight), but they cannot see behind it.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-poly.webp)
+
 It can also be useful when attached to a large 'Monster' token, as the players would be able to view the token - but not be able to view behind it. (In case it's so big that it blocks vision!)
 
 Polygons also block vision if you are INSIDE of the shape. As in, you'll be able to see the area around you (within the shape) but not see outside of it.  This could be useful if the shape is around a 'barrel' - and a player wants to hide inside. They will not be able to peer out of the barrel.
@@ -1421,19 +1447,20 @@ There is no hard-rule to how this thing is used, so it's really up to you to det
 The brush tool is a quick-setup tool for maps that are blocky in nature, with lots of square rooms and hallways (Meaning, not a cave with lots of jagged its).
 
 It's based on the grid, so be sure to line your map up accordingly first. After that, just click and drag as the brush highlights the squares it will draw obstruction lines around.  The benefits of this tool is it will let you setup large maps rather quickly by just coloring them in.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-brush.webp)
-That said, there are pros and cons.
-Pro: All contiguous parallel lines will be joined together, reducing the overall amount of obstruction lines in the scene. (So less processing!)
-Con: Since all lines are joined, it can be more difficult to create a door in a long wall - because the wall will be one slid piece.
-For this specific issue, adding a Door, it might be beneficial to 'bump out' a square where the door will be, so the line will be separate there.
-<i>Note: Alternatively, there are other extensions out there that allow more advanced line manipulation (cutting, joining, segmenting) that you could use to alter the lines.  Feel free to use those to edit your scene, too.</i>
+
+<i>Note: While this aids in setting up large areas quickly, you might find it useful to use the 'Trim' tool after to add a door.</i>
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 ## Smoke: Using Tokens <a id="smoke-tokens" name="smoke-tokens">
 
 #### <a id="smoke-vision"></a>1. Changing a token's vision range
-In the Smoke Panel, once a token has had it's Vision Enabled, the token will appear on the list with some options. The default radius is 30, but you can change this to whatever suits your needs.![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-vision.webp)
+In the Smoke Panel, once a token has had it's Vision Enabled, the token will appear on the list with some options. The default radius is 30, but you can change this to whatever suits your needs.
+
+![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-vision.webp)
+
 There are two sets of settings - Basic and Advanced. In order, the controls are:
 1. (Basic) Vision Range.
 2. (Basic) Vision Falloff.
@@ -1452,30 +1479,49 @@ If you do want people to only see from the viewpoint of their token, you want to
 
 To speed up the flow of assigning ownership, you have two options:
 1. Let players drag in their own tokens. If they brought it in, they're the owner! Then just enable vision on it.
-2. Right-click a token's name in the Smoke Panel, and you are able to assign an owner to a token from a list of **players currently in the room**.
+2. Right-click a token's name in the Smoke Panel, and you are able to assign an owner to a token from a list of **players who have entered the room at any point in time**.
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-player.webp)
+
 <p align="right">(<a href="#smoke">back to top</a>)</p>
+  
+#### <a id="smoke-linked"></a>3. Linked Vision
+To quickly assign vision groups, or simply have a token 'piggy-back' another token's vision settings - you can 'Link' a token to another one. From the Vision List, click and drag the name of a token on top of the token you want to link it to.  This will 'nest' it, removing it's controls from view.  From this point on, that token will use the parent token's vision settings.
+
+To undo this, you click and drag the name onto itself - this will remove the link.
+
+![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-links.webp)
+
+<p align="right">(<a href="#smoke">back to top</a>)</p>
+  
   
 ## Smoke: Advanced Features <a id="smoke-advanced" name="smoke-advanced">
 
 #### <a id="smoke-light"></a>1. Using Torchlight (Previously Light Sources)
-If you need ambient lighting on a map, you need to create a 'Torch'.  This can only be token with token's on the PROP layer.  When you open the context menu of a token on the PROP layer, you will see the 'Create Torchlight' option.
-Torchlights are added to the token vision list like all other tokens, but are appended with a 🔦icon. All of the same settings can be used.
+If you need ambient lighting on a map, you need to create a 'Torch'.  This can only be token with token's on the PROP or ATTACHMENT layer.  When you open the context menu of a token on either layer, you will see the 'Create Torchlight' option.
+Torchlights are added to the token vision list like all other tokens, but are appended with a 🔦 icon. All of the same settings can be used.
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-light.webp)
+
 This is easiest to see with narrow hallways.  If you add a torchlight to a small room, and then have a narrow hallway between it and a character token with vision, you will see that the vision the torch gives is constricted.
 
 If you're looking to have your characters explore a dark area where they have to hold torches, it's a simple task.   Create torch tokens, enable vision, set them as a torchlight and then attach them to the characters.  Your other players will then be able to see each other when the light of the torch is not behind something obstructing it.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-light2.webp)
+
 <i>Given that torchlights are not needed to be manipulated often, it's often better to move them to the 'Out-of-Sight' list, to clean up the clutter in the Smoke panel.</i>
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
-#### <a id="smoke-doors"></a>2. Using Doors
-In the context-menu for an Obstruction Line, there is an option for 'Enable Door'.
+#### <a id="smoke-doors"></a>2. Using Doors & Windows
+In the context-menu for an Obstruction Line, there is an option for 'Enable Door' and 'Enable Window'.
+
 Enabling a door will draw a 'Door' icon on top of that line, which can be toggled to turn on/off the obstruction properties for that line (thus opening the door, allowing people to see through).
+
+Enabling a window will change the line to be 'dashed'.  A windowed line is able to be seen through by players, but will still block movement (if blocking is enabled).
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-door.webp)
+
 You can 'disable' a door and remove the door icon through the same process, selecting 'Disable Door'.
 You can toggle the opening of a door in two ways;
 1. Double click the door icon.
@@ -1488,7 +1534,9 @@ If your players are a little click-happy, you can 'Lock Door' to stop players fr
 
 #### <a id="smoke-customfog"></a>3. Using Custom Fog
 Sometimes flat-colored fog isn't exactly what you're going for.  If you want things to get a little fancy, Custom Fog is a great feature to spruce things up.
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-customfog1.webp)
+
 The basic steps are;
 1. Make sure your Custom Fog image is on the Map layer.
 2. Overlay the Custom Fog image on top of your regular map.
@@ -1496,6 +1544,27 @@ The basic steps are;
 4. Done!
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-customfog2.webp)
+
+<i>Note: To remove the Fog Background, use the Fog Tool to Select the Custom Fog Background (Because it's a Fog Item now!) and select the option to Convert the item back.</i>
+<p align="right">(<a href="#smoke">back to top</a>)</p>
+
+
+#### <a id="smoke-fogeffects"></a>3. Using Fog Effects
+
+![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-enhancedfog.webp)
+
+Fog Effects is a one-touch way of getting stylish fog effects without needing to do much setup.  The flip-side is, you only have access to the ones I have created!
+
+To add a fog-style, double-click a map to see the "Auto Fog" options.
+- Effect: A list of different effects to replace the default 'fog' with.
+- Style: This dictates the style.  
+    - Map fog is generally see-through in a way that you can still see the base map through the effect (though it will still obscure tokens).
+    - Flat fog will block the transparency, and only display the effect as fog.
+
+<i>Note: Fog Effects are done via Shaders - and using a lot of them at once can cause some strain on lower-end devices.  Be smart in how you set your scenes up.</i>
+
+![gmview view](https://battle-system.com/owlbear/smoke-docs/smoke-enhancedfog2.webp)
+
 <i>Note: To remove the Fog Background, use the Fog Tool to Select the Custom Fog Background (Because it's a Fog Item now!) and select the option to Convert the item back.</i>
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
@@ -1503,35 +1572,51 @@ The basic steps are;
 Elevation Mapping allows you to add some depth to your 2D Scene, by assigning 'areas' to the map where certain points/tokens are higher than others.
 
 #### <a id="smoke-elevation-map"></a>1. How it works
-When setting up elevation, you have a few layers to play with. (I've limited this to six to keep things simple, but technically it can be expanded.)
-The default layer - 0 - has the special property of ignoring elevation. When you are using Smoke & Spectre without any elevation mappings, it's using layer 0.  *Any obstructions on layer 0 cannot be seen past, no matter what layer the token is on!*
-With layers 1-6, this is where the calculations become different. If you have a token and an obstruction both within a Layer 1 mapping, the token can see PAST the obstruction!
+When setting up elevation, you have two styles and a few layers to play with. (I've limited this to six to keep things simple, but technically it can be expanded.)
+
+The styles are "Mesa" and "City".
+The idea behind Mesa style - is hills, plateaus and cliffs. 
+With layers 1-6, the calculations become different. If you have a token and an obstruction both within a Layer 1 mapping, the token can see PAST the obstruction!
 But if you have a token with a Layer 1 mapping, and an obstruction within a Layer 2 Mapping, the player CANNOT see past the obstruction. Because the obstruction is at a higher depth.
 
-Now for an active example;
+The "City" style is the same as you would expect on the base layer, but for all layers.
+
+Now for an active example (with Mesa);
 Here is a token on an island map. Their vision is not obstructed at all. I have toggled on the Elevation Mapping View so I can use the tools.  I have used Elevation Mapping Layer-1 tool to surround the area I'm going to be working in. (This is to make sure no obstructions I draw within here end up on Elevation Mapping Layer-0, and thus always block vision.)
+
 ![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-1.webp)
 
 Next, I draw obstruction lines around the items I want to block vision. (This screenshot has the Elevation Mapping View toggled off, so that you can see easier.)
 Notice how the obstruction lines don't block a single thing.  This is because the token AND the obstructions all exist within the Elevation Mapping Layer-1 area.  So they are all at the same depth.
+
 ![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-2.webp)
 
 With the base work done, I want to make sure my rocks are higher up - so that I can't see past them when I'm on the ground, and if I stood upon them - I can see the top of them and everything below.  So I'm going to use the Elevation Mapping Layer-1 Tool and draw an area around my rocks.
 I draw my mappings AROUND the obstructions, fairly closely. This is because if a player is standing CLOSE to the object, I do not want them to accidentally be within that mapping.
 <i>Note: You can layer mappings, and the highest layer will always take priority.</i>
 
-Notice that while on the beach area, I can no longer see past the rocks.![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-3.webp)
+Notice that while on the beach area, I can no longer see past the rocks.
+
+![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-3.webp)
 But when standing on the rocks (within Elevation Mapping Layer-1, the same that the obstruction lines are in), I can see on top of them and off the sides!
+
+
 ![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-4.webp)
+
 But I can still see the next rock above me.. so I'm going to use the next numbered elevation mapping tool.
+
 ![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-5.webp)
+
 Now I can no longer see to the top, but I can see below.  Turn off the Elevation Mapping View so that the layers hide themselves and the effect is complete.
+
 ![example elevation view](https://battle-system.com/owlbear/smoke-docs/smoke-elevation-6.webp)
 
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 #### <a id="smoke-elevation-tools"></a>2. The Mapping Layer Tools
+
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-tools.webp)
+
 The numbered mountains on the Obstruction Tool Bar are the Elevation Mapping Layer Tools.
 Or "MEL" if you want to read it as Mapping Elevation Layer, which for the suck of not writing it a million times - I will.
 Each MEL Tool has a number next to it designating what layer it interacts with.
@@ -1553,6 +1638,7 @@ When the View is toggled on, the MEL tools are all enabled and you can draw.  Wh
 To make things easier and not have to swap between different tool bars, the MEL Select Tool exists so you can grab a layer and interact with it while staying on the Obstruction Tool Bar.
 
 ![gmview view](https://battle-system.com/owlbear/smoke-docs/ui-tools.webp)
+
 <p align="right">(<a href="#smoke">back to top</a>)</p>
 
 ## Smoke: Importing Fog Files <a id="smoke-import" name="smoke-import">

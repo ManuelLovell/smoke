@@ -111,12 +111,11 @@ class Spectre
                 dpi: token.grid.dpi,
                 offset: token.grid.offset
             })
-            .id(token.id)
+            //.id(token.id)
             .position(token.position)
             .scale(token.scale)
             .text(token.text)
             .rotation(token.rotation)
-            .attachedTo(token.id)
             .layer(token.layer)
             .metadata({ [`${Constants.SPECTREID}/isLocalSpectre`]: token.id })
             .disableHit(false)
