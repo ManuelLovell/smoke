@@ -1121,7 +1121,7 @@ class SmokeProcessor
         const darkMeta = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
         const visionMeta = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
 
-        if (!darkMeta || !visionMeta || (darkMeta < visionMeta) || isBlind) return;
+        if (!darkMeta || (darkMeta < visionMeta) || isBlind) return;
 
         const darkVisionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]) * 2;
         const visionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
