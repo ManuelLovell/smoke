@@ -41,6 +41,7 @@ export function CreateTooltips()
     tooltips.set(`tip_gmwalls`, "Toggle to enable/disable the blocking of walls for the GM only.");
     tooltips.set('tip_defaultelevation', "Toggle the Default Elevation Layer. This is the layer a token/wall is set at when it's not on a specific mapping.");
     tooltips.set('tip_elevationstyle','Toggle to change how Elevations treat walls. Mesa will allow tokens to see over walls at elevations above 0. City will have them all behave the same.');
+    tooltips.set('tip_hardwarewarnings','Toggle to display a warning whenever you or someone in your room may have a Hardware Acceleration issue that would cause fog to display incorrectly..');
 
     tooltips.set(`doublewall_button`, "This will change ALL walls within the scene to be double-sided, so they cannot be passed from either side.");
     tooltips.set(`block_button`, "This will set all walls to be Blocking walls, so that tokens cannot move past them.");

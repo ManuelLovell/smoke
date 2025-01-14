@@ -101,6 +101,18 @@ export class SmokeMain
             console.log("localStorage is disabled, not showing the notice. You should definitely check the Patreon.");
         }
 
+        // Hardware Acceleration Test
+        const hardwareAccel = Utilities.IsHardwareAccelerationEnabled().hasHardwareAcceleration;
+        await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/hardwareAcceleration`]: hardwareAccel });
+        if (!hardwareAccel)
+        {
+            await OBR.broadcast.sendMessage(
+                Constants.WARNINGCASTID,
+                OBR.player.id,
+                { destination: "REMOTE" });
+        }
+        // Hardware Acceleration Test
+
         if (BSCACHE.playerRole === "GM")
         {
             await OBR.action.setHeight(530);
@@ -164,6 +176,12 @@ export class SmokeMain
             SetupTools();
             CreateTooltips();
             await SPECTREMACHINE.Initialize();
+
+            // Warnings Check
+            if (!hardwareAccel)
+                await Utilities.HardwareWarning(true);
+            // Warnings Check for Party
+            await Utilities.HardwareWarning(false, BSCACHE.party);
         }
         else
         {
@@ -192,6 +210,11 @@ export class SmokeMain
             `;
             this.UpdatePlayerView();
             this.patreonContainer = document.getElementById("patreonContainer") as HTMLDivElement;
+
+            // Warnings Check
+            if (!hardwareAccel)
+                await Utilities.HardwareWarning(true);
+            // Warnings Check
         }
         await this.InitializeScene();
         this.patreonContainer?.appendChild(Utilities.GetPatreonButton());

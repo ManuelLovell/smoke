@@ -262,6 +262,18 @@ class BSCache
             if (this.sceneReady) this.roomMetadata = await OBR.room.getMetadata();
         }
 
+        const warningHandler = OBR.broadcast.onMessage(Constants.WARNINGCASTID, (data) =>
+        {
+            if (this.playerRole === "GM")
+            {
+                const player = BSCACHE.party.find(x => x.id === data.data);
+                if (player)
+                {
+                    Utilities.HardwareWarning(false, [player]);
+                }
+            }
+        });
+
         const elevationHandler = OBR.broadcast.onMessage(`${Constants.EXTENSIONID}/ELEVATIONEVENT`, (data) =>
         {
             switch (data.data)

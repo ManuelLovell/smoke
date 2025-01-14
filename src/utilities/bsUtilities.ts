@@ -1,4 +1,4 @@
-import { Theme, Image, Vector2, Curve, Wall } from "@owlbear-rodeo/sdk";
+import OBR, { Theme, Image, Vector2, Curve, Wall, Player } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
 import { Constants, PathCommands } from "./bsConstants";
@@ -7,6 +7,164 @@ import simplify from "simplify-js";
 export function GetPersistentLocalKey()
 {
     return `${Constants.EXTENSIONID}/Persistence/${BSCACHE.playerId}/${BSCACHE.sceneId}`;
+}
+
+export async function HardwareWarning(self: boolean, party?: Player[])
+{
+    const showWarning = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/showWarnings`] === undefined ? true : BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/showWarnings`] === true;
+    if (showWarning)
+    {
+        if (self)
+        {
+            await OBR.notification.show("Your browser may have Hardware Acceleration disabled.  Fog and other effects requiring Hardware Acceleration may not display correctly.", "WARNING");
+            await OBR.action.setBadgeText("⚠️");
+            await OBR.action.setBadgeBackgroundColor("black");
+        }
+        else if (party)
+        {
+            const warnedPlayers = party.filter(player => player.metadata[`${Constants.EXTENSIONID}/hardwareAcceleration`] !== true);
+            if (warnedPlayers.length > 0) await OBR.notification.show(`Player(s) [${warnedPlayers.map(x => x.name).join(", ")}] may have Hardware Acceleration disabled on their browsers. Fog and other effects may not display properly for them.`, "WARNING");
+        }
+    }
+}
+
+export function IsHardwareAccelerationEnabled(): { hasHardwareAcceleration: boolean; reason?: string }
+{
+    try
+    {
+        // Create an offscreen canvas for testing
+        const canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+
+        // Test 1: Check for software rendering in WebGL
+        const gl = canvas.getContext('webgl');
+        if (gl)
+        {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo)
+            {
+                const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+                const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+
+                // Check for known software rendering indicators
+                const softwareRenderers = [
+                    'swiftshader',
+                    'llvmpipe',
+                    'software',
+                    'virtualbox',
+                    'microsoft basic render'
+                ];
+
+                if (renderer && softwareRenderers.some(sr =>
+                    renderer.toLowerCase().includes(sr)))
+                {
+                    return {
+                        hasHardwareAcceleration: false,
+                        reason: `Software rendering detected: ${renderer}`
+                    };
+                }
+            }
+        }
+
+        // Test 2: Performance-based detection for transform animations
+        const div = document.createElement('div');
+        div.style.cssText = `
+            position: absolute;
+            left: -9999px;
+            width: 100px;
+            height: 100px;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        `;
+        document.body.appendChild(div);
+
+        let start = performance.now();
+        const iterations = 100;
+
+        // Force multiple repaints with 3D transforms
+        for (let i = 0; i < iterations; i++)
+        {
+            div.style.transform = `translate3d(0, 0, ${i}px)`;
+            // Force layout recalculation
+            void div.offsetHeight;
+        }
+
+        const duration = performance.now() - start;
+        document.body.removeChild(div);
+
+        // If transforms are taking too long, likely software rendering
+        if (duration > 500)
+        { // More than 500ms for 100 iterations suggests software rendering
+            return {
+                hasHardwareAcceleration: false,
+                reason: `Transform performance indicates software rendering (${duration.toFixed(2)}ms)`
+            };
+        }
+
+        // Test 3: Canvas acceleration test
+        const ctx = canvas.getContext('2d');
+        if (ctx)
+        {
+            start = performance.now();
+
+            // Perform operations that should be hardware accelerated
+            for (let i = 0; i < 50; i++)
+            {
+                ctx.filter = `blur(${i % 5}px)`;
+                ctx.fillStyle = `rgba(${i}, ${i}, ${i}, 0.5)`;
+                ctx.fillRect(0, 0, 100, 100);
+            }
+
+            const imageData = ctx.getImageData(0, 0, 100, 100);
+            const canvasDuration = performance.now() - start;
+
+            if (canvasDuration > 300)
+            { // More than 300ms suggests software rendering
+                return {
+                    hasHardwareAcceleration: false,
+                    reason: `Canvas performance indicates software rendering (${canvasDuration.toFixed(2)}ms)`
+                };
+            }
+        }
+
+        // Additional check for Chrome-based browsers
+        if (navigator.userAgent.includes('Chrome') ||
+            navigator.userAgent.includes('Vivaldi'))
+        {
+            const canvas2 = document.createElement('canvas');
+            const ctx2 = canvas2.getContext('2d');
+
+            if (ctx2)
+            {
+                // Test for specific color handling that differs in software mode
+                ctx2.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx2.fillRect(0, 0, 1, 1);
+                const pixel = ctx2.getImageData(0, 0, 1, 1).data;
+
+                // In software rendering, color handling can be different
+                if (pixel[3] !== 26)
+                { // Expected value when hardware accelerated
+                    return {
+                        hasHardwareAcceleration: false,
+                        reason: 'Color handling indicates software rendering'
+                    };
+                }
+            }
+        }
+
+        return {
+            hasHardwareAcceleration: true
+        };
+
+    } catch (e: any)
+    {
+        console.warn('Error during hardware acceleration detection:', e);
+        return {
+            hasHardwareAcceleration: false,
+            reason: `Detection error: ${e.message}`
+        };
+    }
 }
 
 export function GetPatreonButton()

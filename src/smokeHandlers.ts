@@ -148,6 +148,17 @@ export function SetupGMInputHandlers(mobile = false)
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/playerDoors`]: target.checked });
     };
 
+    // Toggles displaying warning messages about hardware acceleration
+    const warningsCheckbox = document.getElementById("warnings_checkbox") as HTMLInputElement;
+    warningsCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/showWarnings`] === undefined ? true : BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/showWarnings`] === true;
+    warningsCheckbox!.onclick = async (event: MouseEvent) =>
+    {
+        if (!event || !event.target) return;
+        const target = event.target as HTMLInputElement;
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/showWarnings`]: target.checked });
+    };
+
     // Toggles showing the unit vision settings context menu
     const unitContextMenuCheckbox = document.getElementById("toggle_unitcontextmenu") as HTMLInputElement;
     unitContextMenuCheckbox.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true;

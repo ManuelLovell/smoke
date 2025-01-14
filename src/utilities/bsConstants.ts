@@ -26,6 +26,7 @@ export class Constants
     static CONTEXTID = "com.battle-system.smoke-context";
     static GRIDID = "d9953ba1-f417-431c-8a39-3c3376e3caf0";
     static SPECTREBROADCASTID = "SPECTREBROADCAST";
+    static WARNINGCASTID = "SMOKEWARNINGCAST";
     static RESETPERSISTID = "RESETPERSISTID";
 
     static DEFAULTLINECOLOR = '#000000';
@@ -921,10 +922,10 @@ export class Constants
                     </td>
                 </tr>
                 <tr>
-                    <td colspan="2"><label for="snap_checkbox" id="tip_playerdoors">Players See Doors</label></td>
+                    <td colspan="2"><label for="door_checkbox" id="tip_playerdoors">Players See Doors</label></td>
                     <td><input type="checkbox" id="door_checkbox"></td>
-                    <td colspan="2">
-                    </td>
+                    <td colspan="2"><label for="warnings_checkbox" id="tip_hardwarewarnings">HW Warnings</label></td>
+                    <td><input type="checkbox" id="warnings_checkbox"></td>
                 </tr>
                 <tr>
                     <td colspan="3"><select class="settingsButton" id="preview_select"></select></td>
@@ -1101,6 +1102,8 @@ export class Constants
             <input type="checkbox" id="door_checkbox">
         </div>
         <div>
+            <label for="warnings_checkbox" id="tip_hardwarewarnings">HW Warnings</label>
+            <input type="checkbox" id="warnings_checkbox">
         </div>
     </div>
 
