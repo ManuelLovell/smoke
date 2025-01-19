@@ -855,7 +855,7 @@
                     <td colspan="2"><input type="button" id="import_button" value="Import" disabled></td>
                 </tr>
                 <tr>
-                    <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT/DDVTT Scene</option><option value="foundry">Foundry</option><option value="uvtt">Universal VTT</option></select></td>
+                    <td colspan="2" >Format</br><select id="import_format"><option value="scene">UVTT/DDVTT Scene</option><option value="foundry">Foundry JSON</option><option value="uvtt">Universal VTT</option></select></td>
                     <td colspan="2">Alignment</br><select id="map_align"><option selected>Loading..</option></select></td>
                 </tr>
                 <tr>
@@ -1061,7 +1061,7 @@
                 <label>Format</label>
                 <select id="import_format">
                     <option value="scene">UVTT/DDVTT Scene</option>
-                    <option value="foundry">Foundry</option>
+                    <option value="foundry">Foundry JSON</option>
                     <option value="uvtt">Universal VTT</option>
                 </select>
             </div>
