@@ -1,12 +1,15 @@
-import OBR, { Image, buildCurve, Vector2, buildImageUpload, buildSceneUpload, Curve, buildImage } from "@owlbear-rodeo/sdk";
+import OBR, { Image, buildCurve, buildImageUpload, buildSceneUpload, Curve, buildImage, Vector2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
-import simplify from "simplify-js";
+import * as Utilities from "./../utilities/bsUtilities";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetToolWidth } from "./visionToolUtilities";
+import { ImportLights } from "./importUVTT_Lights";
+import { ImportWalls } from "./importUVTT_Walls";
+import { ConvertDoorItem } from "./importUVTT_Doors";
 
-type ImportVector2 = Vector2 & { door: boolean };
-const CHUNK_SIZE = 25;
+export const CHUNK_SIZE = 25;
 
+/// Update the Map Selection input
 export function UpdateMaps()
 {
     const mapAlign = document.getElementById("map_align") as HTMLSelectElement;
@@ -44,16 +47,12 @@ export function UpdateMaps()
     }
 };
 
-export async function importFog(importType: string, importData: any, importDpi: number, importMapId: string, errorElement: HTMLDivElement) 
+/// Import Generic Fog
+export async function FogImportEntry(importType: string, importData: any, importDpi: number, importMapId: string) 
 {
-    // import_data is any because the structure depends on what we're importing from
-
-    errorElement.innerText = '';
-
     if (Number.isNaN(importDpi) || importDpi < 0)
     {
-        errorElement.innerText = 'Invalid DPI';
-        return;
+        return await OBR.notification.show("Invalid DPI", "ERROR");
     }
 
     let dpiRatio = BSCACHE.gridDpi / importDpi;
@@ -78,21 +77,20 @@ export async function importFog(importType: string, importData: any, importDpi: 
             offset[1] = importMap.position.y - (importMap.grid.offset.y * dpiRatio);
         } else
         {
-            errorElement.innerText = 'Unable to find map';
-            return;
+            return await OBR.notification.show("Unable to find map", "ERROR");
         }
     } else
     {
-        errorElement.innerText = 'No map selected';
-        return;
+        return await OBR.notification.show("No map selected", "ERROR");
     }
 
     if (importType === "foundry")
     {
-        importFoundry(importData, dpiRatio, offset, errorElement);
-    } else if (importType === "uvtt")
+        await ImportFoundry(importData, dpiRatio, offset);
+    }
+    else if (importType === "uvtt")
     {
-        importUVTT(importData, dpiRatio, offset, errorElement);
+        await ImportUVTT(importData, dpiRatio, offset);
     }
 }
 
@@ -131,48 +129,6 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
     return newItems;
 }
 
-function ConvertDoorItem(uvttDoors: UVTTPortal[]): Curve[]
-{
-    const newItems: Curve[] = [];
-    for (const uvttDoor of uvttDoors)
-    {
-        const newItemPaths = [];
-        for (const point of uvttDoor.bounds)
-        {
-            newItemPaths.push({ x: point.x * BSCACHE.gridDpi, y: point.y * BSCACHE.gridDpi });
-        }
-        const line = buildCurve()
-            .tension(0)
-            .points(newItemPaths)
-            .strokeColor(Constants.DOORCOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(GetToolWidth())
-            .fillOpacity(0)
-            .fillColor("#000000")
-            .layer(Constants.LINELAYER)
-            .name("Vision Line (Door)")
-            .closed(false)
-            .locked(true)
-            .visible(false)
-            .metadata({
-                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
-                [`${Constants.EXTENSIONID}/blocking`]: true,
-                [`${Constants.EXTENSIONID}/doubleSided`]: true,
-                [`${Constants.EXTENSIONID}/isDoor`]: true
-            })
-            .build();
-
-        if (!uvttDoor.closed)
-        {
-            line.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
-            line.metadata[`${Constants.EXTENSIONID}/doorOpen`] = true;
-        }
-
-        newItems.push(line);
-    }
-    return newItems;
-}
-
 export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElement)
 {
     // Create Walls
@@ -185,62 +141,19 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.line_of_sight));
     }
+    // Create Doors
     if (importData.portals?.length > 0)
     {
-        importedObjects = importedObjects.concat(ConvertDoorItem(importData.portals));
+        importedObjects = importedObjects.concat(ConvertDoorItem(importData.portals, BSCACHE.gridDpi, 1, [0, 0]));
+    }
+    // Create Lights
+    if (importData.lights?.length > 0)
+    {
+        importedObjects = importedObjects.concat(ImportLights(importData.lights, BSCACHE.gridDpi, 1, [0, 0]));
     }
 
     try 
     {
-        // Create Torches
-        if (importData.lights?.length > 0)
-        {
-            function translateIntensity(inputValue: number): string
-            {
-                if (!inputValue) return "0";
-                // First, normalize the input from the original scale
-                const originalMin = 1.0;
-                const originalMax = 5.0;
-                const targetMin = 2.0;
-                const targetMax = 0.1;
-
-                // Linear interpolation formula
-                const normalizedValue = (inputValue - originalMin) / (originalMax - originalMin);
-                const translatedValue = targetMin + (targetMax - targetMin) * (1 - normalizedValue);
-
-                return translatedValue.toString();
-            }
-
-            const newItems = [];
-            for (const light of importData.lights)
-            {
-                // Dropping as bite-size transparent PNGs because the light-sources
-                // are images baked into the map itself
-                const torch = buildImage(
-                    {
-                        height: 150,
-                        width: 150,
-                        url: "https://upload.wikimedia.org/wikipedia/commons/5/59/Empty.png",
-                        mime: "image/png",
-                    },
-                    { dpi: 300, offset: { x: 150, y: 150 } }
-                )
-                    .position({ x: light.position.x * BSCACHE.gridDpi, y: light.position.y * BSCACHE.gridDpi })
-                    .layer("PROP")
-                    .metadata({
-                        [`${Constants.EXTENSIONID}/hasVision`]: true,
-                        [`${Constants.EXTENSIONID}/isTorch`]: true,
-                        [`${Constants.EXTENSIONID}/visionFallOff`]: translateIntensity(light.intensity),
-                        [`${Constants.EXTENSIONID}/hiddenToken`]: true,
-                        [`${Constants.EXTENSIONID}/visionRange`]: light.range.toString(),
-                    })
-                    .name("Imported Light Source")
-                    .build();
-                newItems.push(torch);
-            }
-            importedObjects = importedObjects.concat(newItems);
-        }
-
         // Create Map
         const imageBinary = atob(importData.image);
         const uint8Array = new Uint8Array(imageBinary.length);
@@ -253,7 +166,7 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
         }
         const preBlob = new Blob([uint8Array], { type: 'image/png' });
 
-        const blob = imageSize > 60000000 ? await convertToWebP(preBlob, 0.8, true) : await convertToWebP(preBlob, 0.8);
+        const blob = imageSize > 60000000 ? await Utilities.ConvertToWebP(preBlob, 0.8, true) : await Utilities.ConvertToWebP(preBlob, 0.8);
         if (!blob) throw new Error("Unable to convert to WebP");
 
         const image = buildImageUpload(blob)
@@ -269,6 +182,7 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
             .items(importedObjects)
             .build();
         await OBR.assets.uploadScenes([scene], true);
+        await OBR.notification.show("Scene upload complete!", "SUCCESS");
     }
     catch (error: any)
     {
@@ -276,149 +190,123 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
     }
 }
 
-async function importWalls(walls: ImportVector2[][], importDpi: number, dpiRatio: number, offset: number[], errorElement: HTMLDivElement) 
+async function ImportUVTT(importData: any, dpiRatio: number, offset: number[]): Promise<void>
 {
-    let totalImported = 0, totalPoints = 0;
+    let importedObjects: any[] = [];
+    const importDpi = importData.resolution.pixels_per_grid;
+    const doors: UVTTPortal[] = [];
 
-    const lines = [];
-
-    for (let i = 0; i < walls.length; i++)
+    if (importData.resolution.map_origin !== undefined)
     {
-        let points: Vector2[] = [];
-        let door = false;
-
-        for (let j = 0; j < walls[i].length - 1; j++)
-        {
-            let sx = walls[i][j].x * importDpi, sy = walls[i][j].y * importDpi, ex = walls[i][j + 1].x * importDpi, ey = walls[i][j + 1].y * importDpi;
-            points.push({ x: sx * dpiRatio + offset[0], y: sy * dpiRatio + offset[1] });
-            points.push({ x: ex * dpiRatio + offset[0], y: ey * dpiRatio + offset[1] });
-            totalPoints++;
-
-            // if any part is a door, it's a door:
-            if (!door && walls[i][j].door)
-            {
-                door = true;
-            }
-        }
-
-        // Too many points on this line, Simplify to ease burden
-        if (points.length > 128)
-        {
-            const factor = 8;
-            points = simplify(points, factor, false);
-        }
-
-        const line = buildCurve()
-            .tension(0)
-            .points(points)
-            .strokeColor(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR)
-            .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
-            .strokeWidth(GetToolWidth())
-            .fillOpacity(0)
-            .fillColor("#000000")
-            .layer(Constants.LINELAYER)
-            .name("Vision Line (Import)")
-            .metadata({
-                [`${Constants.EXTENSIONID}/isVisionLine`]: true,
-                [`${Constants.EXTENSIONID}/blocking`]: true,
-                [`${Constants.EXTENSIONID}/doubleSided`]: true
-            })
-            .closed(false)
-            .visible(false)
-            .locked(true)
-            .build();
-
-        if (door)
-        {
-            line.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
-        }
-
-        lines.push(line);
+        offset[0] -= importData.resolution.map_origin.x * importDpi;
+        offset[1] -= importData.resolution.map_origin.y * importDpi;
     }
 
-    // Batch our add calls otherwise OBR is unhappy.
-
-    for (let i = 0; i < lines.length; i += CHUNK_SIZE)
+    // add doors as regular walls for now..
+    if (importData.portals?.length > 0)
     {
-        const chunkArray = lines.slice(i, i + CHUNK_SIZE);
+        for (let i = 0; i < importData.portals.length; i++)
+        {
+            const line: Vector2[] = importData.portals[i].bounds;
+
+            for (let j = 0; j < line.length - 1; j++)
+            {
+                doors.push(
+                    {
+                        position: { x: 0, y: 0 },
+                        bounds: [{ x: line[j].x, y: line[j].y },
+                        { x: line[j + 1].x, y: line[j + 1].y }],
+                        closed: true,
+                        freestanding: false,
+                        rotation: 0
+                    }
+                );
+            }
+
+        }
+    }
+
+    const walls: Vector2[][] = importData.line_of_sight.concat(importData.objects_line_of_sight);
+    // Create Walls
+    if (walls.length > 0)
+    {
+        importedObjects = importedObjects.concat(ImportWalls(walls, importDpi, dpiRatio, offset));
+    }
+    // Create Doors
+    if (doors.length > 0)
+    {
+        importedObjects = importedObjects.concat(ConvertDoorItem(doors, importDpi, dpiRatio, offset));
+    }
+    // Create Lights
+    if (importData.lights?.length > 0)
+    {
+        importedObjects = importedObjects.concat(ImportLights(importData.lights, importDpi, dpiRatio, offset));
+    }
+
+    await BatchUpload(importedObjects);
+}
+
+async function ImportFoundry(importData: FoundryUVTT, dpiRatio: number, offset: number[]): Promise<void>
+{
+    let importedObjects: any[] = [];
+    const walls: Vector2[][] = [];
+    const doors: UVTTPortal[] = [];
+
+    for (var i = 0; i < importData.walls.length; i++)
+    {
+        const line = importData.walls[i];
+        if (line.door === 0) // Not a door
+        {
+            walls.push([{
+                x: importData.walls[i].c[0], y: importData.walls[i].c[1]
+            },
+            {
+                x: importData.walls[i].c[2], y: importData.walls[i].c[3]
+            }]);
+        }
+        else
+        {
+            doors.push(
+                {
+                    position: { x: 0, y: 0 },
+                    bounds: [{ x: line.c[0], y: line.c[1] },
+                    { x: line.c[2], y: line.c[3] }],
+                    closed: true,
+                    freestanding: false,
+                    rotation: 0
+                }
+            );
+        }
+    }
+
+    // Create Walls
+    if (walls.length > 0)
+    {
+        importedObjects = importedObjects.concat(ImportWalls(walls, 1, dpiRatio, offset));
+    }
+    // Create Doors
+    if (doors.length > 0)
+    {
+        importedObjects = importedObjects.concat(ConvertDoorItem(doors, 1, dpiRatio, offset));
+    }
+    // Create Lights
+    if (importData.lights?.length > 0)
+    {
+        importedObjects = importedObjects.concat(ImportLights(importData.lights, 1, dpiRatio, offset));
+    }
+
+    await BatchUpload(importedObjects);
+};
+
+async function BatchUpload(dataObjects: any[]): Promise<string>
+{
+    //Batch our add calls otherwise OBR is unhappy.
+    for (let i = 0; i < dataObjects.length; i += CHUNK_SIZE)
+    {
+        const chunkArray = dataObjects.slice(i, i + CHUNK_SIZE);
 
         await OBR.scene.items.addItems(chunkArray);
     }
 
-    errorElement.innerText = 'Finished importing ' + totalImported + ' walls, ' + totalPoints + " points.";
-}
-
-function importUVTT(importData: any, dpiRatio: number, offset: number[], errorElement: HTMLDivElement)
-{
-    if (importData.resolution.map_origin !== undefined)
-    {
-        offset[0] -= importData.resolution.map_origin.x * importData.resolution.pixels_per_grid;
-        offset[1] -= importData.resolution.map_origin.y * importData.resolution.pixels_per_grid;
-    }
-
-    // add doors as regular walls for now..
-    if (importData.portals && importData.portals.length)
-    {
-        for (let i = 0; i < importData.portals.length; i++)
-        {
-            let door = importData.portals[i].bounds;
-            door[0].door = true;
-            door[1].door = true;
-            importData.line_of_sight.push(door);
-        }
-    }
-    const wallCluster = importData.line_of_sight.concat(importData.objects_line_of_sight);
-    importWalls(wallCluster, importData.resolution.pixels_per_grid, dpiRatio, offset, errorElement);
-}
-
-function importFoundry(importData: any, dpiRatio: number, offset: number[], errorElement: HTMLDivElement)
-{
-    if (!importData.walls || importData.walls.length === 0)
-    {
-        errorElement.innerText = 'No walls found';
-        return;
-    }
-
-    const walls: ImportVector2[][] = [];
-
-    for (var i = 0; i < importData.walls.length; i++)
-    {
-        walls.push([{
-            x: importData.walls[i].c[0], y: importData.walls[i].c[1],
-            door: importData.walls[i].door ? true : false
-        },
-        {
-            x: importData.walls[i].c[2], y: importData.walls[i].c[3],
-            door: importData.walls[i].door ? true : false
-        }])
-    }
-
-    importWalls(walls, 1, dpiRatio, offset, errorElement);
-};
-
-async function convertToWebP(blob: Blob, quality = 0.8, shrink = false): Promise<Blob | null>
-{
-    const img = await createImageBitmap(blob);
-    const canvas = document.createElement('canvas');
-
-    // If shrink is true, halve the dimensions
-    canvas.width = shrink ? Math.floor(img.width / 2) : img.width;
-    canvas.height = shrink ? Math.floor(img.height / 2) : img.height;
-
-    const ctx = canvas.getContext('2d')!;
-
-    // Draw the image, scaling it down if shrink is true
-    ctx.drawImage(
-        img,
-        0, 0, img.width, img.height,  // Source rectangle
-        0, 0, canvas.width, canvas.height  // Destination rectangle
-    );
-
-    return new Promise((resolve) =>
-    {
-        canvas.toBlob((webpBlob) =>
-        {
-            resolve(webpBlob);
-        }, 'image/webp', quality);
-    });
+    return await OBR.notification.show(`Finished importing '${dataObjects.length}' objects.`, "SUCCESS");
 }

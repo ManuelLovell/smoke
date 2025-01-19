@@ -3,7 +3,7 @@ import Coloris from "@melloware/coloris";
 import { SMOKEMAIN } from "./smokeMain";
 import { Constants } from "./utilities/bsConstants";
 import { isVisionLine } from "./utilities/itemFilters";
-import { importFog, ImportScene } from "./tools/importUVTT";
+import { FogImportEntry, ImportScene } from "./tools/importUVTT";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SMOKEMACHINE } from "./smokeProcessor";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
@@ -523,7 +523,7 @@ export function SetupGMInputHandlers(mobile = false)
         }
         else
         {
-            await importFog(importFormat.value, importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value, importErrors);
+            await FogImportEntry(importFormat.value, importObject, (dpiAutodetect.checked ? 0 : Number.parseInt(importDpi.value)), mapAlign.value);
         }
         await BSCACHE.ToggleBusy(false);
     };

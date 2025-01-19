@@ -26,14 +26,17 @@ interface UVTT
         ambient_light: string; // ambient lighting color code hex
     };
 
-    lights: Array<{
-        position: { x: number; y: number };
-        range: number;
-        intensity: number;
-        color: string; // light color code hex
-        shadows: boolean;
-    }>;
+    lights: UVTTLight[];
     image: string; // base64 encoded PNG or WEBP
+}
+
+interface UVTTLight
+{
+    position: { x: number; y: number };
+    range: number;
+    intensity: number;
+    color: string; // light color code hex
+    shadows: boolean;
 }
 
 interface UVTTPortal

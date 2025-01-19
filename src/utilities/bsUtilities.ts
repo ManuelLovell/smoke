@@ -4,6 +4,34 @@ import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
 import { Constants, PathCommands } from "./bsConstants";
 import simplify from "simplify-js";
 
+
+export async function ConvertToWebP(blob: Blob, quality = 0.8, shrink = false): Promise<Blob | null>
+{
+    const img = await createImageBitmap(blob);
+    const canvas = document.createElement('canvas');
+
+    // If shrink is true, halve the dimensions
+    canvas.width = shrink ? Math.floor(img.width / 2) : img.width;
+    canvas.height = shrink ? Math.floor(img.height / 2) : img.height;
+
+    const ctx = canvas.getContext('2d')!;
+
+    // Draw the image, scaling it down if shrink is true
+    ctx.drawImage(
+        img,
+        0, 0, img.width, img.height,  // Source rectangle
+        0, 0, canvas.width, canvas.height  // Destination rectangle
+    );
+
+    return new Promise((resolve) =>
+    {
+        canvas.toBlob((webpBlob) =>
+        {
+            resolve(webpBlob);
+        }, 'image/webp', quality);
+    });
+}
+
 export function GetPersistentLocalKey()
 {
     return `${Constants.EXTENSIONID}/Persistence/${BSCACHE.playerId}/${BSCACHE.sceneId}`;
