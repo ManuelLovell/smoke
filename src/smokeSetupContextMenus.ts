@@ -3,7 +3,7 @@ import { Constants } from "./utilities/bsConstants";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SPECTREMACHINE } from "./SpectreTwo";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from "./tools/visionToolUtilities";
-import { ConvertPathCommands } from "./utilities/bsUtilities";
+import { ConvertPathCommands, IsMetadataNumber } from './utilities/bsUtilities';
 import { TensionHelper } from "./obr/tensionhelper";
 
 export async function SetupContextMenus(): Promise<void>
@@ -278,14 +278,22 @@ export async function SetupContextMenus(): Promise<void>
                     else
                     {
                         item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
-                        if (item.metadata[`${Constants.EXTENSIONID}/visionRange`] === undefined)
+                        const keysWithDefaults = [
+                            { key: "visionRange", defaultFn: GetVisionRangeDefault },
+                            { key: "visionSourceRange", defaultFn: GetSourceRangeDefault },
+                            { key: "visionFallOff", defaultFn: GetFalloffRangeDefault },
+                            { key: "visionInAngle", defaultFn: GetInnerAngleDefault },
+                            { key: "visionOutAngle", defaultFn: GetOuterAngleDefault },
+                            { key: "visionDark", defaultFn: GetDarkvisionDefault }
+                        ];
+
+                        for (const { key, defaultFn } of keysWithDefaults)
                         {
-                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = GetVisionRangeDefault(); // Vision Attenuation - Outer Circle
-                            item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = GetSourceRangeDefault(); // Inner Circle
-                            item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = GetFalloffRangeDefault(); // Fall off at end of vision
-                            item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = GetInnerAngleDefault(); // Set an inner cone for vision
-                            item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = GetOuterAngleDefault(); // Set an outer cone for vision
-                            item.metadata[`${Constants.EXTENSIONID}/visionDark`] = GetDarkvisionDefault(); // Set an outer cone for vision
+                            const fullKey = `${Constants.EXTENSIONID}/${key}`;
+                            if (!IsMetadataNumber(item.metadata, fullKey))
+                            {
+                                item.metadata[fullKey] = defaultFn();
+                            }
                         }
                     }
                 }

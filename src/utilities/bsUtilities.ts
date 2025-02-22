@@ -1,9 +1,22 @@
-import OBR, { Theme, Image, Vector2, Curve, Wall, Player } from "@owlbear-rodeo/sdk";
+import OBR, { Theme, Image, Vector2, Curve, Wall, Player, Metadata } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "./bsSceneCache";
 import { Vector3 } from "@owlbear-rodeo/sdk/lib/types/Vector3";
 import { Constants, PathCommands } from "./bsConstants";
 import simplify from "simplify-js";
 
+export function IsNumber(value: string): boolean
+{
+    return !isNaN(Number(value)) && value.trim() !== "";
+}
+
+export function IsMetadataNumber(metadata: Metadata, key: string): boolean
+{
+    if (!metadata || !key) return false // No key or data? Bad.
+    const mdValue = metadata[key];
+    if (!mdValue || typeof mdValue !== "string") return false; // No value or not a string? Bad.
+
+    return !isNaN(Number(mdValue)) && mdValue.trim() !== "";
+}
 
 export async function ConvertToWebP(blob: Blob, quality = 0.8, shrink = false): Promise<Blob | null>
 {
