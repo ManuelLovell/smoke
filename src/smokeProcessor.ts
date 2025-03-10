@@ -620,17 +620,18 @@ class SmokeProcessor
             for (const mapping of elevationMappings)
             {
                 const withinMap = Utilities.isPointInPolygon(sceneToken.position, mapping.Points);
-
-                const customValue = sceneToken.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string;
-                if (customValue)
-                {
-                    sceneTokenDepth = parseInt(customValue);
-                }
-                else if (withinMap && (mapping.Depth > sceneTokenDepth))
+                if (withinMap && (mapping.Depth > sceneTokenDepth))
                 {
                     sceneTokenDepth = mapping.Depth;
                 }
             }
+            
+            const customValue = sceneToken.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string;
+            if (customValue)
+            {
+                sceneTokenDepth = parseInt(customValue);
+            }
+
             const existingLight = BSCACHE.sceneLocal.find(x => x.attachedTo === sceneToken.id && x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true) as Light;
             if (!existingLight)
             {
@@ -868,16 +869,17 @@ class SmokeProcessor
                 {
                     const truePosition = { x: visionLine.points[0].x + visionLine.position.x, y: visionLine.points[0].y + visionLine.position.y };
                     const withinMap = Utilities.isPointInPolygon(truePosition, mapping.Points);
-                    const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
 
-                    if (customValue)
-                    {
-                        visionLineDepth = parseInt(customValue);
-                    }
-                    else if (withinMap && (mapping.Depth > visionLineDepth))
+                    if (withinMap && (mapping.Depth > visionLineDepth))
                     {
                         visionLineDepth = mapping.Depth;
                     }
+                }
+                
+                const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
+                if (customValue)
+                {
+                    visionLineDepth = parseInt(customValue);
                 }
 
                 const existingLine = BSCACHE.sceneLocal.find(x => x.attachedTo === visionLine.id && x.metadata[`${Constants.EXTENSIONID}/isVisionWall`] === true) as Wall;
