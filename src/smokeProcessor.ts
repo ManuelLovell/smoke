@@ -960,6 +960,7 @@ class SmokeProcessor
                         line.visible = mine.visible;
                         line.doubleSided = mine.doubleSided;
                         line.zIndex = mine.zIndex;
+                        line.metadata[`${Constants.EXTENSIONID}/isWindow`] = mine.window;
                     }
                 }
             });
@@ -1205,6 +1206,7 @@ class SmokeProcessor
             scale: sceneLine.scale,
             blocking: blockWall,
             visible: !sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === true,
+            window: sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`],
             doubleSided: sceneLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true,
             zIndex: this.GetDepth(depth, true)
         };
