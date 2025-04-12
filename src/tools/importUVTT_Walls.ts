@@ -13,7 +13,7 @@ export function ImportWalls(walls: Vector2[][], importDpi: number, dpiRatio: num
         let points: Vector2[] = [];
         let door = false;
 
-        for (let j = 0; j < walls[i].length - 1; j++)
+        for (let j = 0; j < walls[i]?.length - 1; j++)
         {
             const sx = walls[i][j].x * importDpi, sy = walls[i][j].y * importDpi;
             const ex = walls[i][j + 1].x * importDpi, ey = walls[i][j + 1].y * importDpi;
