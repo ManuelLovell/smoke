@@ -4,6 +4,7 @@ import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetToolWidth } from "./visionToolUtilities";
 import { HexagonHelper } from './visionBrushHexagonHelper';
 import { IsometricHelper } from "./visionBrushIsometricHelper";
+import * as Utilities from "../utilities/bsUtilities";
 
 interface PointLine
 {
@@ -63,6 +64,7 @@ export class BrushLineGenerator
         {
             const batch = linesToDraw.slice(i, i + batchSize);
             await OBR.scene.items.addItems(batch);
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
     }
 
@@ -92,6 +94,7 @@ export class BrushLineGenerator
         {
             const batch = linesToDraw.slice(i, i + batchSize);
             await OBR.scene.items.addItems(batch);
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
     }
 
@@ -149,6 +152,7 @@ export class BrushLineGenerator
         {
             const batch = linesToDraw.slice(i, i + batchSize);
             await OBR.scene.items.addItems(batch);
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
     }
 

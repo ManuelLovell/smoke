@@ -6,6 +6,7 @@ import { isVisionLine } from "./utilities/itemFilters";
 import { FogImportEntry, ImportScene } from "./tools/importUVTT";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { SMOKEMACHINE } from "./smokeProcessor";
+import * as Utilities from "./utilities/bsUtilities";
 import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 
 export function SetupGMInputHandlers(mobile = false)
@@ -234,6 +235,7 @@ export function SetupGMInputHandlers(mobile = false)
                     path.locked = false;
                 }
             });
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
         BSCACHE.ToggleBusy(false);
     };
@@ -255,6 +257,7 @@ export function SetupGMInputHandlers(mobile = false)
                     path.locked = true;
                 }
             });
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
         await BSCACHE.ToggleBusy(false);
     };
@@ -278,6 +281,7 @@ export function SetupGMInputHandlers(mobile = false)
                     path.metadata[`${Constants.EXTENSIONID}/doubleSided`] = true;
                 }
             });
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
         BSCACHE.ToggleBusy(false);
     };
@@ -302,6 +306,7 @@ export function SetupGMInputHandlers(mobile = false)
                     path.metadata[`${Constants.EXTENSIONID}/blocking`] = undefined;
                 }
             });
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
         BSCACHE.ToggleBusy(false);
     };
@@ -323,6 +328,7 @@ export function SetupGMInputHandlers(mobile = false)
                     path.metadata[`${Constants.EXTENSIONID}/blocking`] = true;
                 }
             });
+            await Utilities.Sleep(Constants.SHORTDELAY);
         }
         await BSCACHE.ToggleBusy(false);
     };

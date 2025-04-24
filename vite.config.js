@@ -15,6 +15,7 @@ export default {
         wallcontextembed: path.resolve(__dirname, 'pages/wallcontextembed.html'),
         mapcontextembed: path.resolve(__dirname, 'pages/mapcontextembed.html'),
         notice: path.resolve(__dirname, "src/notice/notice.html"),
+        progressbar: path.resolve(__dirname, "pages/progressbar.html")
       }
     }
   },

@@ -300,13 +300,33 @@ async function ImportFoundry(importData: FoundryUVTT, dpiRatio: number, offset: 
 
 async function BatchUpload(dataObjects: any[]): Promise<string>
 {
+    //Create Tooltip
+    await OBR.modal.open({
+        id: Constants.PROGRESSBAR,
+        url: '/pages/progressbar.html',
+        height: 400,
+        width: 500,
+        disablePointerEvents: false,
+        hidePaper: true,
+
+    });
+    await Utilities.Sleep(Constants.DELAY);
+
     //Batch our add calls otherwise OBR is unhappy.
     for (let i = 0; i < dataObjects.length; i += CHUNK_SIZE)
     {
         const chunkArray = dataObjects.slice(i, i + CHUNK_SIZE);
 
         await OBR.scene.items.addItems(chunkArray);
+        await Utilities.Sleep(Constants.DELAY);
+
+        const processed = Math.min(i + chunkArray.length, dataObjects.length);
+        const progressData: ProgressData = { current: processed, total: dataObjects.length, complete: false };
+
+        await OBR.broadcast.sendMessage(Constants.PROGRESSBAR, progressData, { destination: "LOCAL" });
     }
 
+    const completeData: ProgressData = { current: 100, total: 100, complete: true };
+    await OBR.broadcast.sendMessage(Constants.PROGRESSBAR, completeData, { destination: "LOCAL" });
     return await OBR.notification.show(`Finished importing '${dataObjects.length}' objects.`, "SUCCESS");
 }

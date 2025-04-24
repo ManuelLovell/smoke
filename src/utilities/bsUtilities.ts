@@ -9,6 +9,10 @@ export function IsNumber(value: string): boolean
     return !isNaN(Number(value)) && value.trim() !== "";
 }
 
+export function Sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export function IsMetadataNumber(metadata: Metadata, key: string): boolean
 {
     if (!metadata || !key) return false // No key or data? Bad.
