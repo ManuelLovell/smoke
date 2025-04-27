@@ -59,7 +59,6 @@ class BSCache
     snap: boolean;
     torchActive: boolean;
 
-    busy: boolean;
     USER_REGISTERED: boolean;
 
     toolStarted: boolean;
@@ -106,7 +105,6 @@ class BSCache
         this.theme = {} as any;
         this.roomMetadata = {};
         this.snap = false;
-        this.busy = false;
         this.torchActive = false;
         this.toolStarted = false;
         this.expectedFogMapId = "";
@@ -777,7 +775,6 @@ class BSCache
         else
         {
             await OBR.action.setBadgeText(on ? "⏱️" : undefined);
-            BSCACHE.busy = on;
         }
     }
 

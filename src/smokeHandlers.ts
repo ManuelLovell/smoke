@@ -1,4 +1,4 @@
-import OBR from "@owlbear-rodeo/sdk";
+import OBR, { buildShape } from "@owlbear-rodeo/sdk";
 import Coloris from "@melloware/coloris";
 import { SMOKEMAIN } from "./smokeMain";
 import { Constants } from "./utilities/bsConstants";
@@ -541,11 +541,10 @@ export function SetupGMInputHandlers(mobile = false)
     let debouncer: ReturnType<typeof setTimeout>;
 
     const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
-    playerPreviewSelect!.onchange = async (event) =>
+    playerPreviewSelect!.onchange = async () =>
     {
-        const target = event.currentTarget as HTMLSelectElement;
-        await BSCACHE.ToggleBusy(false);
         await SMOKEMACHINE.Run();
+        await BSCACHE.ToggleBusy(false);
     };
 
     // Tool Option Handling - Tool Color

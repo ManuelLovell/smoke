@@ -6,7 +6,6 @@ import { Constants } from "./utilities/bsConstants";
 import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ApplyEnhancedFog } from "./smokeEnhancedFog";
 import { VisibilityChecker } from "./smokeVisibilityChecker";
-import Metadata from '@owlbear-rodeo/sdk';
 
 class SmokeProcessor
 {
@@ -575,16 +574,30 @@ class SmokeProcessor
         if (BSCACHE.playerRole === "GM")
         {
             const playerPreviewSelect = document.getElementById("preview_select") as HTMLSelectElement;
-            if (playerPreviewSelect && playerPreviewSelect?.value !== BSCACHE.playerId)
+            if (playerPreviewSelect && playerPreviewSelect.value !== BSCACHE.playerId)
             {
                 // We're running as someone else
-                sceneVisionTokens = BSCACHE.sceneItems.filter(item => (item.layer === "CHARACTER" || item.layer === "MOUNT" || item.layer === "ATTACHMENT" || item.layer === "PROP")
-                    && item.createdUserId === playerPreviewSelect.value && item.metadata[`${Constants.EXTENSIONID}/hasVision`])
+                const tokensWithVision = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+                const myTokensWithVision: Item[] = [];
+                const gmTokenWithVision: Item[] = [];
+                for (const token of tokensWithVision)
+                {
+                    if (token.createdUserId === playerPreviewSelect.value)
+                        myTokensWithVision.push(token);
+                    else
+                    {
+                        const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+                        if (owner?.role === "GM")
+                            gmTokenWithVision.push(token);
+                    }
+                }
+                sceneVisionTokens = [...myTokensWithVision, ...gmTokenWithVision];
             }
             else
             {
                 sceneVisionTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
             }
+            console.log(sceneVisionTokens)
         }
         else
         {
@@ -625,7 +638,7 @@ class SmokeProcessor
                     sceneTokenDepth = mapping.Depth;
                 }
             }
-            
+
             const customValue = sceneToken.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string;
             if (customValue)
             {
@@ -767,12 +780,12 @@ class SmokeProcessor
         }
 
         // Add, Update and Delete
+        if (this.lightsToDelete.length > 0)
+            await OBR.scene.local.deleteItems(this.lightsToDelete);
         if (this.lightsToCreate.length > 0)
         {
             await OBR.scene.local.addItems(this.lightsToCreate);
         }
-        if (this.lightsToDelete.length > 0)
-            await OBR.scene.local.deleteItems(this.lightsToDelete);
         if (this.lightsToUpdate.length > 0)
             await OBR.scene.local.updateItems(localVisionLights.filter(x => !this.lightsToDelete.includes(x.id)), (lights) =>
             {
@@ -875,7 +888,7 @@ class SmokeProcessor
                         visionLineDepth = mapping.Depth;
                     }
                 }
-                
+
                 const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
                 if (customValue)
                 {
