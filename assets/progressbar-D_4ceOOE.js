@@ -1,1 +1,0 @@
-import{O as e,C as n}from"./bsConstants-CCWwgXpm.js";e.onReady(()=>{const o=document.getElementById("progressFill"),a=document.getElementById("progressText");o.style.width="0%",e.broadcast.onMessage(n.PROGRESSBAR,async l=>{const t=l.data,s=Math.min(100,Math.floor(t.current/t.total*100));a.textContent=`${s}%`,o.style.width=s+"%",t.complete&&await e.modal.close(n.PROGRESSBAR)})});
