@@ -12,8 +12,8 @@ export enum PathCommands
 
 export class Constants
 {
-    static DELAY = 300; // Half a second
-    static SHORTDELAY = 100;
+    static DELAY = 500; // Half a second
+    static SHORTDELAY = 300;
     static EXTENSIONID = "com.battle-system.smoke";
     static EXTENSIONNOTICE = "com.battle-system.smoke-notice";
     static PROGRESSBAR = "com.battle-system.smoke-progress";
