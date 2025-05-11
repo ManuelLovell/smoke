@@ -131,22 +131,26 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
 
 export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElement)
 {
+    await ShowProgressBar();
     // Create Walls
     let importedObjects: any[] = [];
     if (importData.objects_line_of_sight?.length > 0)
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.objects_line_of_sight));
     }
+    await ProgressTheBar(10);
     if (importData.line_of_sight?.length > 0)
     {
         importedObjects = importedObjects.concat(ConvertLineOfSightItem(importData.line_of_sight));
     }
     // Create Doors
+    await ProgressTheBar(20);
     if (importData.portals?.length > 0)
     {
         importedObjects = importedObjects.concat(ConvertDoorItem(importData.portals, BSCACHE.gridDpi, 1, [0, 0]));
     }
     // Create Lights
+    await ProgressTheBar(30);
     if (importData.lights?.length > 0)
     {
         importedObjects = importedObjects.concat(ImportLights(importData.lights, BSCACHE.gridDpi, 1, [0, 0]));
@@ -155,10 +159,11 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
     try 
     {
         // Create Map
+        await ProgressTheBar(40);
         const imageBinary = atob(importData.image);
         const uint8Array = new Uint8Array(imageBinary.length);
-        const imageResolution = importData.resolution.map_size.x * importData.resolution.map_size.y;
-        const imageSize = imageResolution * Math.pow(importData.resolution.pixels_per_grid, 2);
+        const calculatedWidth = importData.resolution.map_size.x * importData.resolution.pixels_per_grid;
+        const calculatedHeight = importData.resolution.map_size.y * importData.resolution.pixels_per_grid;
 
         for (let i = 0; i < imageBinary.length; i++)
         {
@@ -166,14 +171,14 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
         }
         const preBlob = new Blob([uint8Array], { type: 'image/png' });
 
-        const blob = imageSize > 60000000 ? await Utilities.ConvertToWebP(preBlob, 0.8, true) : await Utilities.ConvertToWebP(preBlob, 0.8);
+        const blob = await Utilities.ConvertToWebP(preBlob, 0.8, calculatedWidth, calculatedHeight);
         if (!blob) throw new Error("Unable to convert to WebP");
+        await ProgressTheBar(60);
 
         const image = buildImageUpload(blob)
-            .grid({ dpi: importData.resolution.pixels_per_grid, offset: { x: 0, y: 0 } })
+            .dpi(importData.resolution.pixels_per_grid)
+            .scale({ x: 1, y: 1 })
             .build();
-
-        if (imageSize > 60000000) image.scale = { x: 2, y: 2 };
 
         const scene = buildSceneUpload()
             .baseMap(image)
@@ -181,8 +186,9 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
             .name("New UVTT Scene")
             .items(importedObjects)
             .build();
+        await ProgressTheBar(80);
         await OBR.assets.uploadScenes([scene], true);
-        await OBR.notification.show("Scene upload complete!", "SUCCESS");
+        await ProgressTheBar(100, "Scene upload complete!");
     }
     catch (error: any)
     {
@@ -329,4 +335,30 @@ async function BatchUpload(dataObjects: any[]): Promise<string>
     const completeData: ProgressData = { current: 100, total: 100, complete: true };
     await OBR.broadcast.sendMessage(Constants.PROGRESSBAR, completeData, { destination: "LOCAL" });
     return await OBR.notification.show(`Finished importing '${dataObjects.length}' objects.`, "SUCCESS");
+}
+
+async function ShowProgressBar(): Promise<void>
+{
+    //Create Tooltip
+    await OBR.modal.open({
+        id: Constants.PROGRESSBAR,
+        url: '/pages/progressbar.html',
+        height: 400,
+        width: 500,
+        disablePointerEvents: false,
+        hidePaper: true,
+
+    });
+    await Utilities.Sleep(Constants.DELAY);
+}
+
+async function ProgressTheBar(int: number, message = "Done!"): Promise<void>
+{
+    const progress: ProgressData = { current: int, total: 100, complete: false };
+    if (int === 100)
+    {
+        progress.complete = true;
+        await OBR.notification.show(`${message}`, "SUCCESS");
+    }
+    await OBR.broadcast.sendMessage(Constants.PROGRESSBAR, progress, { destination: "LOCAL" });
 }

@@ -597,7 +597,6 @@ class SmokeProcessor
             {
                 sceneVisionTokens = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
             }
-            console.log(sceneVisionTokens)
         }
         else
         {

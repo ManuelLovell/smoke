@@ -809,9 +809,7 @@ class BSCache
             if (data.Data === "OK")
             {
                 this.USER_REGISTERED = true;
-                console.log("Connected");
             }
-            else console.log("Not Registered");
         }
         catch (error)
         {

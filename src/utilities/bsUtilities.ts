@@ -22,22 +22,18 @@ export function IsMetadataNumber(metadata: Metadata, key: string): boolean
     return !isNaN(Number(mdValue)) && mdValue.trim() !== "";
 }
 
-export async function ConvertToWebP(blob: Blob, quality = 0.8, shrink = false): Promise<Blob | null>
+export async function ConvertToWebP(blob: Blob, quality = 0.8, endWidth: number, endHeight: number): Promise<Blob | null>
 {
     const img = await createImageBitmap(blob);
     const canvas = document.createElement('canvas');
 
-    // If shrink is true, halve the dimensions
-    canvas.width = shrink ? Math.floor(img.width / 2) : img.width;
-    canvas.height = shrink ? Math.floor(img.height / 2) : img.height;
-
     const ctx = canvas.getContext('2d')!;
-
-    // Draw the image, scaling it down if shrink is true
+    canvas.width = endWidth;
+    canvas.height = endHeight;
     ctx.drawImage(
         img,
         0, 0, img.width, img.height,  // Source rectangle
-        0, 0, canvas.width, canvas.height  // Destination rectangle
+        0, 0, endWidth, endHeight  // Destination rectangle
     );
 
     return new Promise((resolve) =>
