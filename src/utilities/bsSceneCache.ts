@@ -749,7 +749,7 @@ class BSCache
             await SMOKEMACHINE.UpdateTrailingFogColor(fog.style.color);
         }
 
-        await SMOKEMACHINE.Run(true);
+        await SMOKEMACHINE.Run();
     }
 
     public async OnRoomMetadataChange(_metadata: Metadata)

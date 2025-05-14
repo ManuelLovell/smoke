@@ -103,10 +103,8 @@ class SmokeProcessor
         this.trailingFoggedMaps = [];
     }
 
-    public async Run(override = false)
+    public async Run()
     {
-        if (!BSCACHE.fogFilled && override === false) return;
-
         await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
         await this.UpdateWalls();
         await this.UpdateDoors();

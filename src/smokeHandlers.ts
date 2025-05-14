@@ -212,7 +212,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/passWallsGM`]: target.checked });
-        if (!BSCACHE.fogFilled) await SMOKEMACHINE.Run(true);
+        if (!BSCACHE.fogFilled) await SMOKEMACHINE.Run();
     };
 
     // Toggles the locked/unlocked state of all lines
