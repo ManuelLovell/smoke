@@ -339,7 +339,7 @@ export class SmokeMain
     public async InitializeScene()
     {
         await SMOKEMACHINE.Initialize();
-        await SMOKEMACHINE.Run(true);
+        await SMOKEMACHINE.Run();
         await SPECTREMACHINE.Run();
     }
 
