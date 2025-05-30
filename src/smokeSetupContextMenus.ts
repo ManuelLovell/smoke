@@ -891,37 +891,40 @@ export async function SetupContextMenus(): Promise<void>
                 (item) => item.metadata[`${Constants.SPECTREID}/isSpectre`] === true
             );
 
-            await OBR.scene.items.updateItems(context.items, items =>
+            if (spectre)
             {
-                for (const item of items)
+                // Removing spectres
+                const parentTokensIds = context.items.map(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] as string);
+                await OBR.scene.items.updateItems(parentTokensIds, items =>
                 {
-                    if (spectre)
+                    for (const item of items)
                     {
                         delete item.metadata[`${Constants.SPECTREID}/isSpectre`];
                         delete item.metadata[`${Constants.SPECTREID}/spectreViewers`];
                         item.visible = true;
                     }
-                    else
+                });
+                for (const ghost of parentTokensIds)
+                {
+                    SPECTREMACHINE.RemoveGhostSelect(ghost);
+                }
+                await OBR.scene.local.deleteItems(context.items.map(x => x.id));
+            }
+            else
+            {
+                // creating spectres
+                await OBR.scene.items.updateItems(context.items.map(x => x.id), items =>
+                {
+                    for (const item of items)
                     {
                         item.metadata[`${Constants.SPECTREID}/isSpectre`] = true;
                         item.metadata[`${Constants.SPECTREID}/spectreViewers`] = [BSCACHE.playerId];
                         item.visible = false;
                     }
-                }
-            });
-
-            if (!spectre)
-            {
+                });
                 for (const ghost of context.items)
                 {
                     await SPECTREMACHINE.SetupGhostSelect(ghost as Image);
-                }
-            }
-            else
-            {
-                for (const ghost of context.items)
-                {
-                    SPECTREMACHINE.RemoveGhostSelect(ghost.id);
                 }
             }
         }

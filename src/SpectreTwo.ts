@@ -117,7 +117,10 @@ class Spectre
             .text(token.text)
             .rotation(token.rotation)
             .layer(token.layer)
-            .metadata({ [`${Constants.SPECTREID}/isLocalSpectre`]: token.id })
+            .metadata({
+                [`${Constants.SPECTREID}/isLocalSpectre`]: token.id,
+                [`${Constants.SPECTREID}/isSpectre`]: true
+            })
             .disableHit(false)
             .build();
         if (BSCACHE.playerRole === "GM")
