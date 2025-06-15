@@ -192,7 +192,7 @@ export async function ImportScene(importData: UVTT, _errorElement: HTMLDivElemen
     }
     catch (error: any)
     {
-        await OBR.notification.show("There was an error: " + error.error.message, "ERROR");
+        await OBR.notification.show("There was an error: " + error.message, "ERROR");
     }
 }
 
