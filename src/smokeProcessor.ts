@@ -621,20 +621,10 @@ class SmokeProcessor
             sceneVisionTokens = [];
         }
 
-        const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
         for (const sceneToken of sceneVisionTokens)
         {
-            let sceneTokenDepth = -10;
+            let sceneTokenDepth = this.VisibilityChecker.GetMappedDepth(sceneToken.position);
             const linkedParent = BSCACHE.sceneItems.find(x => x.id === sceneToken.metadata[`${Constants.EXTENSIONID}/linkedTo`]);
-
-            for (const mapping of elevationMappings)
-            {
-                const withinMap = Utilities.isPointInPolygon(sceneToken.position, mapping.Points);
-                if (withinMap && (mapping.Depth > sceneTokenDepth))
-                {
-                    sceneTokenDepth = mapping.Depth;
-                }
-            }
 
             const customValue = sceneToken.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string;
             if (customValue)
@@ -664,7 +654,7 @@ class SmokeProcessor
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionBlind`];
                 const equalDarkVision = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]
                     === existingLight.metadata[`${Constants.EXTENSIONID}/visionDark`];
-                const equalDepth = this.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
+                const equalDepth = this.VisibilityChecker.GetDepth(sceneTokenDepth, false) === existingLight.zIndex;
 
                 const existingDarkVision = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true && x.attachedTo === sceneToken.id);
                 if (!equalOuterRadius || !equalInnerRadius || !equalFalloff || !equalInnerAngle || !equalOuterAngle || !equalBlind || !equalDepth || !equalDarkVision)
@@ -856,7 +846,6 @@ class SmokeProcessor
 
     private async UpdateWalls()
     {
-        const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
         const wallPass = (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true && BSCACHE.playerRole === "GM");
 
         // Find all of the REAL fog lines to be recreated as local walls
@@ -874,17 +863,7 @@ class SmokeProcessor
             const viewers = visionLine.metadata[`${Constants.EXTENSIONID}/wallViewers`] as string[];
             if (!viewers || (viewers && viewers.length > 0 && viewers[0] === BSCACHE.playerId) || BSCACHE.playerRole === "GM")
             {
-                let visionLineDepth = -10;
-                for (const mapping of elevationMappings)
-                {
-                    const truePosition = { x: visionLine.points[0].x + visionLine.position.x, y: visionLine.points[0].y + visionLine.position.y };
-                    const withinMap = Utilities.isPointInPolygon(truePosition, mapping.Points);
-
-                    if (withinMap && (mapping.Depth > visionLineDepth))
-                    {
-                        visionLineDepth = mapping.Depth;
-                    }
-                }
+                let visionLineDepth = this.VisibilityChecker.GetMappedDepth({ x: visionLine.points[0].x + visionLine.position.x, y: visionLine.points[0].y + visionLine.position.y });
 
                 const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
                 if (customValue)
@@ -905,7 +884,7 @@ class SmokeProcessor
                     const equalScale = (visionLine.scale.x === existingLine.scale.x && visionLine.scale.y === existingLine.scale.y);
                     const equalPosition = (visionLine.position.x === existingLine.position.x && visionLine.position.y === existingLine.position.y);
                     const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
-                    const equalDepth = this.GetDepth(visionLineDepth, true) === existingLine.zIndex;
+                    const equalDepth = this.VisibilityChecker.GetDepth(visionLineDepth, true) === existingLine.zIndex;
                     const equalWindow = visionLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === existingLine.metadata[`${Constants.EXTENSIONID}/isWindow`];
 
                     let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
@@ -1034,7 +1013,7 @@ class SmokeProcessor
             .doubleSided(doubleSide)
             .visible(!window)
             .disableAttachmentBehavior(["VISIBLE"])
-            .zIndex(this.GetDepth(depth, true))
+            .zIndex(this.VisibilityChecker.GetDepth(depth, true))
             .metadata({ [`${Constants.EXTENSIONID}/isVisionWall`]: true })
             .build();
 
@@ -1061,7 +1040,7 @@ class SmokeProcessor
             .falloff(parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
             .innerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
             .outerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
-            .zIndex(this.GetDepth(depth, false))
+            .zIndex(this.VisibilityChecker.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isPersistentLight`]: token.id,
                 [`${Constants.EXTENSIONID}/getPersistentLight`]: true
@@ -1107,7 +1086,7 @@ class SmokeProcessor
             .falloff(parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
             .innerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()))
             .outerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
-            .zIndex(this.GetDepth(depth, false))
+            .zIndex(this.VisibilityChecker.GetDepth(depth, false))
             .metadata({
                 [`${Constants.EXTENSIONID}/isVisionLight`]: true,
                 [`${Constants.EXTENSIONID}/visionDark`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`],
@@ -1218,7 +1197,7 @@ class SmokeProcessor
             visible: !sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === true,
             window: sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`],
             doubleSided: sceneLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true,
-            zIndex: this.GetDepth(depth, true)
+            zIndex: this.VisibilityChecker.GetDepth(depth, true)
         };
         this.wallsToUpdate.push(update);
     }
@@ -1243,7 +1222,7 @@ class SmokeProcessor
             innerAngle: parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`] as string ?? GetInnerAngleDefault()),
             outerAngle: parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()),
             blind: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true,
-            zIndex: this.GetDepth(depth, false)
+            zIndex: this.VisibilityChecker.GetDepth(depth, false)
         };
         this.lightsToUpdate.push(update);
         if (lightType === "PRIMARY")
@@ -1257,60 +1236,6 @@ class SmokeProcessor
         const numDistance = asFloat ? parseFloat(distance) : parseInt(distance);
         const tileDistance = numDistance / BSCACHE.gridScale;
         return tileDistance * BSCACHE.gridDpi;
-    }
-
-    private GetDepth(value: number, wall: boolean)
-    {
-        // -10 is base level.
-        if (value === -10)
-        {
-            const customDefault = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
-            if (typeof customDefault === "string") value = parseInt(customDefault);
-        }
-
-        const elevationComplex = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
-        if (elevationComplex === true)
-        {
-            // Elevation Complex keeps the Walls consistent on levels 0-6.
-            switch (value)
-            {
-                case 1:
-                    return -5;
-                case 2:
-                    return -6;
-                case 3:
-                    return -7;
-                case 4:
-                    return -8;
-                case 5:
-                    return -9;
-                case 6:
-                    return -10;
-                default:
-                    return -1;
-            }
-        }
-        else
-        {
-            // Elevation Simple let's a token see over a wall on levels above 0.
-            switch (value)
-            {
-                case 1:
-                    return !wall ? -5 : -4;
-                case 2:
-                    return !wall ? -6 : -5;
-                case 3:
-                    return !wall ? -7 : -6;
-                case 4:
-                    return !wall ? -8 : -7;
-                case 5:
-                    return !wall ? -9 : -8;
-                case 6:
-                    return !wall ? -10 : -9;
-                default:
-                    return -1;
-            }
-        }
     }
 
     // We will only create a new persistent light if it's roughly a square away

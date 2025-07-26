@@ -1,5 +1,7 @@
 import OBR, { Item, Light, Vector2, Wall } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
+import * as Utilities from "./utilities/bsUtilities";
+import { BSCACHE } from "./utilities/bsSceneCache";
 
 export class VisibilityChecker
 {
@@ -120,13 +122,24 @@ export class VisibilityChecker
     }
 
     // Check if line of sight is blocked by any wall segment
-    private isLineOfSightBlocked(observer: Vector2, target: Vector2): boolean
+    private isLineOfSightBlocked(player: Light, enemy: Item): boolean
     {
         // Early exit for performance - check if any segment could possibly intersect
-        const minX = Math.min(observer.x, target.x);
-        const maxX = Math.max(observer.x, target.x);
-        const minY = Math.min(observer.y, target.y);
-        const maxY = Math.max(observer.y, target.y);
+        const minX = Math.min(player.position.x, enemy.position.x);
+        const maxX = Math.max(player.position.x, enemy.position.x);
+        const minY = Math.min(player.position.y, enemy.position.y);
+        const maxY = Math.max(player.position.y, enemy.position.y);
+
+        const enemyDepth = this.GetDepth(this.GetMappedDepth(enemy.position), false);
+        console.log(`Enemy ${enemy.id} depth: ${enemyDepth}`);
+        const playerDepth = player.zIndex;
+        console.log(`Player ${player.id} depth: ${playerDepth}`);
+
+        if (enemyDepth >= playerDepth)
+        {
+            // Player can see enemy without obstruction
+            return false;
+        }
 
         for (const segment of this.cachedWallSegments)
         {
@@ -139,12 +152,116 @@ export class VisibilityChecker
                 continue;
             }
 
-            if (this.lineIntersects(observer, target, segment.start, segment.end))
+            if (this.lineIntersects(player.position, enemy.position, segment.start, segment.end))
             {
                 return true;
             }
         }
         return false;
+    }
+
+    public GetDepth(value: number, wall: boolean)
+    {
+        // -10 is base level.
+        if (value === -10)
+        {
+            const customDefault = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/defaultElevation`];
+            if (typeof customDefault === "string") value = parseInt(customDefault);
+        }
+
+        const elevationComplex = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
+        if (elevationComplex === true)
+        {
+            // Elevation Complex keeps the Walls consistent on levels 0-6.
+            switch (value)
+            {
+                case 1:
+                    return -5;
+                case 2:
+                    return -6;
+                case 3:
+                    return -7;
+                case 4:
+                    return -8;
+                case 5:
+                    return -9;
+                case 6:
+                    return -10;
+                default:
+                    return -1;
+            }
+        }
+        else
+        {
+            // Elevation Simple let's a token see over a wall on levels above 0.
+            switch (value)
+            {
+                case 1:
+                    return !wall ? -5 : -4;
+                case 2:
+                    return !wall ? -6 : -5;
+                case 3:
+                    return !wall ? -7 : -6;
+                case 4:
+                    return !wall ? -8 : -7;
+                case 5:
+                    return !wall ? -9 : -8;
+                case 6:
+                    return !wall ? -10 : -9;
+                default:
+                    return -1;
+            }
+        }
+    }
+    
+    public GetMappedDepth(position: Vector2): number
+    {
+        const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
+        let sceneTokenDepth = -10; // Default depth for vision lights
+        
+        // Early exit if no mappings
+        if (elevationMappings.length === 0) return sceneTokenDepth;
+        
+        for (const mapping of elevationMappings)
+        {
+            // Skip mappings that can't improve our result
+            if (mapping.Depth <= sceneTokenDepth) continue;
+            
+            // Quick bounding box check before expensive polygon test
+            const bounds = this.getPolygonBounds(mapping.Points);
+            if (position.x < bounds.minX || position.x > bounds.maxX || 
+                position.y < bounds.minY || position.y > bounds.maxY)
+            {
+                continue;
+            }
+            
+            const withinMap = Utilities.isPointInPolygon(position, mapping.Points);
+            if (withinMap && (mapping.Depth > sceneTokenDepth))
+            {
+                sceneTokenDepth = mapping.Depth;
+            }
+        }
+        return sceneTokenDepth;
+    }
+
+    // Helper method to calculate polygon bounding box
+    private getPolygonBounds(points: Vector2[]): { minX: number, maxX: number, minY: number, maxY: number }
+    {
+        if (points.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+        
+        let minX = points[0].x, maxX = points[0].x;
+        let minY = points[0].y, maxY = points[0].y;
+        
+        for (let i = 1; i < points.length; i++)
+        {
+            const point = points[i];
+            if (point.x < minX) minX = point.x;
+            if (point.x > maxX) maxX = point.x;
+            if (point.y < minY) minY = point.y;
+            if (point.y > maxY) maxY = point.y;
+        }
+        
+        return { minX, maxX, minY, maxY };
     }
 
     // Main function to get hidden enemies
@@ -155,7 +272,7 @@ export class VisibilityChecker
     {
         const hiddenEnemies: string[] = [];
         const visibleEnemies: string[] = [];
-
+        
         for (const enemy of enemies)
         {
             // Check against each player
@@ -167,7 +284,7 @@ export class VisibilityChecker
                 if (this.distanceSquared(player.position, enemy.position) <= radiusSquared)
                 {
                     // Only check line of sight if within radius
-                    if (!this.isLineOfSightBlocked(player.position, enemy.position))
+                    if (!this.isLineOfSightBlocked(player, enemy))
                     {
                         // Enemy is visible to at least one player, skip to next enemy
                         visibleEnemies.push(enemy.id);
