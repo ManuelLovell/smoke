@@ -277,7 +277,8 @@ class SmokeProcessor
         if (BSCACHE.playerRole === "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
 
         // Check position of a players owned tokens
-        const playerTokens = BSCACHE.sceneItems.filter(x => isTokenWithVisionIOwn(x));
+        let playerTokens = this.getTokensICanSeeThrough()
+        playerTokens = playerTokens.filter(x => x.layer === "CHARACTER" || x.layer === "MOUNT");
         const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
         const visibleDoors: Curve[] = [];
         for (const token of playerTokens)
@@ -292,8 +293,10 @@ class SmokeProcessor
                 const dy = doorPosition.y - tokenPosition.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance <= visionRange) {
-                    if (!this.VisibilityChecker.IsLineOfSightBlocked(token.position, doorPosition, door)) {
+                if (distance <= visionRange)
+                {
+                    if (!this.VisibilityChecker.IsLineOfSightBlocked(token.position, doorPosition, door))
+                    {
                         visibleDoors.push(door);
                     }
                 }
@@ -1307,6 +1310,25 @@ class SmokeProcessor
             }
         }
         return true;
+    }
+
+    private getTokensICanSeeThrough(): Item[]
+    {
+        const tokensWithVision = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+        const myTokensWithVision: Item[] = [];
+        const gmTokenWithVision: Item[] = [];
+        for (const token of tokensWithVision)
+        {
+            if (token.createdUserId === BSCACHE.playerId)
+                myTokensWithVision.push(token);
+            else
+            {
+                const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+                if (owner?.role === "GM")
+                    gmTokenWithVision.push(token);
+            }
+        }
+        return [...myTokensWithVision, ...gmTokenWithVision];
     }
 
     public async ToggleDoor(toggleDoorId: string)
