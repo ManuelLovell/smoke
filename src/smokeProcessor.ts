@@ -1,7 +1,7 @@
 import OBR, { Curve, Item, Image, Light, Math2, MathM, Player, Vector2, Wall, buildImage, buildLight, buildShape, buildWall, Effect, buildEffect, Shape, Uniform } from "@owlbear-rodeo/sdk";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
-import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isVisionLineAndEnabled, isIndicatorRing, isLocalPersistentLight, isDoor, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
+import { isLocalVisionWall, isLocalVisionLight, isTokenWithVision, isTokenWithVisionIOwn, isVisionLineAndEnabled, isIndicatorRing, isLocalPersistentLight, isLocalDecal, isDarkVision } from "./utilities/itemFilters";
 import { Constants } from "./utilities/bsConstants";
 import { GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetVisionRangeDefault } from "./tools/visionToolUtilities";
 import { ApplyEnhancedFog } from "./smokeEnhancedFog";
@@ -268,9 +268,50 @@ class SmokeProcessor
 
     private async UpdateDoors()
     {
-        if (BSCACHE.playerRole === "PLAYER" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
+        this.IsPlayerNearDoor();
+        this.ShowGMDoors();
+    }
 
+    private async IsPlayerNearDoor()
+    {
+        if (BSCACHE.playerRole === "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
+
+        // Check position of a players owned tokens
+        const playerTokens = BSCACHE.sceneItems.filter(x => isTokenWithVisionIOwn(x));
         const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
+        const visibleDoors: Curve[] = [];
+        for (const token of playerTokens)
+        {
+            const tokenPosition = token.position;
+            const visionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
+
+            for (const door of sceneDoors)
+            {
+                const doorPosition = Math2.centroid(door.points);
+                const dx = doorPosition.x - tokenPosition.x;
+                const dy = doorPosition.y - tokenPosition.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (distance <= visionRange) {
+                    if (!this.VisibilityChecker.IsLineOfSightBlocked(token.position, doorPosition, door)) {
+                        visibleDoors.push(door);
+                    }
+                }
+            }
+        }
+
+        this.UpdateVisibleDoors(visibleDoors);
+    }
+
+    private async ShowGMDoors()
+    {
+        if (BSCACHE.playerRole === "PLAYER") return;
+        const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
+        this.UpdateVisibleDoors(sceneDoors);
+    }
+
+    private async UpdateVisibleDoors(sceneDoors: Curve[])
+    {
         const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/localDoor`] === true) as Image[];
         if (sceneDoors.length > 0)
         {
@@ -316,7 +357,7 @@ class SmokeProcessor
                             x: .75, y: .75
                         }))
                         .attachedTo(door.id)
-                        .layer(BSCACHE.playerRole === "GM" ? Constants.LINELAYER : "DRAWING")
+                        .layer(Constants.LINELAYER)
                         .zIndex(door.zIndex + 10)
                         .locked(true)
                         .name(doorName)
@@ -342,7 +383,7 @@ class SmokeProcessor
             const deletedDoorWalls: string[] = [];
             for (const local of localDoors)
             {
-                const pairedDoorWall = BSCACHE.sceneItems.find(x => x.id === local.attachedTo && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
+                const pairedDoorWall = sceneDoors.find(x => x.id === local.attachedTo && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true);
                 if (pairedDoorWall)
                 {
                     if (BSCACHE.playerRole === "GM" && local.image.url !== Constants.DOORLOCKED && pairedDoorWall.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === true)
@@ -982,7 +1023,7 @@ class SmokeProcessor
         this.wallsToError = [];
         this.wallsNotOwner = [];
 
-        if (BSCACHE.playerRole === "GM" && updateCache)
+        if (updateCache)
         {
             await this.VisibilityChecker.UpdateWallSegments();
             updateCache = false;

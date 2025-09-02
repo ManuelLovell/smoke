@@ -1,4 +1,4 @@
-import OBR, { Item, Light, Vector2, Wall } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Light, Vector2, Wall } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
@@ -121,19 +121,10 @@ export class VisibilityChecker
         return false;
     }
 
-    // Check if line of sight is blocked by any wall segment
-    private isLineOfSightBlocked(player: Light, enemy: Item): boolean
+    private isLineOfSightBlocked(player: Item, enemy: Item): boolean
     {
-        // Early exit for performance - check if any segment could possibly intersect
-        const minX = Math.min(player.position.x, enemy.position.x);
-        const maxX = Math.max(player.position.x, enemy.position.x);
-        const minY = Math.min(player.position.y, enemy.position.y);
-        const maxY = Math.max(player.position.y, enemy.position.y);
-
         const enemyDepth = this.GetDepth(this.GetMappedDepth(enemy.position), false);
-        console.log(`Enemy ${enemy.id} depth: ${enemyDepth}`);
         const playerDepth = player.zIndex;
-        console.log(`Player ${player.id} depth: ${playerDepth}`);
 
         if (enemyDepth >= playerDepth)
         {
@@ -141,8 +132,34 @@ export class VisibilityChecker
             return false;
         }
 
+        // Check if line of sight is blocked by any wall segment
+        return this.IsLineOfSightBlocked(player.position, enemy.position);
+    }
+
+    // Check if line of sight is blocked by any wall segment
+    public IsLineOfSightBlocked(player: Vector2, target: Vector2, line?: Curve): boolean
+    {
+        // Early exit for performance - check if any segment could possibly intersect
+        const minX = Math.min(player.x, target.x);
+        const maxX = Math.max(player.x, target.x);
+        const minY = Math.min(player.y, target.y);
+        const maxY = Math.max(player.y, target.y);
+
         for (const segment of this.cachedWallSegments)
         {
+            if (line && line.points.length > 1)
+            {
+                const lineStart = line.points[0];
+                const lineEnd = line.points[1];
+                const isSamePoint = (a: Vector2, b: Vector2) => a.x === b.x && a.y === b.y;
+                if ((isSamePoint(segment.start, lineStart) && isSamePoint(segment.end, lineEnd))
+                    || (isSamePoint(segment.start, lineEnd) && isSamePoint(segment.end, lineStart)))
+                {
+                    // If the segment matches the line, its our target that we want to see
+                    // and not the wall blocking our vision
+                    continue;
+                }
+            }
             // Quick AABB check before detailed intersection
             if (Math.max(segment.start.x, segment.end.x) < minX ||
                 Math.min(segment.start.x, segment.end.x) > maxX ||
@@ -152,7 +169,7 @@ export class VisibilityChecker
                 continue;
             }
 
-            if (this.lineIntersects(player.position, enemy.position, segment.start, segment.end))
+            if (this.lineIntersects(player, target, segment.start, segment.end))
             {
                 return true;
             }
@@ -213,28 +230,28 @@ export class VisibilityChecker
             }
         }
     }
-    
+
     public GetMappedDepth(position: Vector2): number
     {
         const elevationMappings = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationMapping`] as ElevationMap[] ?? [];
         let sceneTokenDepth = -10; // Default depth for vision lights
-        
+
         // Early exit if no mappings
         if (elevationMappings.length === 0) return sceneTokenDepth;
-        
+
         for (const mapping of elevationMappings)
         {
             // Skip mappings that can't improve our result
             if (mapping.Depth <= sceneTokenDepth) continue;
-            
+
             // Quick bounding box check before expensive polygon test
             const bounds = this.getPolygonBounds(mapping.Points);
-            if (position.x < bounds.minX || position.x > bounds.maxX || 
+            if (position.x < bounds.minX || position.x > bounds.maxX ||
                 position.y < bounds.minY || position.y > bounds.maxY)
             {
                 continue;
             }
-            
+
             const withinMap = Utilities.isPointInPolygon(position, mapping.Points);
             if (withinMap && (mapping.Depth > sceneTokenDepth))
             {
@@ -248,10 +265,10 @@ export class VisibilityChecker
     private getPolygonBounds(points: Vector2[]): { minX: number, maxX: number, minY: number, maxY: number }
     {
         if (points.length === 0) return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-        
+
         let minX = points[0].x, maxX = points[0].x;
         let minY = points[0].y, maxY = points[0].y;
-        
+
         for (let i = 1; i < points.length; i++)
         {
             const point = points[i];
@@ -260,7 +277,7 @@ export class VisibilityChecker
             if (point.y < minY) minY = point.y;
             if (point.y > maxY) maxY = point.y;
         }
-        
+
         return { minX, maxX, minY, maxY };
     }
 
@@ -272,7 +289,7 @@ export class VisibilityChecker
     {
         const hiddenEnemies: string[] = [];
         const visibleEnemies: string[] = [];
-        
+
         for (const enemy of enemies)
         {
             // Check against each player
