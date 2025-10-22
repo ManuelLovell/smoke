@@ -1,4 +1,4 @@
-import OBR, { Vector2, buildCurve } from "@owlbear-rodeo/sdk";
+import OBR, { Vector2, buildCurve, Curve } from "@owlbear-rodeo/sdk";
 import simplify from "simplify-js";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
@@ -6,11 +6,11 @@ import { GetToolWidth } from "./visionToolUtilities";
 
 export function ImportWalls(walls: Vector2[][], importDpi: number, dpiRatio: number, offset: number[]) 
 {
-    const lines = [];
+    const lines: Curve[] = [];
 
     for (let i = 0; i < walls.length; i++)
     {
-        let points: Vector2[] = [];
+    let points: Vector2[] = [];
         let door = false;
 
         for (let j = 0; j < walls[i]?.length - 1; j++)

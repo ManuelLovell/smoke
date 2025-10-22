@@ -35,8 +35,8 @@ export async function SetupContextMenus(): Promise<void>
         ],
         async onClick(ctx)
         {
-            const linesToMake = [];
-            const linesToDelete = [];
+            const linesToMake: Curve[] = [];
+            const linesToDelete: string[] = [];
 
             for (const item of ctx.items)
             {
@@ -135,7 +135,7 @@ export async function SetupContextMenus(): Promise<void>
                 else if (item.type === "SHAPE")
                 {
                     const baseShape = item as Shape;
-                    const points = [];
+                    const points: Vector2[] = [];
                     if (baseShape.shapeType === "CIRCLE")
                     {
                         const radius = Math.min(baseShape.width, baseShape.height) / 2;

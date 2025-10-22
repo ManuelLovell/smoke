@@ -316,7 +316,7 @@ class Spectre
                 // Access the TomSelect instance using .tomselect
                 const tomSelectInstance = tSelect.tomselect as TomSelect;
 
-                const newOptions = [];
+                const newOptions: { value: string; text: string }[] = [];
                 for (const player of BSCACHE.party)
                 {
                     newOptions.push({ value: player.id, text: player.name });

@@ -1,4 +1,4 @@
-import { buildImage } from "@owlbear-rodeo/sdk";
+import { buildImage, Item } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
 
@@ -7,7 +7,7 @@ export function ImportLights(lights: UVTTLight[] | FoundryLight[], importDpi: nu
     // Create Torches
     if (lights?.length > 0)
     {
-        const newItems = [];
+    const newItems: Item[] = [];
         for (const light of lights)
         {
             const uniLight = normalizeLight(light);

@@ -99,7 +99,7 @@ function ConvertLineOfSightItem(uvttObjects: Array<Array<{ x: number; y: number 
     const newItems: Curve[] = [];
     for (const uvttItem of uvttObjects)
     {
-        const newItemPaths = [];
+    const newItemPaths: Vector2[] = [];
         for (const point of uvttItem)
         {
             newItemPaths.push({ x: point.x * BSCACHE.gridDpi, y: point.y * BSCACHE.gridDpi });

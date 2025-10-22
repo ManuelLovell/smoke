@@ -1,4 +1,4 @@
-import { Curve, buildCurve } from "@owlbear-rodeo/sdk";
+import { Curve, buildCurve, Vector2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "../utilities/bsConstants";
 import { BSCACHE } from "../utilities/bsSceneCache";
 import { GetToolWidth } from "./visionToolUtilities";
@@ -9,7 +9,7 @@ export function ConvertDoorItem(uvttDoors: UVTTPortal[], importDpi: number, dpiR
 
     for (const uvttDoor of uvttDoors)
     {
-        const newItemPaths = [];
+    const newItemPaths: Vector2[] = [];
         for (const point of uvttDoor.bounds)
         {
             newItemPaths.push({

@@ -240,7 +240,7 @@ async function Deactivate(_: ToolContext)
     const toCleanUp = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/elevation`] !== undefined) as Curve[];
     if (toCleanUp.length > 0)
     {
-        const newSave = [];
+    const newSave: ElevationMap[] = [];
         for (const line of toCleanUp)
         {
             let adjustedPoints = line.points;
