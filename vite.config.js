@@ -1,6 +1,7 @@
 import path from 'path';
 
 export default {
+  server: { cors: true },
   build: {
     target: 'esnext',
     rollupOptions: {

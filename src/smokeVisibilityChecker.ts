@@ -126,7 +126,11 @@ export class VisibilityChecker
         const enemyDepth = this.GetDepth(this.GetMappedDepth(enemy.position), false);
         const playerDepth = player.zIndex;
 
-        if (enemyDepth >= playerDepth)
+        // If enemy is at a higher depth than player, player can see enemy
+        // This will likely need to be adjusted if there are walls between these two points that
+        // Would somehow impede vision.. As if the player was at a 1, the enemy was at a 2, but there was a wall at a 3 between them.
+        // Technically the wall would separate them both.
+        if (enemyDepth > playerDepth)
         {
             // Player can see enemy without obstruction
             return false;
