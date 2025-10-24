@@ -46,6 +46,12 @@ export class VisibilityChecker
 
         for (const wall of walls)
         {
+            if (wall.metadata[`${Constants.EXTENSIONID}/isWindow`] === true)
+            {
+                // Skip windows as they don't block vision
+                continue;
+            }
+            
             const rotatedPoints = new Array(wall.points.length);
 
             // Pre-calculate all rotated points for this wall
