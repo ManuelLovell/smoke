@@ -159,8 +159,8 @@ export class VisibilityChecker
         {
             if (line && line.points.length > 1)
             {
-                const lineStart = line.points[0];
-                const lineEnd = line.points[1];
+                const lineStart = { x: line.points[0].x + line.position.x, y: line.points[0].y + line.position.y };
+                const lineEnd = { x: line.points[1].x + line.position.x, y: line.points[1].y + line.position.y };
                 const isSamePoint = (a: Vector2, b: Vector2) => a.x === b.x && a.y === b.y;
                 if ((isSamePoint(segment.start, lineStart) && isSamePoint(segment.end, lineEnd))
                     || (isSamePoint(segment.start, lineEnd) && isSamePoint(segment.end, lineStart)))

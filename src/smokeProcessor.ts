@@ -288,7 +288,11 @@ class SmokeProcessor
 
             for (const door of sceneDoors)
             {
-                const doorPosition = Math2.centroid(door.points);
+                const adjustedPoints = door.points.map(point => ({
+                    x: point.x + door.position.x,
+                    y: point.y + door.position.y
+                }));
+                const doorPosition = Math2.centroid(adjustedPoints);
                 const dx = doorPosition.x - tokenPosition.x;
                 const dy = doorPosition.y - tokenPosition.y;
                 const distance = Math.sqrt(dx * dx + dy * dy);
