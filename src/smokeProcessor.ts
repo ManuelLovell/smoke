@@ -112,11 +112,19 @@ class SmokeProcessor
         await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
         await this.UpdateTrailingFogTokens();
         await this.UpdateAutoHideTokens();
+        await this.UpdateWindowVisibility();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true)
         {
             // Using Localstorage to keep persistent data atm
             localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
         }
+    }
+
+    private async UpdateWindowVisibility()
+    {
+        const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
+        const windows = await OBR.scene.local.getItems<Wall>(x => x.metadata[`${Constants.EXTENSIONID}/isWindow`] === true) as Wall[];
+        await this.VisibilityChecker.UpdateWindowVisibility(players, windows);
     }
 
     private async UpdateAutoHideTokens()
@@ -934,11 +942,13 @@ class SmokeProcessor
                     const equalSides = visionLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === existingLine.doubleSided;
                     const equalDepth = this.VisibilityChecker.GetDepth(visionLineDepth, true) === existingLine.zIndex;
                     const equalWindow = visionLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === existingLine.metadata[`${Constants.EXTENSIONID}/isWindow`];
+                    
+                    const windowDepthCheck = existingLine.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`];
 
                     let equalBlock = (wallPass ? false : visionLine.metadata[`${Constants.EXTENSIONID}/blocking`])
                         === existingLine.blocking;
 
-                    if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth || !equalWindow)
+                    if (!equalPoints || !equalPosition || !equalRotation || !equalScale || !equalBlock || !equalSides || !equalDepth || !equalWindow || windowDepthCheck !== undefined)
                     {
                         this.UpdateWallToQueue(visionLine, existingLine, visionLineDepth);
                     }
@@ -994,10 +1004,11 @@ class SmokeProcessor
                         line.rotation = mine.rotation;
                         line.scale = mine.scale;
                         line.blocking = mine.blocking;
-                        line.visible = mine.visible;
+                        line.visible = mine.windowDisable ? true : mine.visible;
                         line.doubleSided = mine.doubleSided;
                         line.zIndex = mine.zIndex;
                         line.metadata[`${Constants.EXTENSIONID}/isWindow`] = mine.window;
+                        line.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`] = mine.windowDisable;
                     }
                 }
             });
@@ -1044,6 +1055,7 @@ class SmokeProcessor
         // We are making a mirror of the wall, that we can identify which one it's replicating
         let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
         const window = line.metadata[`${Constants.EXTENSIONID}/isWindow`] === true;
+        const windowDisable = line.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`] === true;
         const doubleSide = line.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true;
 
         if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true)
@@ -1244,6 +1256,7 @@ class SmokeProcessor
             blocking: blockWall,
             visible: !sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`] === true,
             window: sceneLine.metadata[`${Constants.EXTENSIONID}/isWindow`],
+            windowDisable: localWall.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`],
             doubleSided: sceneLine.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true,
             zIndex: this.VisibilityChecker.GetDepth(depth, true)
         };

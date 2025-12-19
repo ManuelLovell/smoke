@@ -5,7 +5,7 @@ import { brushMode } from "./visionBrushMode";
 import { elevationMode } from "./elevationMode";
 import { Constants } from "./../utilities/bsConstants";
 import { BSCACHE } from "./../utilities/bsSceneCache";
-import { cutterMode } from "./visionDoorMode.ts";
+import { cutterMode } from "./visionDoorMode";
 
 export async function SetupTools(): Promise<void>
 {

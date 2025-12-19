@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Light, Vector2, Wall } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Item, Light, Math2, Vector2, Wall } from "@owlbear-rodeo/sdk";
 import { Constants } from "./utilities/bsConstants";
 import * as Utilities from "./utilities/bsUtilities";
 import { BSCACHE } from "./utilities/bsSceneCache";
@@ -289,6 +289,54 @@ export class VisibilityChecker
         }
 
         return { minX, maxX, minY, maxY };
+    }
+
+    public async UpdateWindowVisibility(
+        players: Light[],
+        windows: Wall[]
+    ): Promise<void>
+    {
+        const showWindows: string[] = [];
+        const hideWindows: string[] = [];
+
+        for (const window of windows)
+        {
+            const adjustedPoints = window.points.map(point => ({
+                x: point.x + window.position.x,
+                y: point.y + window.position.y
+            }));
+            const windowCenter = Math2.centroid(adjustedPoints);
+            const windowDepth = this.GetMappedDepth(windowCenter);
+
+            // Check against each player
+            for (const player of players)
+            {
+                // Quick distance check first
+                const playerDepth = this.GetMappedDepth(player.position);
+                const viewRadius = player.attenuationRadius;
+                const radiusSquared = viewRadius * viewRadius;
+                if (this.distanceSquared(player.position, windowCenter) <= radiusSquared)
+                {
+                    // Only check line of sight if within radius
+                    playerDepth >= windowDepth ? showWindows.push(window.id) : hideWindows.push(window.id);
+                }
+            }
+        }
+
+        await OBR.scene.local.updateItems(windows.map(window => window.id), (windows) =>
+        {
+            for (let window of windows)
+            {
+                if (showWindows.includes(window.id) && !hideWindows.includes(window.id))
+                {
+                    window.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`] = false;
+                }
+                else
+                {
+                    window.metadata[`${Constants.EXTENSIONID}/isHiddenWindow`] = true;
+                }
+            }
+        });
     }
 
     // Main function to get hidden enemies
