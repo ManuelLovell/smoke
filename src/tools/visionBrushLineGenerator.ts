@@ -278,7 +278,6 @@ export class BrushLineGenerator
 
             if (removedLines.includes(line))
             {
-                //console.log("skip")
             }
             else if (match && !removedLines.includes(match))
             {

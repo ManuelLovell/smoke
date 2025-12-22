@@ -51,6 +51,7 @@ export async function finishDrawing()
         currentElevationData.push(newMap);
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationMapping`]: currentElevationData });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
 
     stop();
@@ -262,10 +263,12 @@ async function Deactivate(_: ToolContext)
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationMapping`]: newSave });
         await OBR.scene.local.deleteItems(toCleanUp.map(x => x.id));
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
     else
     {
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationMapping`]: [] });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
 }
 

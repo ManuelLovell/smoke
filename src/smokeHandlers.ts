@@ -55,6 +55,7 @@ export function SetupGMInputHandlers(mobile = false)
             const target = event.target as HTMLInputElement;
 
             await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/disableVision`]: target.checked });
+            await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
         }
     };
 
@@ -78,6 +79,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/trailingFog`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles auto-hide, allowing tokens out of vision range to be 'invisible'.
@@ -89,6 +91,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/autoHide`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles the colored ownership lines
@@ -116,6 +119,7 @@ export function SetupGMInputHandlers(mobile = false)
         {
             trailingFogCheckbox.disabled = false;
         }
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Resets all persistent lights
@@ -136,6 +140,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toggleOwnerLines`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles showing players the Door icons
@@ -147,6 +152,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/playerDoors`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles displaying warning messages about hardware acceleration
@@ -158,6 +164,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/showWarnings`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles showing the unit vision settings context menu
@@ -169,6 +176,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/unitContextMenu`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
     //wallContextMenu
 
@@ -181,6 +189,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/wallContextMenu`]: target.checked });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggle the default elevation layer for tokens/walls
@@ -191,6 +200,7 @@ export function SetupGMInputHandlers(mobile = false)
     {
         const target = event.currentTarget as HTMLSelectElement;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/defaultElevation`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggle the elevation style between tokens see over walls, and consistent levels (0 - 6 all work the same);
@@ -201,6 +211,7 @@ export function SetupGMInputHandlers(mobile = false)
     {
         const target = event.currentTarget as HTMLSelectElement;
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationComplex`]: target.value === "true" });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles the pass-through of walls for a GM
@@ -212,7 +223,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.target as HTMLInputElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/passWallsGM`]: target.checked });
-        if (!BSCACHE.fogFilled) await SMOKEMACHINE.Run();
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     // Toggles the locked/unlocked state of all lines
@@ -350,6 +361,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetSourceRangeDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionRangeDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     const collisionDefaultInput = document.getElementById("collisionDefaultInput") as HTMLButtonElement;
@@ -368,6 +380,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetSourceRangeDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionSourceDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     const greyscaleDefaultInput = document.getElementById("greyscaleDefaultInput") as HTMLButtonElement;
@@ -386,6 +399,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetSourceRangeDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionDarkDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     const innerAngleDefaultInput = document.getElementById("innerAngleDefaultInput") as HTMLButtonElement;
@@ -404,6 +418,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetOuterAngleDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionInAngleDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
 
     const outerAngleDefaultInput = document.getElementById("outerAngleDefaultInput") as HTMLButtonElement;
@@ -422,6 +437,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetOuterAngleDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionOutAngleDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
 
     const falloffDefaultInput = document.getElementById("falloffDefaultInput") as HTMLButtonElement;
@@ -440,6 +456,7 @@ export function SetupGMInputHandlers(mobile = false)
             target.value = GetFalloffRangeDefault();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionFallOffDefault`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
 
     // TODO: this is a hack, need to pass json between different event handlers
@@ -571,6 +588,7 @@ export function SetupGMInputHandlers(mobile = false)
             if (hexTest.test(target.value))
             {
                 await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolColor`]: target.value });
+                await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
             }
         }, 400);
 
@@ -581,6 +599,7 @@ export function SetupGMInputHandlers(mobile = false)
         const target = event.currentTarget as HTMLSelectElement;
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolStyle`]: target.value == "solid" ? [] : [25, 25] });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     };
 
     toolWidth!.onchange = (event) =>
@@ -597,7 +616,6 @@ export function SetupGMInputHandlers(mobile = false)
             }
         } catch (error)
         {
-            console.log("Tool Width value set out of range, swapping to default")
             target.value = "8";
         }
 
@@ -605,6 +623,7 @@ export function SetupGMInputHandlers(mobile = false)
         debouncer = setTimeout(async () =>
         {
             await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/toolWidth`]: target.value });
+            await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
         }, 400);
     };
 

@@ -341,6 +341,9 @@ export class SmokeMain
         await SMOKEMACHINE.Initialize();
         await SMOKEMACHINE.Run();
         await SPECTREMACHINE.Run();
+
+        // Refreshing on created local items
+        await SMOKEMACHINE.Run();
     }
 
     public async UpdateVisionList()

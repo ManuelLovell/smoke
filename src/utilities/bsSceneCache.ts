@@ -50,6 +50,9 @@ class BSCache
     sceneMetadata: Metadata;
     sceneReady: boolean;
 
+    disableWindows: string[];
+    enableWindows: string[];
+
     roomMetadata: Metadata;
 
     theme: Theme;
@@ -96,6 +99,8 @@ class BSCache
         this.sceneLocal = [];
         this.sceneSelected = [];
         this.sceneMetadata = {};
+        this.disableWindows = [];
+        this.enableWindows = [];
         this.gridDpi = 0;
         this.gridScale = 5;
         this.gridSnap = 10;
@@ -163,6 +168,7 @@ class BSCache
                 if (this.sceneId === "" || this.sceneId === undefined)
                 {
                     await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/sceneId`]: crypto.randomUUID() });
+                    await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
                 }
             }
         }
@@ -191,6 +197,12 @@ class BSCache
         this.theme = await OBR.theme.getTheme();
 
         Utilities.SetThemeMode(this.theme, document);
+
+        await OBR.broadcast.onMessage(Constants.PROCESSEDID, async (data) =>
+        {
+            if (data.data === true)
+                await SMOKEMAIN.OnDataChange();
+        });
 
         if (this.caches.includes(BSCache.PLAYER))
         {
@@ -581,7 +593,6 @@ class BSCache
         if (this.playerRole === "GM")
         {
         }
-        await SMOKEMAIN.OnDataChange();
     }
 
     public async OnSceneItemsChange(items: Item[])
