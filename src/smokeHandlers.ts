@@ -517,15 +517,18 @@ export function SetupGMInputHandlers(mobile = false)
                 {
                     // Good to go:
                     importButton!.disabled = false;
+                    OBR.notification.show("Smoke & Spectre: Import file loaded successfully.", "SUCCESS");
                 } else
                 {
-                    importErrors!.innerText = "Imported file has no walls";
+                    importButton!.disabled = true;
+                    OBR.notification.show("Smoke & Spectre: Import file has no walls to import.", "ERROR");
                 }
             };
             readFile.readAsText(file);
         } else
         {
             importErrors!.innerText = "Failed to load file";
+            OBR.notification.show("Smoke & Spectre: Failed to load import file.", "ERROR");
         }
     };
 

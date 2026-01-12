@@ -692,6 +692,11 @@ input[type=button]:hover {
     background-color: var(--OBR-Purple-Select);
 }
 
+input[type=button]#import_button:disabled {
+    background-color: grey;
+    cursor: not-allowed;
+}
+
 #import_file_name {
     height: 24px;
     max-width: 170px;
