@@ -219,7 +219,7 @@ export class VisibilityChecker {
         let sceneTokenDepth = -10; // Default depth for vision lights
 
         // Early exit if no mappings
-        if (elevationMappings.length === 0) return sceneTokenDepth;
+        if (!elevationMappings || !elevationMappings.length || elevationMappings.length === 0) return sceneTokenDepth;
 
         for (const mapping of elevationMappings) {
             // Skip mappings that can't improve our result
