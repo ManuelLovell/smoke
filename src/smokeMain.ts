@@ -83,24 +83,6 @@ export class SmokeMain
             }
         }
 
-        if (isLocalStorageEnabled())
-        {
-            const noticed = localStorage.getItem("NOTICED");
-            if (noticed !== "true")
-            {
-                await OBR.modal.open({
-                    id: Constants.EXTENSIONNOTICE,
-                    url: `/src/notice/notice.html?subscriber=${BSCACHE.USER_REGISTERED}`,
-                    height: 400,
-                    width: 500,
-                });
-                localStorage.setItem("NOTICED", "true");
-            }
-        } else
-        {
-            console.log("localStorage is disabled, not showing the notice. You should definitely check the Patreon.");
-        }
-
         // Hardware Acceleration Test
         const hardwareAccel = Utilities.IsHardwareAccelerationEnabled().hasHardwareAcceleration;
         await OBR.player.setMetadata({ [`${Constants.EXTENSIONID}/hardwareAcceleration`]: hardwareAccel });
