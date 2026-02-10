@@ -1,7 +1,6 @@
 import { Command, Layer, PathCommand } from "@owlbear-rodeo/sdk";
 
-export enum PathCommands
-{
+export enum PathCommands {
     MOVE = 0,
     LINE = 1,
     QUAD = 2,
@@ -10,8 +9,18 @@ export enum PathCommands
     CLOSE = 5
 }
 
-export class Constants
-{
+export enum LIGHTDIRECTIONS {
+    North = "NORTH",
+    Northeast = "NORTHEAST",
+    East = "EAST",
+    Southeast = "SOUTHEAST",
+    South = "SOUTH",
+    Southwest = "SOUTHWEST",
+    West = "WEST",
+    Northwest = "NORTHWEST"
+};
+
+export class Constants {
     static DELAY = 500; // Half a second
     static SHORTDELAY = 300;
     static EXTENSIONID = "com.battle-system.smoke";

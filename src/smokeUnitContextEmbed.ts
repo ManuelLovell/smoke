@@ -1,6 +1,6 @@
 import OBR from "@owlbear-rodeo/sdk";
 import "./css/style.css";
-import { Constants } from "./utilities/bsConstants";
+import { Constants, LIGHTDIRECTIONS } from "./utilities/bsConstants";
 
 OBR.onReady(async () =>
 {
@@ -15,6 +15,15 @@ OBR.onReady(async () =>
     const visionOuterInput = document.getElementById('outerContext') as HTMLInputElement;
     const visionOwnerSelect = document.getElementById('visionOwnerSelect') as HTMLSelectElement;
     const unitDepthSelect = document.getElementById('unitDepthSelect') as HTMLSelectElement;
+    const visionLightDirectionSelect = document.getElementById('visionLightDirectionSelect') as HTMLSelectElement;
+
+    for (const direction of Object.values(LIGHTDIRECTIONS))
+    {
+        const option = document.createElement("option");
+        option.value = direction;
+        option.textContent = direction.charAt(0) + direction.slice(1).toLowerCase();
+        visionLightDirectionSelect.appendChild(option);
+    }
 
     const unitItems = await OBR.scene.items.getItems(item => unitsIds?.includes(item.id));
     const party = await OBR.party.getPlayers();
@@ -68,7 +77,23 @@ OBR.onReady(async () =>
         unitDepthSelect.value = token.metadata[`${Constants.EXTENSIONID}/unitDepth`] !== undefined
             ? token.metadata[`${Constants.EXTENSIONID}/unitDepth`] as string
             : "0";
+
+        visionLightDirectionSelect.value = token.metadata[`${Constants.EXTENSIONID}/visionFacing`] !== undefined
+         ? token.metadata[`${Constants.EXTENSIONID}/visionFacing`] as string
+         : Object.values(LIGHTDIRECTIONS)[0];
     }
+
+    visionLightDirectionSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
+        {
+            for (const item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionFacing`] = target.value;
+            }
+        });
+    };
 
     visionOwnerSelect.onchange = async (event) =>
     {
