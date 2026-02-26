@@ -600,9 +600,9 @@ class SmokeProcessor {
             else {
                 const tokenSettings = linkedParent ?? sceneToken;
 
-                let equalOuterRadius = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`]) === existingLight.attenuationRadius;
-                const equalInnerRadius = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`])
-                    === existingLight.sourceRadius;
+                const equalOuterRadius = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] === existingLight.metadata[`${Constants.EXTENSIONID}/visionRange`];
+                const equalInnerRadius = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`]
+                    === existingLight.metadata[`${Constants.EXTENSIONID}/visionSourceRange`];
                 const equalFalloff = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`]
                     === existingLight.falloff?.toString();
                 const equalInnerAngle = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionInAngle`]
@@ -725,6 +725,8 @@ class SmokeProcessor {
                         light.rotation = mine.tokenFacing + this.findLightDirection(mine.visionFacing);
                         light.metadata[`${Constants.EXTENSIONID}/visionFacing`] = mine.visionFacing;
                         light.metadata[`${Constants.EXTENSIONID}/visionBlind`] = mine.blind;
+                        light.metadata[`${Constants.EXTENSIONID}/visionRange`] = mine.visionRange;
+                        light.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = mine.visionSourceRange;
                         light.zIndex = mine.zIndex;
                     }
                 }
@@ -1008,6 +1010,8 @@ class SmokeProcessor {
             .outerAngle(parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] as string ?? GetOuterAngleDefault()))
             .zIndex(this.VisibilityChecker.GetDepth(depth, false))
             .metadata({
+                [`${Constants.EXTENSIONID}/visionSourceRange`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`],
+                [`${Constants.EXTENSIONID}/visionRange`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`],
                 [`${Constants.EXTENSIONID}/isVisionLight`]: true,
                 [`${Constants.EXTENSIONID}/visionFacing`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFacing`],
                 [`${Constants.EXTENSIONID}/visionDark`]: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`],
@@ -1131,6 +1135,8 @@ class SmokeProcessor {
 
         const update = {
             id: localLight.id,
+            visionRange: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`],
+            visionSourceRange: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`],
             attenuationRadius: useDarkVision ? darkVisionRange : visionRange,
             sourceRadius: this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] ?? GetSourceRangeDefault(), true),
             falloff: parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()),
