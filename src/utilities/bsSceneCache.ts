@@ -62,8 +62,6 @@ class BSCache
     snap: boolean;
     torchActive: boolean;
 
-    USER_REGISTERED: boolean;
-
     toolStarted: boolean;
     expectedFogMapId: string;
     expectedFogStyle: string;
@@ -116,7 +114,6 @@ class BSCache
         this.expectedFogStyle = "";
         this.expectedFogEffect = "";
 
-        this.USER_REGISTERED = false;
         this.caches = caches;
     }
 
@@ -342,7 +339,6 @@ class BSCache
             this.expectedFogEffect = message.FogEffect;
         });
 
-        await this.CheckRegistration();
         await this.SaveUserToScene();
     }
 
@@ -786,46 +782,6 @@ class BSCache
         else
         {
             await OBR.action.setBadgeText(on ? "⏱️" : undefined);
-        }
-    }
-
-    public async CheckRegistration()
-    {
-        try
-        {
-            const debug = window.location.origin.includes("localhost") ? "eternaldream" : "";
-            const userid = {
-                owlbearid: BSCACHE.playerId
-            };
-
-            const requestOptions = {
-                method: "POST",
-                headers: new Headers({
-                    "Content-Type": "application/json",
-                    "Authorization": Constants.ANONAUTH,
-                    "x-manuel": debug
-                }),
-                body: JSON.stringify(userid),
-            };
-            const response = await fetch(Constants.CHECKREGISTRATION, requestOptions);
-
-            if (!response.ok)
-            {
-                const errorData = await response.json();
-                // Handle error data
-                console.error("Error:", errorData);
-                return;
-            }
-            const data = await response.json();
-            if (data.Data === "OK")
-            {
-                this.USER_REGISTERED = true;
-            }
-        }
-        catch (error)
-        {
-            // Handle errors
-            console.error("Error:", error);
         }
     }
 
