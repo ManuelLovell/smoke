@@ -793,6 +793,9 @@ class SmokeProcessor {
             // Wall Viewers - If no viewer - If you are Viewer - If you are GM
             const viewers = visionLine.metadata[`${Constants.EXTENSIONID}/wallViewers`] as string[];
             if (!viewers || (viewers && viewers.length > 0 && viewers[0] === BSCACHE.playerId) || BSCACHE.playerRole === "GM") {
+                if (!visionLine.points || visionLine.points.length === 0 || !visionLine.points[0] || visionLine.points[0].x === null || visionLine.points[0].y === null) {
+                    continue;
+                }
                 let visionLineDepth = this.VisibilityChecker.GetMappedDepth({ x: visionLine.points[0].x + visionLine.position.x, y: visionLine.points[0].y + visionLine.position.y });
 
                 const customValue = visionLine.metadata[`${Constants.EXTENSIONID}/wallDepth`] as string;
