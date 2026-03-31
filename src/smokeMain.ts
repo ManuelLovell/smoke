@@ -8,7 +8,7 @@ import { BSCACHE } from './utilities/bsSceneCache.ts';
 import { Constants } from "./utilities/bsConstants.ts";
 import { SetupContextMenus } from "./smokeSetupContextMenus.ts";
 import { isTokenWithVisionForUI, isTokenWithVisionIOwn, isTorch } from "./utilities/itemFilters.ts";
-import { SetupGMInputHandlers } from "./smokeHandlers.ts";
+import { SetupGMInputHandlers, SetupPresetHandlers } from "./smokeHandlers.ts";
 import { UpdateMaps } from "./tools/importUVTT.ts";
 import { SetupTools } from "./tools/smokeSetupTools.ts";
 import { SMOKEMACHINE } from "./smokeProcessor.ts";
@@ -26,11 +26,13 @@ export class SmokeMain
 
     public smokeViewToggle?: HTMLButtonElement;
     public spectreViewToggle?: HTMLButtonElement;
+    public presetsViewToggle?: HTMLButtonElement;
     public settingsViewToggle?: HTMLButtonElement;
     public helpViewToggle?: HTMLButtonElement;
 
     public smokeViewPanel?: HTMLDivElement;
     public spectreViewPanel?: HTMLDivElement;
+    public presetsViewPanel?: HTMLDivElement;
     public settingsViewPanel?: HTMLDivElement;
     public helpViewPanel?: HTMLDivElement;
 
@@ -98,7 +100,7 @@ export class SmokeMain
         if (BSCACHE.playerRole === "GM")
         {
             await OBR.action.setHeight(530);
-            await OBR.action.setWidth(420);
+            await OBR.action.setWidth(500);
 
             const width = await OBR.viewport.getWidth();
             const useMobile = width < 400;
@@ -106,11 +108,13 @@ export class SmokeMain
             this.mainWindow!.innerHTML = useMobile ? Constants.SMOKEMOBILEMAIN : Constants.SMOKEMAIN;
             this.smokeViewToggle = document.getElementById("smokeViewToggle") as HTMLButtonElement;
             this.spectreViewToggle = document.getElementById("spectreViewToggle") as HTMLButtonElement;
+            this.presetsViewToggle = document.getElementById("presetsViewToggle") as HTMLButtonElement;
             this.settingsViewToggle = document.getElementById("settingsViewToggle") as HTMLButtonElement;
             this.helpViewToggle = document.getElementById("helpViewToggle") as HTMLButtonElement;
 
             this.smokeViewPanel = document.getElementById("smokeViewPanel") as HTMLDivElement;
             this.spectreViewPanel = document.getElementById("spectreViewPanel") as HTMLDivElement;
+            this.presetsViewPanel = document.getElementById("presetsViewPanel") as HTMLDivElement;
             this.settingsViewPanel = document.getElementById("settingsViewPanel") as HTMLDivElement;
             this.helpViewPanel = document.getElementById("helpViewPanel") as HTMLDivElement;
 
@@ -119,6 +123,7 @@ export class SmokeMain
             // Setup Panels before hitting Handlers
             this.smokeViewPanel.innerHTML = useMobile ? Constants.SMOKEMOBILEHTML : Constants.SMOKEHTML;
             this.spectreViewPanel.innerHTML = Constants.SPECTREHTML;
+            this.presetsViewPanel.innerHTML = Constants.PRESETSHTML;
             this.settingsViewPanel.innerHTML = useMobile ? Constants.SETTINGSMOBILEHTML : Constants.SETTINGSHTML;
 
             // Setup Player Owner Context Menu
@@ -154,6 +159,7 @@ export class SmokeMain
             this.SetupGMPanelHandlers();
             await this.UpdateVisionList();
             SetupGMInputHandlers(useMobile);
+            SetupPresetHandlers();
             UpdateMaps();
             SetupTools();
             CreateTooltips();
@@ -273,6 +279,12 @@ export class SmokeMain
             TogglePanel(SMOKEMAIN.spectreViewToggle!, SMOKEMAIN.spectreViewPanel!);
         };
 
+        this.presetsViewToggle!.onclick = (e) =>
+        {
+            e.preventDefault();
+            TogglePanel(SMOKEMAIN.presetsViewToggle!, SMOKEMAIN.presetsViewPanel!);
+        };
+
         this.settingsViewToggle!.onclick = (e) =>
         {
             e.preventDefault();
@@ -289,11 +301,13 @@ export class SmokeMain
         {
             SMOKEMAIN.smokeViewToggle?.classList.remove("selected");
             SMOKEMAIN.spectreViewToggle?.classList.remove("selected");
+            SMOKEMAIN.presetsViewToggle?.classList.remove("selected");
             SMOKEMAIN.settingsViewToggle?.classList.remove("selected");
             SMOKEMAIN.helpViewToggle?.classList.remove("selected");
 
             SMOKEMAIN.smokeViewPanel!.style.display = "none";
             SMOKEMAIN.spectreViewPanel!.style.display = "none";
+            SMOKEMAIN.presetsViewPanel!.style.display = "none";
             SMOKEMAIN.settingsViewPanel!.style.display = "none";
             SMOKEMAIN.helpViewPanel!.style.display = "none";
 

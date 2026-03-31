@@ -717,6 +717,7 @@ export class Constants {
                         <div class="even-set-button-container">
                             <button class="view-button selected" id="smokeViewToggle"><img class="menu_svg" src="./icon.svg"></button>
                             <button class="view-button" id="spectreViewToggle"><img class="menu_svg" src="./ghost.svg"></button>
+                            <button class="view-button" id="presetsViewToggle">Pre</button>
                             <button class="view-button" id="helpViewToggle"><img class="menu_svg" src="./help.svg"></button>
                             <button class="view-button" id="settingsViewToggle"><img class="menu_svg" src="./settings.svg"></button>
                         </div>
@@ -725,6 +726,7 @@ export class Constants {
                 </div>
                 <div id="smokeViewPanel" class="panel"></div>
                 <div id="spectreViewPanel" class="panel" style="display: none;"></div>
+                <div id="presetsViewPanel" class="panel" style="display: none;"></div>
                 <div id="settingsViewPanel" class="panel" style="display: none;"></div>
                 <div id="helpViewPanel" class="panel" style="display: none;">
                     <div id="markdownHelpContainer"></div>
@@ -786,6 +788,7 @@ export class Constants {
                         <div class="even-set-button-container">
                             <button class="view-button selected" id="smokeViewToggle">Smoke</button>
                             <button class="view-button" id="spectreViewToggle">Spectre</button>
+                            <button class="view-button" id="presetsViewToggle">Presets</button>
                             <button class="view-button" id="helpViewToggle">Help</button>
                             <button class="view-button" id="settingsViewToggle">Settings</button>
                         </div>
@@ -794,6 +797,7 @@ export class Constants {
                 </div>
                 <div id="smokeViewPanel" class="panel"></div>
                 <div id="spectreViewPanel" class="panel" style="display: none;"></div>
+                <div id="presetsViewPanel" class="panel" style="display: none;"></div>
                 <div id="settingsViewPanel" class="panel" style="display: none;"></div>
                 <div id="helpViewPanel" class="panel" style="display: none;">
                     <div id="markdownHelpContainer"></div>
@@ -868,6 +872,46 @@ export class Constants {
         </div>
     </div>
     `;
+    static PRESETSHTML = `
+    <div id="presets-ui" style="padding: 4px;">
+        <table id="presetsTable" style="width: 100%;">
+            <colgroup>
+                <col style="width: 20%;">
+                <col style="width: 30%;">
+                <col style="width: 20%;">
+                <col style="width: 30%;">
+            </colgroup>
+            <tbody>
+                <tr><td colspan="4" class="tableHeader">New Vision Preset</td></tr>
+                <tr>
+                    <td class="preset-label-cell">Name</td>
+                    <td class="preset-input-cell"><input type="text" id="preset_name" placeholder="Preset name" maxlength="30" style="width: 96%;"></td>
+                    <td class="preset-label-cell">Save</td>
+                    <td class="preset-input-cell"><input type="button" id="preset_save_btn" class="settingsButton" value="Save Preset" style="width: 100%;"></td>
+                </tr>
+                <tr>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionRange.svg" title="Vision" alt="Vision">Vision</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vrange" min="0" max="999" value="30"></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionBumper.svg" title="Source Range" alt="Source Range">Source Range</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vsource" min="0" max="999" value="0"></td>
+                </tr>
+                <tr>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionInner.svg" title="Inner Angle" alt="Inner Angle">Inner Angle</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vinner" min="-360" max="360" value="360"></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionOuter.svg" title="Outer Angle" alt="Outer Angle">Outer Angle</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vouter" min="-360" max="360" value="360"></td>
+                </tr>
+                <tr>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionFalloff.svg" title="Falloff" alt="Falloff">Falloff</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vfalloff" min="0" max="10" step="0.1" value="1"></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./darkvision.svg" title="Darkvision" alt="Darkvision">Darkvision</span></td>
+                    <td class="preset-input-cell"><input type="number" id="preset_vdark" min="0" max="999" value="0"></td>
+                </tr>
+            </tbody>
+        </table>
+        <div id="preset_list" style="margin-top: 4px;"></div>
+    </div>
+    `;
     static SETTINGSHTML = `
     <div id="settings-ui">
         <table id="settingsTable">
@@ -892,6 +936,11 @@ export class Constants {
                     <td><input type="checkbox" id="toggle_persistence"></td>
                     <td colspan="2"><label for="toggle_trailingfog" id="tip_trailingfog">Trailing Fog (Beta)</label></td>
                     <td><input type="checkbox" id="toggle_trailingfog"></td>
+                </tr>
+                <tr>
+                    <td colspan="2"><label for="persistence_limit" id="tip_persistencelimit">Persistence Limit</label></td>
+                    <td><input type="number" id="persistence_limit" min="1" max="999" value="100"></td>
+                    <td colspan="3"></td>
                 </tr>
                 <tr>
                     <td colspan="2"><label for="toggle_ownerlines" id="tip_ownerrings">Owner Highlight</label></td>
@@ -1060,6 +1109,14 @@ export class Constants {
             <label for="toggle_autohide" id="tip_autohide">Autohide (Beta)</label>
             <input type="checkbox" id="toggle_autohide">
         </div>
+    </div>
+
+    <div class="grid-container">
+        <div>
+            <label for="persistence_limit" id="tip_persistencelimit">Persistence Limit</label>
+            <input type="number" id="persistence_limit" min="1" max="999" value="100">
+        </div>
+        <div></div>
     </div>
 
     <div class="grid-container">

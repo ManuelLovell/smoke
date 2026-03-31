@@ -2,6 +2,16 @@ import OBR from "@owlbear-rodeo/sdk";
 import "./css/style.css";
 import { Constants, LIGHTDIRECTIONS } from "./utilities/bsConstants";
 
+type VisionPreset = {
+    name: string;
+    visionRange: string;
+    visionSourceRange: string;
+    visionFallOff: string;
+    visionInAngle: string;
+    visionOutAngle: string;
+    visionDark: string;
+};
+
 OBR.onReady(async () =>
 {
     const unitsIds = await OBR.player.getSelection();
@@ -14,6 +24,7 @@ OBR.onReady(async () =>
     const visionInnerInput = document.getElementById('innerContext') as HTMLInputElement;
     const visionOuterInput = document.getElementById('outerContext') as HTMLInputElement;
     const visionOwnerSelect = document.getElementById('visionOwnerSelect') as HTMLSelectElement;
+    const visionPresetSelect = document.getElementById('visionPresetSelect') as HTMLSelectElement;
     const unitDepthSelect = document.getElementById('unitDepthSelect') as HTMLSelectElement;
     const visionLightDirectionSelect = document.getElementById('visionLightDirectionSelect') as HTMLSelectElement;
 
@@ -44,6 +55,22 @@ OBR.onReady(async () =>
     }
 
     const sceneMetadata = await OBR.scene.getMetadata();
+    const scenePresets = Array.isArray(sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`])
+        ? sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`] as VisionPreset[]
+        : [];
+
+    const presetPlaceholder = document.createElement("option");
+    presetPlaceholder.value = "";
+    presetPlaceholder.textContent = scenePresets.length > 0 ? "Apply preset..." : "No presets saved";
+    visionPresetSelect.appendChild(presetPlaceholder);
+
+    for (const preset of scenePresets)
+    {
+        const option = document.createElement("option");
+        option.value = preset.name;
+        option.textContent = preset.name;
+        visionPresetSelect.appendChild(option);
+    }
 
     visionOwnerSelect.value = '';
     if (unitItems.length === 1)
@@ -83,6 +110,35 @@ OBR.onReady(async () =>
          : Object.values(LIGHTDIRECTIONS)[0];
     }
 
+    visionPresetSelect.onchange = async (event) =>
+    {
+        const target = event.currentTarget as HTMLSelectElement;
+        if (!target.value) return;
+
+        const matchedPreset = scenePresets.find(preset => preset.name === target.value);
+        if (!matchedPreset) return;
+
+        await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
+        {
+            for (const item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionRange`] = matchedPreset.visionRange;
+                item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = matchedPreset.visionSourceRange;
+                item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = matchedPreset.visionFallOff;
+                item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = matchedPreset.visionInAngle;
+                item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = matchedPreset.visionOutAngle;
+                item.metadata[`${Constants.EXTENSIONID}/visionDark`] = matchedPreset.visionDark;
+            }
+        });
+
+        visionRangeInput.value = matchedPreset.visionRange;
+        visionBumperInput.value = matchedPreset.visionSourceRange;
+        visionFalloffInput.value = matchedPreset.visionFallOff;
+        visionInnerInput.value = matchedPreset.visionInAngle;
+        visionOuterInput.value = matchedPreset.visionOutAngle;
+        visionDarkInput.value = matchedPreset.visionDark;
+    };
+
     visionLightDirectionSelect.onchange = async (event) =>
     {
         const target = event.currentTarget as HTMLSelectElement;
@@ -112,13 +168,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionRangeDefault');
+        NormalizeIntegerInput(target, GetVisionDefault('visionRangeDefault'), 0, 999);
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
             for (let item of items)
@@ -133,13 +183,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseFloat(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionSourceDefault');
+        NormalizeFloatInput(target, GetVisionDefault('visionSourceDefault'), 0, 999);
 
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
@@ -155,13 +199,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseFloat(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 10)
-            target.value = "10";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionFallOffDefault');
+        NormalizeFloatInput(target, GetVisionDefault('visionFallOffDefault'), 0, 10);
 
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
@@ -177,13 +215,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseInt(target.value);
-        if (value < -360)
-            target.value = "-360";
-        if (value > 360)
-            target.value = "360";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionInAngleDefault');
+        NormalizeIntegerInput(target, GetVisionDefault('visionInAngleDefault'), -360, 360);
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
             for (let item of items)
@@ -198,13 +230,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseInt(target.value);
-        if (value < -360)
-            target.value = "-360";
-        if (value > 360)
-            target.value = "360";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionOutAngleDefault');
+        NormalizeIntegerInput(target, GetVisionDefault('visionOutAngleDefault'), -360, 360);
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
             for (let item of items)
@@ -219,13 +245,7 @@ OBR.onReady(async () =>
         if (!event || !event.target) return;
 
         const target = event.target as HTMLInputElement;
-        const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
-        if (isNaN(value))
-            target.value = GetVisionDefault('visionDarkDefault');
+        NormalizeIntegerInput(target, GetVisionDefault('visionDarkDefault'), 0, 999);
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
         {
             for (let item of items)
@@ -253,6 +273,32 @@ OBR.onReady(async () =>
             }
         });
     };
+
+    function NormalizeIntegerInput(target: HTMLInputElement, fallback: string, min: number, max: number)
+    {
+        const value = parseInt(target.value);
+        if (isNaN(value))
+            target.value = fallback;
+        else if (value < min)
+            target.value = min.toString();
+        else if (value > max)
+            target.value = max.toString();
+        else
+            target.value = value.toString();
+    }
+
+    function NormalizeFloatInput(target: HTMLInputElement, fallback: string, min: number, max: number)
+    {
+        const value = parseFloat(target.value);
+        if (isNaN(value))
+            target.value = fallback;
+        else if (value < min)
+            target.value = min.toString();
+        else if (value > max)
+            target.value = max.toString();
+        else
+            target.value = value.toString();
+    }
 
     function GetVisionDefault(key: string): string
     {

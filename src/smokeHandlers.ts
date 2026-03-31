@@ -131,6 +131,32 @@ export function SetupGMInputHandlers(mobile = false)
         await OBR.broadcast.sendMessage(Constants.RESETPERSISTID, true, { destination: "ALL" });
     };
 
+    const persistenceLimitInput = document.getElementById("persistence_limit") as HTMLInputElement;
+    const savedPersistenceLimit = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistenceLimit`];
+    persistenceLimitInput.value = typeof savedPersistenceLimit === "string"
+        ? savedPersistenceLimit
+        : typeof savedPersistenceLimit === "number"
+            ? savedPersistenceLimit.toString()
+            : "100";
+    persistenceLimitInput.onchange = async (event: Event) =>
+    {
+        if (!event || !event.target) return;
+
+        const target = event.target as HTMLInputElement;
+        const value = parseInt(target.value);
+        if (isNaN(value))
+            target.value = "100";
+        else if (value < 1)
+            target.value = "1";
+        else if (value > 999)
+            target.value = "999";
+        else
+            target.value = value.toString();
+
+        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/persistenceLimit`]: target.value });
+        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
+    };
+
     // Toggles the colored ownership lines
     const toggleOwnerLines = document.getElementById("toggle_ownerlines") as HTMLInputElement;
     toggleOwnerLines.checked = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] === true;
@@ -206,7 +232,7 @@ export function SetupGMInputHandlers(mobile = false)
     // Toggle the elevation style between tokens see over walls, and consistent levels (0 - 6 all work the same);
     const elevationStyleSelect = document.getElementById('elevation_style_select') as HTMLSelectElement;
     const savedElevationStyle = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
-    elevationStyleSelect.value = savedElevationStyle === "true" ? "true" : "false";
+    elevationStyleSelect.value = savedElevationStyle === true ? "true" : "false";
     elevationStyleSelect.onchange = async (event) =>
     {
         const target = event.currentTarget as HTMLSelectElement;
@@ -353,12 +379,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
         if (isNaN(value))
-            target.value = GetSourceRangeDefault();
+            target.value = GetVisionRangeDefault();
+        else if (value < 0)
+            target.value = "0";
+        else if (value > 999)
+            target.value = "999";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionRangeDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -372,12 +400,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseFloat(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
         if (isNaN(value))
             target.value = GetSourceRangeDefault();
+        else if (value < 0)
+            target.value = "0";
+        else if (value > 999)
+            target.value = "999";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionSourceDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -391,12 +421,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 999)
-            target.value = "999";
         if (isNaN(value))
-            target.value = GetSourceRangeDefault();
+            target.value = GetDarkvisionDefault().toString();
+        else if (value < 0)
+            target.value = "0";
+        else if (value > 999)
+            target.value = "999";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionDarkDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -410,12 +442,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < -360)
-            target.value = "-360";
-        if (value > 360)
-            target.value = "360";
         if (isNaN(value))
-            target.value = GetOuterAngleDefault();
+            target.value = GetInnerAngleDefault().toString();
+        else if (value < -360)
+            target.value = "-360";
+        else if (value > 360)
+            target.value = "360";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionInAngleDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -429,12 +463,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseInt(target.value);
-        if (value < -360)
-            target.value = "-360";
-        if (value > 360)
-            target.value = "360";
         if (isNaN(value))
-            target.value = GetOuterAngleDefault();
+            target.value = GetOuterAngleDefault().toString();
+        else if (value < -360)
+            target.value = "-360";
+        else if (value > 360)
+            target.value = "360";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionOutAngleDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -448,12 +484,14 @@ export function SetupGMInputHandlers(mobile = false)
 
         const target = event.target as HTMLInputElement;
         const value = parseFloat(target.value);
-        if (value < 0)
-            target.value = "0";
-        if (value > 10)
-            target.value = "10";
         if (isNaN(value))
             target.value = GetFalloffRangeDefault();
+        else if (value < 0)
+            target.value = "0";
+        else if (value > 10)
+            target.value = "10";
+        else
+            target.value = value.toString();
 
         await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/visionFallOffDefault`]: target.value });
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
@@ -508,7 +546,13 @@ export function SetupGMInputHandlers(mobile = false)
                     return;
                 }
                 const fileContent = target.result;
-                importObject = JSON.parse(fileContent);
+                try {
+                    importObject = JSON.parse(fileContent);
+                } catch {
+                    importErrors!.innerText = "Import file contains invalid JSON";
+                    OBR.notification.show("Smoke & Spectre: Import file contains invalid JSON.", "ERROR");
+                    return;
+                }
 
                 // do we really need to validate this here? can do it inside the import functions for each vtt
                 if (importObject && ((importObject.walls && importObject.walls.length)
@@ -640,4 +684,161 @@ export function SetupGMInputHandlers(mobile = false)
         el: "#tool_color",
         defaultColor: getToolColor
     });
+}
+
+type VisionPreset = {
+    id: string;
+    name: string;
+    visionRange: string;
+    visionDark: string;
+    visionSourceRange: string;
+    visionFallOff: string;
+    visionInAngle: string;
+    visionOutAngle: string;
+};
+
+const VISION_PRESETS_KEY = `${Constants.EXTENSIONID}/visionPresets`;
+const MAX_VISION_PRESETS = 20;
+
+function RenderPresetList(
+    container: HTMLDivElement,
+    presets: VisionPreset[],
+    onApply: (id: string) => Promise<void>,
+    onDelete: (id: string) => Promise<void>)
+{
+    if (presets.length === 0)
+    {
+        container.innerHTML = `<div style="text-align: center; padding: 8px; opacity: 0.6;">No presets saved.</div>`;
+        return;
+    }
+
+    const table = document.createElement("table");
+    table.style.width = "100%";
+    const colgroup = document.createElement("colgroup");
+    colgroup.innerHTML = `<col style="width: 50%;"><col style="width: 25%;"><col style="width: 25%;">`;
+    table.appendChild(colgroup);
+
+    for (const preset of presets)
+    {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+            <td style="padding: 2px;">
+                <div style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${preset.name}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; opacity: 0.9; font-size: 0.85em;">
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./visionRange.svg">${preset.visionRange}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./visionBumper.svg">${preset.visionSourceRange}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./visionInner.svg">${preset.visionInAngle}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./visionOuter.svg">${preset.visionOutAngle}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./visionFalloff.svg">${preset.visionFallOff}</span>
+                    <span style="display: inline-flex; align-items: center; gap: 3px;"><img class="setting_svg" src="./darkvision.svg">${preset.visionDark}</span>
+                </div>
+            </td>
+            <td><input type="button" class="settingsButton" value="Apply" data-preset-id="${preset.id}"></td>
+            <td><input type="button" class="settingsButton" value="Delete" data-preset-delete-id="${preset.id}"></td>
+        `;
+        table.appendChild(row);
+    }
+
+    container.innerHTML = "";
+    container.appendChild(table);
+
+    table.addEventListener("click", async (e) =>
+    {
+        const target = e.target as HTMLInputElement;
+        if (!target || target.tagName !== "INPUT") return;
+
+        const applyId = target.dataset.presetId;
+        const deleteId = target.dataset.presetDeleteId;
+
+        if (applyId) await onApply(applyId);
+        else if (deleteId) await onDelete(deleteId);
+    });
+}
+
+export function SetupPresetHandlers()
+{
+    const presetNameInput = document.getElementById("preset_name") as HTMLInputElement;
+    const presetVRange = document.getElementById("preset_vrange") as HTMLInputElement;
+    const presetVDark = document.getElementById("preset_vdark") as HTMLInputElement;
+    const presetVSource = document.getElementById("preset_vsource") as HTMLInputElement;
+    const presetVFalloff = document.getElementById("preset_vfalloff") as HTMLInputElement;
+    const presetVInner = document.getElementById("preset_vinner") as HTMLInputElement;
+    const presetVOuter = document.getElementById("preset_vouter") as HTMLInputElement;
+    const presetSaveBtn = document.getElementById("preset_save_btn") as HTMLInputElement;
+    const presetList = document.getElementById("preset_list") as HTMLDivElement;
+
+    if (!presetSaveBtn || !presetList) return;
+
+    let presets = Array.isArray(BSCACHE.sceneMetadata[VISION_PRESETS_KEY])
+        ? BSCACHE.sceneMetadata[VISION_PRESETS_KEY] as VisionPreset[]
+        : [];
+
+    const persistAndRender = async (updated: VisionPreset[]) =>
+    {
+        presets = updated;
+        BSCACHE.sceneMetadata[VISION_PRESETS_KEY] = updated;
+        await OBR.scene.setMetadata({ [VISION_PRESETS_KEY]: updated });
+        RenderPresetList(presetList, presets, onApply, onDelete);
+    };
+
+    const onApply = async (presetId: string) =>
+    {
+        const preset = presets.find(p => p.id === presetId);
+        if (!preset) return;
+        const selection = await OBR.player.getSelection();
+        if (!selection || selection.length === 0)
+        {
+            await OBR.notification.show("Select one or more tokens on the board to apply the preset.", "WARNING");
+            return;
+        }
+        await OBR.scene.items.updateItems(selection, (items) =>
+        {
+            for (const item of items)
+            {
+                item.metadata[`${Constants.EXTENSIONID}/visionRange`] = preset.visionRange;
+                item.metadata[`${Constants.EXTENSIONID}/visionDark`] = preset.visionDark;
+                item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = preset.visionSourceRange;
+                item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = preset.visionFallOff;
+                item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = preset.visionInAngle;
+                item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = preset.visionOutAngle;
+            }
+        });
+        await OBR.notification.show(`Preset "${preset.name}" applied to ${selection.length} token(s).`, "SUCCESS");
+    };
+
+    const onDelete = async (presetId: string) =>
+    {
+        await persistAndRender(presets.filter(p => p.id !== presetId));
+    };
+
+    RenderPresetList(presetList, presets, onApply, onDelete);
+
+    presetSaveBtn.onclick = async () =>
+    {
+        const name = presetNameInput.value.trim();
+        if (!name)
+        {
+            await OBR.notification.show("Please enter a preset name.", "WARNING");
+            return;
+        }
+        if (presets.length >= MAX_VISION_PRESETS)
+        {
+            await OBR.notification.show(`You can save up to ${MAX_VISION_PRESETS} presets. Delete one to add another.`, "WARNING");
+            return;
+        }
+
+        const newPreset: VisionPreset = {
+            id: crypto.randomUUID(),
+            name,
+            visionRange: presetVRange.value || GetVisionRangeDefault(),
+            visionDark: presetVDark.value || GetDarkvisionDefault().toString(),
+            visionSourceRange: presetVSource.value || GetSourceRangeDefault(),
+            visionFallOff: presetVFalloff.value || GetFalloffRangeDefault(),
+            visionInAngle: presetVInner.value || GetInnerAngleDefault().toString(),
+            visionOutAngle: presetVOuter.value || GetOuterAngleDefault().toString(),
+        };
+        const updated = [...presets, newPreset];
+        await persistAndRender(updated);
+        presetNameInput.value = "";
+    };
 }

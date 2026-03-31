@@ -6,8 +6,7 @@ import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, Get
 import { ConvertPathCommands, IsMetadataNumber } from './utilities/bsUtilities';
 import { TensionHelper } from "./obr/tensionhelper";
 
-export async function SetupContextMenus(): Promise<void>
-{
+export async function SetupContextMenus(): Promise<void> {
     await OBR.contextMenu.create({
         id: `${Constants.EXTENSIONID}/convert-curve`,
         icons: [
@@ -33,20 +32,16 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const linesToMake: Curve[] = [];
             const linesToDelete: string[] = [];
 
-            for (const item of ctx.items)
-            {
-                if (item.type === "CURVE")
-                {
+            for (const item of ctx.items) {
+                if (item.type === "CURVE") {
                     // Remember this Que: Lines need to remade because for some reason
                     // it doesnt work great converting straight over
                     const baseCurve = item as Curve;
-                    if (baseCurve.points.length > 2)
-                    {
+                    if (baseCurve.points.length > 2) {
                         const tension = baseCurve.style.tension ?? 0;
                         const closedShape = baseCurve.style.closed === true || baseCurve.style.fillOpacity !== 0;
                         if (closedShape) { baseCurve.points.push(baseCurve.points[0]); }
@@ -78,11 +73,9 @@ export async function SetupContextMenus(): Promise<void>
                         linesToDelete.push(baseCurve.id);
                     }
                 }
-                else if (item.type === "PATH")
-                {
+                else if (item.type === "PATH") {
                     const basePath = item as Path;
-                    if (basePath.commands.length > 2)
-                    {
+                    if (basePath.commands.length > 2) {
                         const line = buildCurve()
                             .tension(0)
                             .points(ConvertPathCommands(basePath.commands, basePath.position))
@@ -106,8 +99,7 @@ export async function SetupContextMenus(): Promise<void>
                         linesToDelete.push(basePath.id);
                     }
                 }
-                else if (item.type === "LINE")
-                {
+                else if (item.type === "LINE") {
                     const baseLine = item as Line;
                     const line = buildCurve()
                         .tension(0)
@@ -132,24 +124,20 @@ export async function SetupContextMenus(): Promise<void>
                     linesToMake.push(line);
                     linesToDelete.push(baseLine.id);
                 }
-                else if (item.type === "SHAPE")
-                {
+                else if (item.type === "SHAPE") {
                     const baseShape = item as Shape;
                     const points: Vector2[] = [];
-                    if (baseShape.shapeType === "CIRCLE")
-                    {
+                    if (baseShape.shapeType === "CIRCLE") {
                         const radius = Math.min(baseShape.width, baseShape.height) / 2;
                         const angleIncrement = (2 * Math.PI) / 20;
-                        for (let i = 0; i < 20; i++)
-                        {
+                        for (let i = 0; i < 20; i++) {
                             const angle = i * angleIncrement;
                             const x = radius * Math.cos(angle);
                             const y = radius * Math.sin(angle);
                             points.push({ x, y });
                         }
                     }
-                    else if (baseShape.shapeType === "RECTANGLE")
-                    {
+                    else if (baseShape.shapeType === "RECTANGLE") {
                         const x = 0;
                         const y = 0;
                         const endX = x + baseShape.width;
@@ -160,22 +148,19 @@ export async function SetupContextMenus(): Promise<void>
                         points.push({ x: endX, y: endY });
                         points.push({ x: x, y: endY });
                     }
-                    else if (baseShape.shapeType === "HEXAGON")
-                    {
+                    else if (baseShape.shapeType === "HEXAGON") {
                         const radius = baseShape.width / 2;
                         const angles = [Math.PI / 2, Math.PI / 6, 11 * Math.PI / 6, 3 * Math.PI / 2, 7 * Math.PI / 6, 5 * Math.PI / 6];
 
                         // Calculate hexagon vertices based on angles and rotation
-                        for (let i = 0; i < 6; i++)
-                        {
+                        for (let i = 0; i < 6; i++) {
                             const angle = angles[i];
                             const x = radius * Math.cos(angle);
                             const y = radius * Math.sin(angle);
                             points.push({ x, y });
                         }
                     }
-                    else if (baseShape.shapeType === "TRIANGLE")
-                    {
+                    else if (baseShape.shapeType === "TRIANGLE") {
                         const x = 0;
                         const y = 0;
                         points.push({ x: x, y: y });
@@ -183,13 +168,11 @@ export async function SetupContextMenus(): Promise<void>
                         points.push({ x: x + (baseShape.width / 2), y: y + baseShape.height });
                     }
 
-                    if (points.length > 0)
-                    {
+                    if (points.length > 0) {
                         points.push(points[0]);
 
                         let adjustedPoints = points;
-                        if (baseShape.shapeType === "CIRCLE")
-                        {
+                        if (baseShape.shapeType === "CIRCLE") {
                             const curvedPath = TensionHelper.CreateSkPath(points, .25, true);
                             adjustedPoints = ConvertPathCommands(curvedPath, { x: 0, y: 0 }, { curveSegments: 20 });
                         }
@@ -221,11 +204,9 @@ export async function SetupContextMenus(): Promise<void>
                     }
                 }
             }
-            if (linesToMake.length > 0)
-            {
+            if (linesToMake.length > 0) {
                 const batchSize = 5;
-                for (let i = 0; i < linesToMake.length; i += batchSize)
-                {
+                for (let i = 0; i < linesToMake.length; i += batchSize) {
                     const batch = linesToMake.slice(i, i + batchSize);
                     await OBR.scene.items.addItems(batch);
                 }
@@ -262,22 +243,47 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const enableVision = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/hasVision`] === undefined);
 
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableVision)
-                    {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (!enableVision) {
                         delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
                     }
-                    else
-                    {
+                    else {
+                        const asImage = item as Image;
+                        const tokenText = asImage.text?.plainText?.trim();
+                        const fallbackName = item.name?.trim();
+                        const itemName = tokenText && tokenText.length > 0
+                            ? tokenText
+                            : (fallbackName && fallbackName.length > 0 ? fallbackName : "Unnamed Item");
                         item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
+                        const availablePresets = Array.isArray(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`])
+                            ? BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`] as {
+                                name: string;
+                                visionRange: string;
+                                visionSourceRange: string;
+                                visionFallOff: string;
+                                visionInAngle: string;
+                                visionOutAngle: string;
+                                visionDark: string;
+                            }[]
+                            : [];
+                        const matchedPreset = availablePresets.find(
+                            preset => preset.name?.trim().toLocaleLowerCase() === itemName.toLocaleLowerCase());
+
+                        if (matchedPreset) {
+                            item.metadata[`${Constants.EXTENSIONID}/visionRange`] = matchedPreset.visionRange;
+                            item.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] = matchedPreset.visionSourceRange;
+                            item.metadata[`${Constants.EXTENSIONID}/visionFallOff`] = matchedPreset.visionFallOff;
+                            item.metadata[`${Constants.EXTENSIONID}/visionInAngle`] = matchedPreset.visionInAngle;
+                            item.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] = matchedPreset.visionOutAngle;
+                            item.metadata[`${Constants.EXTENSIONID}/visionDark`] = matchedPreset.visionDark;
+                            continue;
+                        }
+
                         const keysWithDefaults = [
                             { key: "visionRange", defaultFn: GetVisionRangeDefault },
                             { key: "visionSourceRange", defaultFn: GetSourceRangeDefault },
@@ -287,11 +293,9 @@ export async function SetupContextMenus(): Promise<void>
                             { key: "visionDark", defaultFn: GetDarkvisionDefault }
                         ];
 
-                        for (const { key, defaultFn } of keysWithDefaults)
-                        {
+                        for (const { key, defaultFn } of keysWithDefaults) {
                             const fullKey = `${Constants.EXTENSIONID}/${key}`;
-                            if (!IsMetadataNumber(item.metadata, fullKey))
-                            {
+                            if (!IsMetadataNumber(item.metadata, fullKey)) {
                                 item.metadata[fullKey] = defaultFn();
                             }
                         }
@@ -322,18 +326,13 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`])
-                    {
+        async onClick(ctx) {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`]) {
                         delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
+                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`]) {
                         item.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
                     }
                 }
@@ -369,18 +368,13 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/doubleSided`])
-                    {
+        async onClick(ctx) {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/doubleSided`]) {
                         delete item.metadata[`${Constants.EXTENSIONID}/doubleSided`];
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
+                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`]) {
                         item.metadata[`${Constants.EXTENSIONID}/doubleSided`] = true;
                     }
                 }
@@ -401,12 +395,9 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
-            {
-                for (const item of items)
-                {
+        async onClick(ctx) {
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items => {
+                for (const item of items) {
                     const swappedPoints = item.points.reverse();
                     item.points = swappedPoints;
                 }
@@ -442,18 +433,13 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/blocking`])
-                    {
+        async onClick(ctx) {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/blocking`]) {
                         delete item.metadata[`${Constants.EXTENSIONID}/blocking`];
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
+                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`]) {
                         item.metadata[`${Constants.EXTENSIONID}/blocking`] = true;
                     }
                 }
@@ -474,8 +460,7 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(_ctx, elementId: string)
-        {
+        async onClick(_ctx, elementId: string) {
             await OBR.popover.open({
                 id: Constants.CONTEXTID,
                 url: `/pages/mapcontextembed.html`,
@@ -507,24 +492,19 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const turnToFogMaps = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isFogMap`] === undefined);
 
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!turnToFogMaps)
-                    {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (!turnToFogMaps) {
                         item.layer = "MAP";
                         item.zIndex = -1.00000001;
                         item.disableAutoZIndex = false;
                         delete item.metadata[`${Constants.EXTENSIONID}/isFogMap`];
                     }
-                    else
-                    {
+                    else {
                         item.layer = "FOG";
                         item.zIndex = -1.00000001;
                         item.disableAutoZIndex = true;
@@ -575,23 +555,18 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const enableDoor = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isWindow`] === undefined);
 
-            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableDoor)
-                    {
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items => {
+                for (const item of items) {
+                    if (!enableDoor) {
                         delete item.metadata[`${Constants.EXTENSIONID}/isWindow`];
                         //item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
                         item.style.strokeDash = Constants.DEFAULTLINESTROKE;
                     }
-                    else
-                    {
+                    else {
                         item.metadata[`${Constants.EXTENSIONID}/isWindow`] = true;
                         //item.style.strokeColor = Constants.WINDOWCOLOR;
                         item.style.strokeDash = [20, 20];
@@ -641,25 +616,20 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const enableDoor = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isDoor`] === undefined);
 
-            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableDoor)
-                    {
+            await OBR.scene.items.updateItems<Curve>(ctx.items as Curve[], items => {
+                for (const item of items) {
+                    if (!enableDoor) {
                         delete item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`];
                         delete item.metadata[`${Constants.EXTENSIONID}/doorOpen`];
                         delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
                         delete item.metadata[`${Constants.EXTENSIONID}/isDoor`];
                         item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
                     }
-                    else
-                    {
+                    else {
                         //#bb99ff
                         item.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
                         item.style.strokeColor = Constants.DOORCOLOR;
@@ -723,19 +693,14 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
-            await OBR.scene.items.updateItems(ctx.items, (items) =>
-            {
-                for (let item of items)
-                {
-                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`])
-                    {
+        async onClick(ctx) {
+            await OBR.scene.items.updateItems(ctx.items, (items) => {
+                for (let item of items) {
+                    if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`] && item.metadata[`${Constants.EXTENSIONID}/disabled`]) {
                         delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
                         delete item.metadata[`${Constants.EXTENSIONID}/doorOpen`];
                     }
-                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`])
-                    {
+                    else if (item.metadata[`${Constants.EXTENSIONID}/isVisionLine`]) {
                         item.metadata[`${Constants.EXTENSIONID}/disabled`] = true;
                         item.metadata[`${Constants.EXTENSIONID}/doorOpen`] = true;
                     }
@@ -792,21 +757,16 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const lockDoor = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] === undefined);
 
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!lockDoor)
-                    {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (!lockDoor) {
                         delete item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`];
                     }
-                    else
-                    {
+                    else {
                         item.metadata[`${Constants.EXTENSIONID}/isDoorLocked`] = true;
                     }
                 }
@@ -840,22 +800,17 @@ export async function SetupContextMenus(): Promise<void>
                 },
             },
         ],
-        async onClick(ctx)
-        {
+        async onClick(ctx) {
             const enableTorchlight = ctx.items.every(
                 (item) => item.metadata[`${Constants.EXTENSIONID}/isTorch`] === undefined);
 
-            await OBR.scene.items.updateItems(ctx.items, items =>
-            {
-                for (const item of items)
-                {
-                    if (!enableTorchlight)
-                    {
+            await OBR.scene.items.updateItems(ctx.items, items => {
+                for (const item of items) {
+                    if (!enableTorchlight) {
                         delete item.metadata[`${Constants.EXTENSIONID}/isTorch`];
                         delete item.metadata[`${Constants.EXTENSIONID}/hasVision`];
                     }
-                    else
-                    {
+                    else {
                         item.metadata[`${Constants.EXTENSIONID}/isTorch`] = true;
                         item.metadata[`${Constants.EXTENSIONID}/hasVision`] = true;
                     }
@@ -885,71 +840,57 @@ export async function SetupContextMenus(): Promise<void>
                 },
             }
         ],
-        async onClick(context)
-        {
+        async onClick(context) {
             const spectre = context.items.every(
                 (item) => item.metadata[`${Constants.SPECTREID}/isSpectre`] === true
             );
 
-            if (spectre)
-            {
+            if (spectre) {
                 // Removing spectres
                 const parentTokensIds = context.items.map(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] as string);
-                await OBR.scene.items.updateItems(parentTokensIds, items =>
-                {
-                    for (const item of items)
-                    {
+                await OBR.scene.items.updateItems(parentTokensIds, items => {
+                    for (const item of items) {
                         delete item.metadata[`${Constants.SPECTREID}/isSpectre`];
                         delete item.metadata[`${Constants.SPECTREID}/spectreViewers`];
                         item.visible = true;
                     }
                 });
-                for (const ghost of parentTokensIds)
-                {
+                for (const ghost of parentTokensIds) {
                     SPECTREMACHINE.RemoveGhostSelect(ghost);
                 }
                 await OBR.scene.local.deleteItems(context.items.map(x => x.id));
             }
-            else
-            {
+            else {
                 // creating spectres
-                await OBR.scene.items.updateItems(context.items.map(x => x.id), items =>
-                {
-                    for (const item of items)
-                    {
+                await OBR.scene.items.updateItems(context.items.map(x => x.id), items => {
+                    for (const item of items) {
                         item.metadata[`${Constants.SPECTREID}/isSpectre`] = true;
                         item.metadata[`${Constants.SPECTREID}/spectreViewers`] = [BSCACHE.playerId];
                         item.visible = false;
                     }
                 });
-                for (const ghost of context.items)
-                {
+                for (const ghost of context.items) {
                     await SPECTREMACHINE.SetupGhostSelect(ghost as Image);
                 }
             }
         }
     });
 
-    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true)
-    {
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true) {
         await SetupUnitContextMenu(true);
     }
 
-    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true)
-    {
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true) {
         await SetupWallContextMenu(true);
     }
 
-    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true)
-    {
+    if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true) {
         await SetupAutoHideMenu(true);
     }
 }
 
-export async function SetupAutoHideMenu(enable: boolean)
-{
-    if (enable)
-    {
+export async function SetupAutoHideMenu(enable: boolean) {
+    if (enable) {
         await OBR.contextMenu.create({
             id: `${Constants.EXTENSIONID}/autohide-toggle`,
             icons: [
@@ -980,21 +921,16 @@ export async function SetupAutoHideMenu(enable: boolean)
                     },
                 },
             ],
-            async onClick(ctx)
-            {
+            async onClick(ctx) {
                 const enableAutohide = ctx.items.every(
                     (item) => item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === undefined);
 
-                await OBR.scene.items.updateItems(ctx.items, items =>
-                {
-                    for (const item of items)
-                    {
-                        if (!enableAutohide)
-                        {
+                await OBR.scene.items.updateItems(ctx.items, items => {
+                    for (const item of items) {
+                        if (!enableAutohide) {
                             delete item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`];
                         }
-                        else
-                        {
+                        else {
                             item.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] = true;
                         }
                     }
@@ -1002,16 +938,13 @@ export async function SetupAutoHideMenu(enable: boolean)
             },
         });
     }
-    else
-    {
+    else {
         await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/autohide-toggle`);
     }
 }
 
-export async function SetupWallContextMenu(enable: boolean)
-{
-    if (enable)
-    {
+export async function SetupWallContextMenu(enable: boolean) {
+    if (enable) {
 
 
         await OBR.contextMenu.create({
@@ -1025,8 +958,7 @@ export async function SetupWallContextMenu(enable: boolean)
                     },
                 }
             ],
-            async onClick(_ctx, elementId: string)
-            {
+            async onClick(_ctx, elementId: string) {
                 await OBR.popover.open({
                     id: Constants.CONTEXTID,
                     url: `/pages/wallcontextembed.html`,
@@ -1038,16 +970,13 @@ export async function SetupWallContextMenu(enable: boolean)
             embed: { url: `/pages/wallcontextembed.html?contextmenu=true`, height: 80 }
         });
     }
-    else
-    {
+    else {
         await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/switch-advanced-wall`);
     }
 }
 
-export async function SetupUnitContextMenu(enable: boolean)
-{
-    if (enable)
-    {
+export async function SetupUnitContextMenu(enable: boolean) {
+    if (enable) {
         await OBR.contextMenu.create({
             id: `${Constants.EXTENSIONID}/context-menu-embed`,
             icons: [
@@ -1066,27 +995,24 @@ export async function SetupUnitContextMenu(enable: boolean)
                 },
             ],
 
-            async onClick(_ctx, elementId: string)
-            {
+            async onClick(_ctx, elementId: string) {
                 await OBR.popover.open({
                     id: Constants.CONTEXTID,
                     url: `/pages/unitcontextembed.html`,
-                    height: 200,
+                    height: 230,
                     width: 200,
                     anchorElementId: elementId
                 });
             },
-            embed: { url: `/pages/unitcontextembed.html?contextmenu=true`, height: 200 }
+            embed: { url: `/pages/unitcontextembed.html?contextmenu=true`, height: 230 }
         });
     }
-    else
-    {
+    else {
         await OBR.contextMenu.remove(`${Constants.EXTENSIONID}/context-menu-embed`);
     }
 }
 
-function adjustPoints(points: Vector2[], adjustment: Vector2): Vector2[]
-{
+function adjustPoints(points: Vector2[], adjustment: Vector2): Vector2[] {
     return points.map(point => ({
         x: point.x + adjustment.x,
         y: point.y + adjustment.y

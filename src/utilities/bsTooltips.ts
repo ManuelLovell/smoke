@@ -31,6 +31,7 @@ export function CreateTooltips()
     tooltips.set(`tip_fogfill`, "Toggle to enable/disable fog fill for the scene.");
     tooltips.set(`tip_disablevision`, "Toggle to enable/disable vision for all tokens in scene.");
     tooltips.set(`tip_persistence`, "Toggle to enable/disable persistence vision for tokens. This will leave the map revealed as they travel.");
+    tooltips.set(`tip_persistencelimit`, "Set the maximum number of persistent lights kept for this scene before older ones are removed.");
     tooltips.set(`tip_playerdoors`, "Toggle to enable/disable players being able to see and use doors on their own.");
     tooltips.set(`tip_ownerrings`, "Toggle to enable/disable the colored rings seen around a player to indicate their vision radius. GM-Only.");
     tooltips.set(`tip_gridsnap`, "Toggle to enable/disable grid snapping when drawing Obstruction Lines and Objects. This is separate from the default OBR Snap setting.");

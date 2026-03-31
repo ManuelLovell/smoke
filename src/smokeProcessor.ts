@@ -43,16 +43,34 @@ class SmokeProcessor {
         metadata: any;
     }[] = [];
     persistenceCullingDistance = 1;
-    persistenceLimit = 50;
+    persistenceLimit = 100;
 
-    public trailingFoggedMaps: string[] = [];
-    public trailingFogTokens: string[] = [];
+    public trailingFoggedMaps: Set<string> = new Set();
+    public trailingFogTokens: Set<string> = new Set();
+
+    private isRunning = false;
+    private runPending = false;
+    private lastStampPosition: Map<string, Vector2> = new Map();
 
     constructor() {
         this.VisibilityChecker = new VisibilityChecker();
     }
 
+    private GetPersistenceLimit()
+    {
+        const metadataValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistenceLimit`];
+        const numericValue = typeof metadataValue === "number"
+            ? metadataValue
+            : parseInt(metadataValue as string);
+
+        if (isNaN(numericValue)) return 100;
+        if (numericValue < 1) return 1;
+        if (numericValue > 999) return 999;
+        return numericValue;
+    }
+
     public async Initialize() {
+        this.persistenceLimit = this.GetPersistenceLimit();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true) {
             // Using Localstorage to keep persistent data atm
             const persistentFogData = localStorage.getItem(Utilities.GetPersistentLocalKey());
@@ -69,7 +87,9 @@ class SmokeProcessor {
                         // We move the ID from the metadata so it resembles the original token
                         // The metadata is that of the original scene token
                         // The original 'depth' is moved to the zIndex so it can be reset without updating function
-                        pLight.id = pLight.metadata[`${Constants.EXTENSIONID}/isPersistentLight`] as string;
+                        const rehydratedId = pLight.metadata[`${Constants.EXTENSIONID}/isPersistentLight`] as string;
+                        if (!rehydratedId) continue;
+                        pLight.id = rehydratedId;
                         this.AddPersistentLightToQueue(pLight as any, pLight.zIndex);
                     }
                 }
@@ -89,23 +109,34 @@ class SmokeProcessor {
 
     public async Reset() {
         this.persistentLights = [];
-        this.trailingFogTokens = [];
-        this.trailingFoggedMaps = [];
+        this.trailingFogTokens = new Set();
+        this.trailingFoggedMaps = new Set();
+        this.lastStampPosition = new Map();
     }
 
     public async Run() {
-        await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
-        await this.UpdateWindowVisibility();
-        await this.UpdateWalls();
-        await this.UpdateDoors();
-        await this.UpdateLights();
-        await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
-        await this.UpdateTrailingFogTokens();
-        await this.UpdateAutoHideTokens();
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true) {
-            // Using Localstorage to keep persistent data atm
-            localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
+        if (this.isRunning) {
+            this.runPending = true;
+            return;
         }
+        this.persistenceLimit = this.GetPersistenceLimit();
+        this.isRunning = true;
+        do {
+            this.runPending = false;
+            await this.UpdateTrailingFogMaps(); // Fog Effect has to go on before Revealer Effect
+            await this.UpdateWindowVisibility();
+            await this.UpdateWalls();
+            await this.UpdateDoors();
+            await this.UpdateLights();
+            await this.UpdateOwnershipHighlights(); // Logic for building is coupled with Light logic
+            await this.UpdateTrailingFogTokens();
+            await this.UpdateAutoHideTokens();
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true) {
+                // Using Localstorage to keep persistent data atm
+                localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
+            }
+        } while (this.runPending);
+        this.isRunning = false;
     }
 
     private async UpdateWindowVisibility() {
@@ -138,14 +169,14 @@ class SmokeProcessor {
                 this.revealersToCreate = [];
             }
         }
-        else if (this.trailingFogTokens.length > 0 || this.trailingFoggedMaps.length > 0) {
+        else if (this.trailingFogTokens.size > 0 || this.trailingFoggedMaps.size > 0) {
             // Otherwise, we need to remove all and not process
             const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
             const trailingFogMaps = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogger`] !== undefined) as Effect[];
             if (trailingFogMaps.length > 0) await OBR.scene.local.deleteItems(trailingFogMaps.map(x => x.id));
             if (trailingFogRevealers.length > 0) await OBR.scene.local.deleteItems(trailingFogRevealers.map(x => x.id));
-            this.trailingFogTokens = [];
-            this.trailingFoggedMaps = [];
+            this.trailingFogTokens = new Set();
+            this.trailingFoggedMaps = new Set();
         }
     }
 
@@ -172,15 +203,20 @@ class SmokeProcessor {
     }
 
     private CreateTrailingFogRevealer(light: Light) {
+        // TODO(task-21): Wall-aware trailing fog requires a custom SkSL polygon-occlusion shader.
+        // The nearest N wall segments from VisibilityChecker.cachedWallSegments should be passed as
+        // uniforms and TRAILINGFOGREVEALSHADER updated to compute per-pixel occlusion, replacing the
+        // current full-circle mask. Until then the revealer ignores walls.
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true) {
-            if (!this.trailingFogTokens.includes(light.id)) {
+            if (!this.trailingFogTokens.has(light.id)) {
+                const revealerSize = Math.max(light.attenuationRadius * 2, 200);
                 const revealerEffect = buildEffect()
                     .position(light.position)
                     .attachedTo(light.id)
                     .rotation(light.rotation)
                     .scale(light.scale)
-                    .width(200)
-                    .height(200)
+                    .width(revealerSize)
+                    .height(revealerSize)
                     .effectType("ATTACHMENT")
                     .layer("POST_PROCESS")
                     .sksl(Constants.TRAILINGFOGREVEALSHADER)
@@ -194,7 +230,7 @@ class SmokeProcessor {
                     .zIndex(200) // Revealer Above Overlay
                     .build();
                 this.revealersToCreate.push(revealerEffect);
-                this.trailingFogTokens.push(light.id);
+                this.trailingFogTokens.add(light.id);
             }
         }
     }
@@ -206,7 +242,7 @@ class SmokeProcessor {
         const trailFoggersToCreate: Effect[] = [];
         const maps = BSCACHE.sceneItems.filter(x => x.layer === "MAP" && x.type === "IMAGE") as Image[];
         for (const map of maps) {
-            if (!this.trailingFoggedMaps.includes(map.id)) {
+            if (!this.trailingFoggedMaps.has(map.id)) {
                 const trailingFogEffect = buildEffect()
                     .position(map.position)
                     .attachedTo(map.id)
@@ -226,7 +262,7 @@ class SmokeProcessor {
                     .zIndex(100) // Overlay at Base
                     .build();
                 trailFoggersToCreate.push(trailingFogEffect);
-                this.trailingFoggedMaps.push(map.id);
+                this.trailingFoggedMaps.add(map.id);
             }
         }
 
@@ -243,8 +279,8 @@ class SmokeProcessor {
     }
 
     private async UpdateDoors() {
-        this.IsPlayerNearDoor();
-        this.ShowGMDoors();
+        await this.IsPlayerNearDoor();
+        await this.ShowGMDoors();
     }
 
     private async IsPlayerNearDoor() {
@@ -622,9 +658,8 @@ class SmokeProcessor {
                         if (!equalDarkVision || !equalOuterRadius) {
                             this.UpdateDarkVision(sceneToken, linkedParent);
                         }
-                        else if (tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] && !existingDarkVision) {
-                            this.CreateDarkVisionToQueue(sceneToken, linkedParent);
-                        }
+                    } else if (tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]) {
+                        this.CreateDarkVisionToQueue(sceneToken, linkedParent);
                     }
                 }
 
@@ -647,19 +682,24 @@ class SmokeProcessor {
             // And there is no persistent light at this spot
             // And there is none within 10px
             if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true && sceneToken.metadata[`${Constants.EXTENSIONID}/visionBlind`] !== true) {
-                const tokenInPosition = this.persistentLights.find(x => x.position.x === sceneToken.position.x && x.position.y === sceneToken.position.y);
-                if (!tokenInPosition) {
-                    // This checks to see if there is any token in a small radius, as to avoid doubling up
-                    if (this.IsPositionClear(sceneToken.position)) {
-                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
+                const lastStamp = this.lastStampPosition.get(sceneToken.id);
+                if (!lastStamp || Utilities.distanceBetween(sceneToken.position, lastStamp) > BSCACHE.gridDpi / 2) {
+                    const tokenInPosition = this.persistentLights.find(x => x.position.x === sceneToken.position.x && x.position.y === sceneToken.position.y);
+                    if (!tokenInPosition) {
+                        // This checks to see if there is any token in a small radius, as to avoid doubling up
+                        if (this.IsPositionClear(sceneToken.position)) {
+                            this.lastStampPosition.set(sceneToken.id, sceneToken.position);
+                            this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
+                        }
                     }
-                }
-                else {
-                    // This means we're using coned vision, and should track rotation for persistence
-                    if ((sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== 360
-                        || sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== 360)
-                        && this.IsPositionAndRotationClear(sceneToken.rotation, sceneToken.position)) {
-                        this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
+                    else {
+                        // This means we're using coned vision, and should track rotation for persistence
+                        if ((sceneToken.metadata[`${Constants.EXTENSIONID}/visionInAngle`] !== "360"
+                            || sceneToken.metadata[`${Constants.EXTENSIONID}/visionOutAngle`] !== "360")
+                            && this.IsPositionAndRotationClear(sceneToken.rotation, sceneToken.position)) {
+                            this.lastStampPosition.set(sceneToken.id, sceneToken.position);
+                            this.AddPersistentLightToQueue(sceneToken, sceneTokenDepth, linkedParent)
+                        }
                     }
                 }
             }
@@ -699,10 +739,10 @@ class SmokeProcessor {
         const localDarkVisions = BSCACHE.sceneLocal.filter(x => isDarkVision(x)) as Effect[];
         for (const darkvision of localDarkVisions) {
             const exists = sceneVisionTokens.find(x => darkvision.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true && darkvision.attachedTo === x.id) as Image;
-            if (!exists) this.decalsToDelete.push(darkvision.id);
+            if (!exists) this.darkVisionToDelete.push(darkvision.id);
             else {
                 if (parseInt(exists.metadata[`${Constants.EXTENSIONID}/visionDark`] as string) < parseInt(exists.metadata[`${Constants.EXTENSIONID}/visionRange`] as string))
-                    this.decalsToDelete.push(darkvision.id);
+                    this.darkVisionToDelete.push(darkvision.id);
             }
         }
 
@@ -765,6 +805,24 @@ class SmokeProcessor {
                 }
             });
 
+        // Reconcile: remove in-memory persistent light entries that no longer exist in local
+        {
+            const freshlyCreatedIds = new Set(
+                this.lightsToCreate
+                    .filter(x => x.metadata[`${Constants.EXTENSIONID}/getPersistentLight`] === true)
+                    .map(x => x.id)
+            );
+            const localPersistentIds = new Set<string>([
+                ...BSCACHE.sceneLocal
+                    .filter(x => x.metadata[`${Constants.EXTENSIONID}/getPersistentLight`] === true)
+                    .map(x => x.id),
+                ...freshlyCreatedIds
+            ]);
+            if (localPersistentIds.size < this.persistentLights.length) {
+                this.persistentLights = this.persistentLights.filter(x => localPersistentIds.has(x.id));
+            }
+        }
+
         this.lightsToCreate = [];
         this.lightsToUpdate = [];
         this.lightsToDelete = [];
@@ -792,7 +850,7 @@ class SmokeProcessor {
 
             // Wall Viewers - If no viewer - If you are Viewer - If you are GM
             const viewers = visionLine.metadata[`${Constants.EXTENSIONID}/wallViewers`] as string[];
-            if (!viewers || (viewers && viewers.length > 0 && viewers[0] === BSCACHE.playerId) || BSCACHE.playerRole === "GM") {
+            if (!viewers || (viewers && viewers.length > 0 && viewers.includes(BSCACHE.playerId)) || BSCACHE.playerRole === "GM") {
                 if (!visionLine.points || visionLine.points.length === 0 || !visionLine.points[0] || visionLine.points[0].x === null || visionLine.points[0].y === null) {
                     continue;
                 }

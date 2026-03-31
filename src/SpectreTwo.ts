@@ -5,20 +5,123 @@ import "tom-select/dist/css/tom-select.css";
 import { BSCACHE } from "./utilities/bsSceneCache";
 import { isLocalSpectre } from "./utilities/itemFilters";
 
+type SpectreUpdate = {
+    id: string;
+    position: Vector2;
+    rotation: number;
+    scale: Vector2;
+    layer: Image["layer"];
+    zIndex: number;
+    visible: boolean;
+    disableAutoZIndex: boolean;
+    locked: boolean;
+    name: string;
+    text: Image["text"];
+    image: Image["image"];
+    grid: Image["grid"];
+};
+
+type SpectreSceneUpdate = {
+    id: string;
+    position: Vector2;
+    rotation: number;
+    scale: Vector2;
+    layer: Image["layer"];
+    zIndex: number;
+    visible: boolean;
+    disableAutoZIndex: boolean;
+};
+
 class Spectre
 {
     spectresToCreate: Item[] = [];
     spectresToDelete: string[] = [];
-    spectresToUpdate: {
-        id: string,
-        position: Vector2,
-        rotation: number,
-        scale: Vector2,
-        layer: any,
-    }[] = [];
+    spectresToUpdate: SpectreUpdate[] = [];
+
+    private isRunning = false;
+    private runPending = false;
+    private suppressLocalSyncIds: Set<string> = new Set();
+    private ghostSelects: Map<string, TomSelect> = new Map();
 
     constructor()
     {
+    }
+
+    private ClearQueues()
+    {
+        this.spectresToCreate = [];
+        this.spectresToUpdate = [];
+        this.spectresToDelete = [];
+    }
+
+    private NearlyEqual(first: number, second: number, epsilon = 0.01)
+    {
+        return Math.abs(first - second) <= epsilon;
+    }
+
+    private EqualPosition(first: Vector2, second: Vector2)
+    {
+        return this.NearlyEqual(first.x, second.x) && this.NearlyEqual(first.y, second.y);
+    }
+
+    private EqualScale(first: Vector2, second: Vector2)
+    {
+        return this.NearlyEqual(first.x, second.x) && this.NearlyEqual(first.y, second.y);
+    }
+
+    private EqualImage(first: Image["image"], second: Image["image"])
+    {
+        return first.height === second.height
+            && first.width === second.width
+            && first.url === second.url
+            && first.mime === second.mime;
+    }
+
+    private EqualGrid(first: Image["grid"], second: Image["grid"])
+    {
+        return first.dpi === second.dpi
+            && first.offset.x === second.offset.x
+            && first.offset.y === second.offset.y;
+    }
+
+    private EqualText(first: Image["text"], second: Image["text"])
+    {
+        return JSON.stringify(first ?? null) === JSON.stringify(second ?? null);
+    }
+
+    private GetDisplayName(ghost: Image)
+    {
+        const tokenText = ghost.text?.plainText?.trim();
+        const fallbackName = ghost.name?.trim();
+        if (tokenText && tokenText.length > 0) return tokenText;
+        if (fallbackName && fallbackName.length > 0) return fallbackName;
+        return "Unnamed Item";
+    }
+
+    private GetSpectreViewers(ghost: Image)
+    {
+        const viewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`];
+        if (Array.isArray(viewers))
+        {
+            return viewers.filter((viewer): viewer is string => typeof viewer === "string" && viewer.length > 0);
+        }
+        return ghost.createdUserId ? [ghost.createdUserId] : [];
+    }
+
+    private QueueSuppressedLocalSync(localIds: string[])
+    {
+        for (const localId of localIds)
+        {
+            this.suppressLocalSyncIds.add(localId);
+        }
+    }
+
+    private ApplyTomSelectTheme(instance: TomSelect)
+    {
+        const control = instance.control;
+        if (!control) return;
+        control.style.backgroundColor = BSCACHE.theme.mode === "DARK" ? "rgb(49, 49, 65)" : "rgb(210, 210, 223)";
+        control.style.borderRadius = "6px";
     }
 
     public async Initialize()
@@ -32,69 +135,123 @@ class Spectre
 
     public async Run()
     {
-        const sceneSpectres = BSCACHE.sceneItems.filter(x => x.metadata[`${Constants.SPECTREID}/isSpectre`] === true) as Image[];
-        const visibleSpectres = sceneSpectres.filter(x => (x.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[]).includes(BSCACHE.playerId));
-        if (visibleSpectres.length > 0)
+        if (this.isRunning)
         {
-            for (const spectre of visibleSpectres)
+            this.runPending = true;
+            return;
+        }
+
+        this.isRunning = true;
+
+        try
+        {
+            do
             {
-                const existingSpectre = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] === spectre.id) as Image;
-                if (!existingSpectre)
+                this.runPending = false;
+
+                const sceneSpectres = BSCACHE.sceneItems.filter(x => x.metadata[`${Constants.SPECTREID}/isSpectre`] === true) as Image[];
+                const visibleSpectres = sceneSpectres.filter(x => this.GetSpectreViewers(x).includes(BSCACHE.playerId));
+
+                if (visibleSpectres.length > 0)
                 {
-                    this.CreateSpectreToQueue(spectre);
+                    for (const spectre of visibleSpectres)
+                    {
+                        const existingSpectre = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] === spectre.id) as Image | undefined;
+                        if (!existingSpectre)
+                        {
+                            this.CreateSpectreToQueue(spectre);
+                        }
+                        else
+                        {
+                            const equalPosition = this.EqualPosition(spectre.position, existingSpectre.position);
+                            const equalScale = this.EqualScale(spectre.scale, existingSpectre.scale);
+                            const equalRotation = this.NearlyEqual(spectre.rotation, existingSpectre.rotation);
+                            const equalLayer = spectre.layer === existingSpectre.layer;
+                            const equalVisible = spectre.visible === existingSpectre.visible;
+                            const equalZIndex = this.NearlyEqual(spectre.zIndex, existingSpectre.zIndex);
+                            const equalDisableAutoZ = spectre.disableAutoZIndex === existingSpectre.disableAutoZIndex;
+                            const equalLocked = spectre.locked === existingSpectre.locked;
+                            const equalName = spectre.name === existingSpectre.name;
+                            const equalText = this.EqualText(spectre.text, existingSpectre.text);
+                            const equalImage = this.EqualImage(spectre.image, existingSpectre.image);
+                            const equalGrid = this.EqualGrid(spectre.grid, existingSpectre.grid);
+
+                            if (!equalRotation || !equalScale || !equalLayer || !equalPosition
+                                || !equalVisible || !equalZIndex || !equalDisableAutoZ
+                                || !equalLocked || !equalName || !equalText || !equalImage || !equalGrid)
+                            {
+                                this.UpdateSpectreToQueue(spectre, existingSpectre);
+                            }
+                        }
+                    }
+
+                    const localSpectres = BSCACHE.sceneLocal.filter(x => isLocalSpectre(x)) as Image[];
+                    for (const localSpectre of localSpectres)
+                    {
+                        const exists = visibleSpectres.find(x => x.id === localSpectre.metadata[`${Constants.SPECTREID}/isLocalSpectre`]);
+                        if (!exists) this.spectresToDelete.push(localSpectre.id);
+                    }
+
+                    if (this.spectresToCreate.length > 0)
+                        await OBR.scene.local.addItems(this.spectresToCreate);
+
+                    if (this.spectresToDelete.length > 0)
+                    {
+                        await OBR.scene.local.deleteItems(this.spectresToDelete);
+                        for (const localId of this.spectresToDelete)
+                        {
+                            this.suppressLocalSyncIds.delete(localId);
+                        }
+                    }
+
+                    if (this.spectresToUpdate.length > 0)
+                    {
+                        const localIdsToUpdate = localSpectres
+                            .filter(x => !this.spectresToDelete.includes(x.id))
+                            .map(x => x.id);
+
+                        if (localIdsToUpdate.length > 0)
+                        {
+                            this.QueueSuppressedLocalSync(localIdsToUpdate);
+                            await OBR.scene.local.updateItems<Image>(localIdsToUpdate, (spectres) =>
+                            {
+                                for (const spectre of spectres)
+                                {
+                                    const mine = this.spectresToUpdate.find(x => x.id === spectre.id);
+                                    if (mine)
+                                    {
+                                        spectre.layer = mine.layer;
+                                        spectre.scale = mine.scale;
+                                        spectre.rotation = mine.rotation;
+                                        spectre.position = mine.position;
+                                        spectre.visible = mine.visible;
+                                        spectre.zIndex = mine.zIndex;
+                                        spectre.disableAutoZIndex = mine.disableAutoZIndex;
+                                        spectre.locked = mine.locked;
+                                        spectre.name = mine.name;
+                                        spectre.text = mine.text;
+                                        spectre.image = mine.image;
+                                        spectre.grid = mine.grid;
+                                    }
+                                }
+                            });
+                        }
+                    }
                 }
                 else
                 {
-                    const equalPosition = (spectre.position.x === existingSpectre.position.x && spectre.position.y === existingSpectre.position.y);
-                    const equalScale = (spectre.scale.x === existingSpectre.scale.x && spectre.scale.y === existingSpectre.scale.y);
-                    const equalRotation = spectre.rotation === existingSpectre.rotation;
-                    const equalLayer = spectre.layer === existingSpectre.layer;
-                    if (!equalRotation || !equalScale || !equalLayer || !equalPosition)
-                    {
-                        this.UpdateSpectreToQueue(spectre, existingSpectre);
-                    }
+                    const existingSpectres = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] !== undefined) as Image[];
+                    if (existingSpectres.length > 0)
+                        await OBR.scene.local.deleteItems(existingSpectres.map(x => x.id));
                 }
-            }
 
-            const localSpectres = BSCACHE.sceneLocal.filter(x => (isLocalSpectre(x))) as Image[];
-            for (const localSpectre of localSpectres)
-            {
-                const exists = visibleSpectres.find(x => x.id === localSpectre.metadata[`${Constants.SPECTREID}/isLocalSpectre`]);
-                if (!exists) this.spectresToDelete.push(localSpectre.id);
-            }
-
-            // Add, Update and Delete
-            if (this.spectresToCreate.length > 0)
-                await OBR.scene.local.addItems(this.spectresToCreate);
-            if (this.spectresToDelete.length > 0)
-                await OBR.scene.local.deleteItems(this.spectresToDelete);
-            if (this.spectresToUpdate.length > 0)
-            {
-                await OBR.scene.items.updateItems(localSpectres.filter(x => !this.spectresToDelete.includes(x.id)), (spectres) =>
-                {
-                    for (let spectre of spectres)
-                    {
-                        const mine = this.spectresToUpdate.find(x => x.id === spectre.id)
-                        if (mine)
-                        {
-                            spectre.layer = mine.layer;
-                            spectre.scale = mine.scale;
-                            spectre.rotation = mine.rotation;
-                            spectre.position = mine.position;
-                        }
-                    }
-                });
-            }
-
-            this.spectresToCreate = [];
-            this.spectresToUpdate = [];
-            this.spectresToDelete = [];
+                this.ClearQueues();
+            } while (this.runPending);
         }
-        else
+        finally
         {
-            const existingSpectres = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] !== undefined) as Image[];
-            if (existingSpectres.length > 0)
-                await OBR.scene.local.deleteItems(existingSpectres.map(x => x.id));
+            this.ClearQueues();
+            this.isRunning = false;
         }
     }
 
@@ -123,6 +280,13 @@ class Spectre
             })
             .disableHit(false)
             .build();
+
+        item.visible = token.visible;
+        item.locked = token.locked;
+        item.zIndex = token.zIndex;
+        item.disableAutoZIndex = token.disableAutoZIndex === true;
+        item.name = token.name;
+
         if (BSCACHE.playerRole === "GM")
         {
             // We are doing this so the GM can select the token directly
@@ -142,6 +306,14 @@ class Spectre
             rotation: token.rotation,
             scale: token.scale,
             layer: token.layer,
+            visible: token.visible,
+            zIndex: token.zIndex,
+            disableAutoZIndex: token.disableAutoZIndex === true,
+            locked: token.locked,
+            name: token.name,
+            text: token.text,
+            image: token.image,
+            grid: token.grid,
         };
         this.spectresToUpdate.push(update);
     }
@@ -151,23 +323,28 @@ class Spectre
         const oldLocalSpectres = oldLocalItems.filter(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] !== undefined) as Image[];
         if (oldLocalSpectres.length > 0)
         {
-            const toUpdate: {
-                id: string,
-                position: Vector2,
-                scale: Vector2,
-                rotation: number,
-            }[] = [];
+            const toUpdate: SpectreSceneUpdate[] = [];
             for (const oldLocal of oldLocalSpectres)
             {
+                if (this.suppressLocalSyncIds.has(oldLocal.id))
+                {
+                    this.suppressLocalSyncIds.delete(oldLocal.id);
+                    continue;
+                }
+
                 const newLocal = BSCACHE.sceneLocal.find(x => x.id === oldLocal.id);
                 if (!newLocal) continue;
 
                 // Check if the old local matches the new Local
-                const equalPosition = (oldLocal.position.x === newLocal.position.x && oldLocal.position.y === newLocal.position.y);
-                const equalScale = (oldLocal.scale.x === newLocal.scale.x && oldLocal.scale.y === newLocal.scale.y);
-                const equalRotation = oldLocal.rotation === newLocal.rotation;
+                const equalPosition = this.EqualPosition(oldLocal.position, newLocal.position);
+                const equalScale = this.EqualScale(oldLocal.scale, newLocal.scale);
+                const equalRotation = this.NearlyEqual(oldLocal.rotation, newLocal.rotation);
+                const equalLayer = oldLocal.layer === newLocal.layer;
+                const equalVisible = oldLocal.visible === newLocal.visible;
+                const equalZIndex = this.NearlyEqual(oldLocal.zIndex, newLocal.zIndex);
+                const equalDisableAutoZ = oldLocal.disableAutoZIndex === newLocal.disableAutoZIndex;
 
-                if (!equalPosition || !equalScale || !equalRotation)
+                if (!equalPosition || !equalScale || !equalRotation || !equalLayer || !equalVisible || !equalZIndex || !equalDisableAutoZ)
                 {
                     const sceneItemMatch = BSCACHE.sceneItems.find(x => x.id === newLocal.metadata[`${Constants.SPECTREID}/isLocalSpectre`]);
                     if (sceneItemMatch)
@@ -177,6 +354,10 @@ class Spectre
                             position: newLocal.position,
                             scale: newLocal.scale,
                             rotation: newLocal.rotation,
+                            layer: newLocal.layer,
+                            visible: newLocal.visible,
+                            zIndex: newLocal.zIndex,
+                            disableAutoZIndex: newLocal.disableAutoZIndex === true,
                         };
                         toUpdate.push(update);
                     }
@@ -184,16 +365,20 @@ class Spectre
             }
             if (toUpdate.length > 0)
             {
-                await OBR.scene.items.updateItems(toUpdate.map(x => x.id), (items) =>
+                await OBR.scene.items.updateItems<Image>(toUpdate.map(x => x.id), (items) =>
                 {
-                    for (let item of items)
+                    for (const item of items)
                     {
-                        const mine = toUpdate.find(x => x.id === item.id)
+                        const mine = toUpdate.find(x => x.id === item.id);
                         if (mine)
                         {
                             item.position = mine.position;
                             item.scale = mine.scale;
                             item.rotation = mine.rotation;
+                            item.layer = mine.layer;
+                            item.visible = mine.visible;
+                            item.zIndex = mine.zIndex;
+                            item.disableAutoZIndex = mine.disableAutoZIndex;
                         }
                     }
                 });
@@ -203,7 +388,15 @@ class Spectre
 
     public async SetupGhostSelect(ghost: Image)
     {
-        const name = ghost.text?.plainText || ghost.name;
+        const name = this.GetDisplayName(ghost);
+
+        const existingRow = document.getElementById(`tr-${ghost.id}`) as HTMLTableRowElement | null;
+        if (existingRow)
+        {
+            const existingName = existingRow.querySelector(".token-name") as HTMLTableCellElement | null;
+            if (existingName) existingName.textContent = name;
+            return;
+        }
 
         const table = document.getElementById("ghostList")! as HTMLDivElement;
         const newTr = document.createElement("tr");
@@ -225,8 +418,10 @@ class Spectre
             const playerMetadatas = playerMetadataKeys.map(key => 
             {
                 const playerData = BSCACHE.sceneMetadata[key] as Player;
-                playerData.id = key.replace(`${Constants.EXTENSIONID}/USER-`, '');
-                return playerData;
+                return {
+                    ...playerData,
+                    id: key.replace(`${Constants.EXTENSIONID}/USER-`, '')
+                } as Player;
             });
 
             for (const player of playerMetadatas)
@@ -241,10 +436,9 @@ class Spectre
         }
 
         // Needed
-        let currentViewers = ghost.metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
-        if (!currentViewers) currentViewers = [BSCACHE.playerId];
+        const currentViewers = this.GetSpectreViewers(ghost);
 
-        let selectedViewers = currentViewers.filter(x => x !== BSCACHE.playerId);
+        const selectedViewers = currentViewers.filter(x => x !== BSCACHE.playerId);
 
         const settings = {
             plugins: {
@@ -257,81 +451,71 @@ class Spectre
             maxItems: null,
             items: selectedViewers,
             create: false,
-            onDelete: async function (id: string, element: any) 
+            onDelete: async (id: string) =>
             {
-                // Sooo fucking hacky
-                const ghostId = element.currentTarget.parentElement.parentElement.parentElement.parentElement.parentElement.id.slice(3);
-
-                // Dereference from values or it'll mess up the control
-                await OBR.scene.items.updateItems([ghostId], ghosties =>
+                await OBR.scene.items.updateItems([ghost.id], ghosties =>
                 {
-                    const metadata = ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
+                    const metadata = this.GetSpectreViewers(ghosties[0] as Image);
                     const index = metadata.findIndex(x => x === id);
-                    metadata.splice(index, 1);
+                    if (index >= 0) metadata.splice(index, 1);
                     ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] = metadata;
                 });
             },
-            onItemAdd: async function (playerId: string, element: any) 
+            onItemAdd: async (playerId: string) =>
             {
-                // So fucking hacky
-                const ghostId = element.parentElement.parentElement.parentElement.parentElement.id.slice(3);
-
-                await OBR.scene.items.updateItems([ghostId], ghosties =>
+                await OBR.scene.items.updateItems([ghost.id], ghosties =>
                 {
-                    const metadata = ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] as string[];
-                    metadata.push(playerId);
+                    const metadata = this.GetSpectreViewers(ghosties[0] as Image);
+                    if (!metadata.includes(playerId)) metadata.push(playerId);
                     ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] = metadata;
                 });
             }
         };
 
         const ghostSelect = new TomSelect(`#select-${ghost.id}`, settings);
+        this.ghostSelects.set(ghost.id, ghostSelect);
+        this.ApplyTomSelectTheme(ghostSelect);
 
         const deleteButton = document.getElementById(`deleteGhost-${ghost.id}`) as HTMLInputElement;
         deleteButton.onclick = async () =>
         {
-            const ghostIndex = BSCACHE.sceneLocal.findIndex(x => x.id === ghost.id);
-            BSCACHE.sceneLocal.splice(ghostIndex, 1);
-            newTr.remove();
+            this.RemoveGhostSelect(ghost.id);
             await OBR.scene.items.deleteItems([ghost.id]);
         };
-
-        const colorSwapTargets = document.getElementsByClassName('ts-control');
-        for (let element of colorSwapTargets)
-        {
-            const tomSelectElement = element as HTMLDivElement;
-            tomSelectElement.style.backgroundColor = BSCACHE.theme.mode === "DARK" ? 'rgb(49, 49, 65)' : 'rgb(210, 210, 223)';
-            tomSelectElement.style.borderRadius = '6px';
-        }
     }
 
     public UpdateSpectreTargets(): void
     {
-        const existingSelects = document.querySelectorAll('.tSelects') as any;
+        const newOptions = BSCACHE.party
+            .filter(player => player.id !== BSCACHE.playerId)
+            .map(player => ({ value: player.id, text: player.name }));
 
-        for (const tSelect of existingSelects)
+        for (const [, tomSelectInstance] of this.ghostSelects)
         {
-            if (tSelect && tSelect.tomselect)
+            const existingOptions = new Set(Object.keys(tomSelectInstance.options));
+            for (const option of newOptions)
             {
-                // Access the TomSelect instance using .tomselect
-                const tomSelectInstance = tSelect.tomselect as TomSelect;
-
-                const newOptions: { value: string; text: string }[] = [];
-                for (const player of BSCACHE.party)
+                if (!existingOptions.has(option.value))
                 {
-                    newOptions.push({ value: player.id, text: player.name });
+                    tomSelectInstance.addOption(option);
                 }
-
-                tomSelectInstance.addOption(newOptions);
-
-                tomSelectInstance.settings.placeholder = "Choose..";
-                tomSelectInstance.inputState();
             }
+
+            tomSelectInstance.settings.placeholder = "Choose..";
+            tomSelectInstance.inputState();
+            this.ApplyTomSelectTheme(tomSelectInstance);
         }
     }
 
     public RemoveGhostSelect(ghostId: string)
     {
+        const ghostSelect = this.ghostSelects.get(ghostId);
+        if (ghostSelect)
+        {
+            ghostSelect.destroy();
+            this.ghostSelects.delete(ghostId);
+        }
+
         const targetRow = document.getElementById(`tr-${ghostId}`);
         targetRow?.remove();
     }
