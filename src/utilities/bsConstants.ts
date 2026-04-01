@@ -890,9 +890,9 @@ export class Constants {
                     <td class="preset-input-cell"><input type="button" id="preset_save_btn" class="settingsButton" value="Save Preset" style="width: 100%;"></td>
                 </tr>
                 <tr>
-                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionRange.svg" title="Vision" alt="Vision">Vision</span></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionRange.svg" title="Range" alt="Range">Range</span></td>
                     <td class="preset-input-cell"><input type="number" id="preset_vrange" min="0" max="999" value="30"></td>
-                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionBumper.svg" title="Source Range" alt="Source Range">Source Range</span></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionBumper.svg" title="Collision" alt="Collision">Collision D.</span></td>
                     <td class="preset-input-cell"><input type="number" id="preset_vsource" min="0" max="999" value="0"></td>
                 </tr>
                 <tr>
@@ -904,7 +904,7 @@ export class Constants {
                 <tr>
                     <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./visionFalloff.svg" title="Falloff" alt="Falloff">Falloff</span></td>
                     <td class="preset-input-cell"><input type="number" id="preset_vfalloff" min="0" max="10" step="0.1" value="1"></td>
-                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./darkvision.svg" title="Darkvision" alt="Darkvision">Darkvision</span></td>
+                    <td class="preset-label-cell"><span class="preset-field-label"><img class="setting_svg" src="./darkvision.svg" title="Greyscale" alt="Greyscale">Greyscale</span></td>
                     <td class="preset-input-cell"><input type="number" id="preset_vdark" min="0" max="999" value="0"></td>
                 </tr>
             </tbody>
