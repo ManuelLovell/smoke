@@ -847,7 +847,13 @@ export async function SetupContextMenus(): Promise<void> {
 
             if (spectre) {
                 // Removing spectres
-                const parentTokensIds = context.items.map(x => x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] as string);
+                const parentTokensIds = context.items.map((x) => {
+                    if (x.metadata[`${Constants.SPECTREID}/isLocalSpectre`]) {
+                        return x.metadata[`${Constants.SPECTREID}/isLocalSpectre`] as string;
+                    }
+                    else {
+                        return BSCACHE.sceneLocal.find(y => y.metadata[`${Constants.SPECTREID}/isLocalSpectre`] === x.id)?.metadata[`${Constants.SPECTREID}/isLocalSpectre`] as string;
+                }});
                 await OBR.scene.items.updateItems(parentTokensIds, items => {
                     for (const item of items) {
                         delete item.metadata[`${Constants.SPECTREID}/isSpectre`];
