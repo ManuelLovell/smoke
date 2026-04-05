@@ -12,9 +12,6 @@ type SpectreUpdate = {
     scale: Vector2;
     layer: Image["layer"];
     zIndex: number;
-    visible: boolean;
-    disableAutoZIndex: boolean;
-    locked: boolean;
     name: string;
     text: Image["text"];
     image: Image["image"];
@@ -28,8 +25,6 @@ type SpectreSceneUpdate = {
     scale: Vector2;
     layer: Image["layer"];
     zIndex: number;
-    visible: boolean;
-    disableAutoZIndex: boolean;
 };
 
 class Spectre
@@ -167,18 +162,12 @@ class Spectre
                             const equalScale = this.EqualScale(spectre.scale, existingSpectre.scale);
                             const equalRotation = this.NearlyEqual(spectre.rotation, existingSpectre.rotation);
                             const equalLayer = spectre.layer === existingSpectre.layer;
-                            const equalVisible = spectre.visible === existingSpectre.visible;
                             const equalZIndex = this.NearlyEqual(spectre.zIndex, existingSpectre.zIndex);
-                            const equalDisableAutoZ = spectre.disableAutoZIndex === existingSpectre.disableAutoZIndex;
-                            const equalLocked = spectre.locked === existingSpectre.locked;
                             const equalName = spectre.name === existingSpectre.name;
-                            const equalText = this.EqualText(spectre.text, existingSpectre.text);
-                            const equalImage = this.EqualImage(spectre.image, existingSpectre.image);
-                            const equalGrid = this.EqualGrid(spectre.grid, existingSpectre.grid);
 
                             if (!equalRotation || !equalScale || !equalLayer || !equalPosition
-                                || !equalVisible || !equalZIndex || !equalDisableAutoZ
-                                || !equalLocked || !equalName || !equalText || !equalImage || !equalGrid)
+                                || !equalZIndex
+                                || !equalName)
                             {
                                 this.UpdateSpectreToQueue(spectre, existingSpectre);
                             }
@@ -224,10 +213,7 @@ class Spectre
                                         spectre.scale = mine.scale;
                                         spectre.rotation = mine.rotation;
                                         spectre.position = mine.position;
-                                        spectre.visible = mine.visible;
                                         spectre.zIndex = mine.zIndex;
-                                        spectre.disableAutoZIndex = mine.disableAutoZIndex;
-                                        spectre.locked = mine.locked;
                                         spectre.name = mine.name;
                                         spectre.text = mine.text;
                                         spectre.image = mine.image;
@@ -280,11 +266,7 @@ class Spectre
             })
             .disableHit(false)
             .build();
-
-        item.visible = token.visible;
-        item.locked = token.locked;
         item.zIndex = token.zIndex;
-        item.disableAutoZIndex = token.disableAutoZIndex === true;
         item.name = token.name;
 
         if (BSCACHE.playerRole === "GM")
@@ -306,10 +288,7 @@ class Spectre
             rotation: token.rotation,
             scale: token.scale,
             layer: token.layer,
-            visible: token.visible,
             zIndex: token.zIndex,
-            disableAutoZIndex: token.disableAutoZIndex === true,
-            locked: token.locked,
             name: token.name,
             text: token.text,
             image: token.image,
@@ -340,11 +319,10 @@ class Spectre
                 const equalScale = this.EqualScale(oldLocal.scale, newLocal.scale);
                 const equalRotation = this.NearlyEqual(oldLocal.rotation, newLocal.rotation);
                 const equalLayer = oldLocal.layer === newLocal.layer;
-                const equalVisible = oldLocal.visible === newLocal.visible;
                 const equalZIndex = this.NearlyEqual(oldLocal.zIndex, newLocal.zIndex);
                 const equalDisableAutoZ = oldLocal.disableAutoZIndex === newLocal.disableAutoZIndex;
 
-                if (!equalPosition || !equalScale || !equalRotation || !equalLayer || !equalVisible || !equalZIndex || !equalDisableAutoZ)
+                if (!equalPosition || !equalScale || !equalRotation || !equalLayer || !equalZIndex || !equalDisableAutoZ)
                 {
                     const sceneItemMatch = BSCACHE.sceneItems.find(x => x.id === newLocal.metadata[`${Constants.SPECTREID}/isLocalSpectre`]);
                     if (sceneItemMatch)
@@ -355,7 +333,6 @@ class Spectre
                             scale: newLocal.scale,
                             rotation: newLocal.rotation,
                             layer: newLocal.layer,
-                            visible: newLocal.visible,
                             zIndex: newLocal.zIndex,
                             disableAutoZIndex: newLocal.disableAutoZIndex === true,
                         };
@@ -376,9 +353,7 @@ class Spectre
                             item.scale = mine.scale;
                             item.rotation = mine.rotation;
                             item.layer = mine.layer;
-                            item.visible = mine.visible;
                             item.zIndex = mine.zIndex;
-                            item.disableAutoZIndex = mine.disableAutoZIndex;
                         }
                     }
                 });
@@ -450,14 +425,18 @@ class Spectre
             placeholder: "Choose..",
             maxItems: null,
             items: selectedViewers,
-            create: false,
-            onDelete: async (id: string) =>
+            create: false,  
+            onDelete: async (id: string | string[]) =>
             {
                 await OBR.scene.items.updateItems([ghost.id], ghosties =>
                 {
                     const metadata = this.GetSpectreViewers(ghosties[0] as Image);
-                    const index = metadata.findIndex(x => x === id);
-                    if (index >= 0) metadata.splice(index, 1);
+                    const idsToDelete = Array.isArray(id) ? id : [id];
+                    for (const viewerId of idsToDelete)
+                    {
+                        const index = metadata.findIndex(x => x === viewerId);
+                        if (index >= 0) metadata.splice(index, 1);
+                    }
                     ghosties[0].metadata[`${Constants.SPECTREID}/spectreViewers`] = metadata;
                 });
             },
