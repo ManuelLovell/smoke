@@ -755,7 +755,7 @@ function RenderPresetList(
     });
 }
 
-export function SetupPresetHandlers()
+export async function SetupPresetHandlers()
 {
     const presetNameInput = document.getElementById("preset_name") as HTMLInputElement;
     const presetVRange = document.getElementById("preset_vrange") as HTMLInputElement;
@@ -769,15 +769,33 @@ export function SetupPresetHandlers()
 
     if (!presetSaveBtn || !presetList) return;
 
-    let presets = Array.isArray(BSCACHE.sceneMetadata[VISION_PRESETS_KEY])
-        ? BSCACHE.sceneMetadata[VISION_PRESETS_KEY] as VisionPreset[]
-        : [];
+    const loadPresetsFromStorage = async (): Promise<VisionPreset[]> =>
+    {
+        // Check if presets exist in old scene location for backwards compatibility
+        const scenePresets = Array.isArray(BSCACHE.sceneMetadata[VISION_PRESETS_KEY])
+            ? BSCACHE.sceneMetadata[VISION_PRESETS_KEY] as VisionPreset[]
+            : null;
+        
+        if (scenePresets && scenePresets.length > 0)
+        {
+            // Migrate to localStorage
+            localStorage.setItem(VISION_PRESETS_KEY, JSON.stringify(scenePresets));
+            // Clean up scene metadata
+            await OBR.scene.setMetadata({ [VISION_PRESETS_KEY]: undefined });
+            return scenePresets;
+        }
+        
+        // Load from localStorage
+        const stored = localStorage.getItem(VISION_PRESETS_KEY);
+        return stored ? JSON.parse(stored) : [];
+    };
+
+    let presets = await loadPresetsFromStorage();
 
     const persistAndRender = async (updated: VisionPreset[]) =>
     {
         presets = updated;
-        BSCACHE.sceneMetadata[VISION_PRESETS_KEY] = updated;
-        await OBR.scene.setMetadata({ [VISION_PRESETS_KEY]: updated });
+        localStorage.setItem(VISION_PRESETS_KEY, JSON.stringify(updated));
         RenderPresetList(presetList, presets, onApply, onDelete);
     };
 
