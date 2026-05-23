@@ -392,6 +392,7 @@ li>p {
     justify-content: space-between;
 }
 
+#conversionTable,
 #importTable,
 #settingsTable {
     margin-top: 5px;

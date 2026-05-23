@@ -26,6 +26,7 @@ export class Constants {
     static EXTENSIONID = "com.battle-system.smoke";
     static EXTENSIONNOTICE = "com.battle-system.smoke-notice";
     static PROGRESSBAR = "com.battle-system.smoke-progress";
+    static CONVERSIONOVERLAY = "com.battle-system.smoke-converting";
     static RESETID = "com.battle-system.smoke-reset";
     static SPECTREID = "com.battle-system.spectre";
     static EXTENSIONWHATSNEW = "com.battle-system.smoke-whatsnew";
@@ -1073,6 +1074,23 @@ export class Constants {
             </tbody>
             <div id="import_errors" class="grid-3"></div>
         </table>
+
+        <table id="conversionTable">
+            <colgroup>
+                <col style="width: 100%;">
+            </colgroup>
+            <tbody>
+                <tr>
+                    <td colspan="4" class="tableHeader">Conversions</td>
+                </tr>
+                <tr id="tip_convertToSmoke">
+                    <td><input class="settingsButton" type="button" id="convert_fog_button" value="Convert OBR Fog to Smoke Obstructions"></td>
+                </tr>
+                <tr id="tip_convertToFog">
+                    <td><input class="settingsButton" type="button" id="convert_smoke_button" value="Convert Smoke Obstructions to OBR Fog"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>`;
 
     static SETTINGSMOBILEHTML = `
@@ -1297,6 +1315,18 @@ export class Constants {
         </div>
 
         <div id="import_errors" class="grid-3"></div>
+    </div>
+
+    <div id="conversionTable">
+        <div class="tableHeader">Conversions</div>
+        <div class="grid-container">
+            <div>
+                <input class="settingsButton" type="button" id="convert_fog_button" value="Convert OBR Fog to Smoke Obstructions">
+            </div>
+            <div>
+                <input class="settingsButton" type="button" id="convert_smoke_button" value="Convert Smoke Obstructions to OBR Fog">
+            </div>
+        </div>
     </div>
 </div>
 `;
