@@ -26,7 +26,7 @@ export function CreateTooltips()
     tooltips.set(`visionOutAngleHeader`, "Outer Angle:  Outer angle of token vision, for hard edge, match with Inner Angle. Click to Mass Edit");
     tooltips.set(`visionDarkHeader`, "Greyscale: Add an 'outer-ring' of visible greyscale outside of your vision (Darkvision-Esque). Click to Mass Edit");
 
-    tooltips.set(`tip_spectretokens`, "Spectre tokens are only visible to specific players. Enable vision here after it has been Spectred.");
+    tooltips.set(`tip_spectretokens`, "Spectre tokens are only visible to specific players.");
 
     tooltips.set(`tip_fogfill`, "Toggle to enable/disable fog fill for the scene.");
     tooltips.set(`tip_disablevision`, "Toggle to enable/disable vision for all tokens in scene.");
@@ -58,5 +58,9 @@ export function CreateTooltips()
     tooltips.set(`tip_greyscaleDefault`, "Set the default greyscale vision range (should be higher than token Vision to take effect).");
     tooltips.set(`tip_innerAngleDefault`, "Set the default inner angle radius.");
     tooltips.set(`tip_outerAngleDefault`, "Set the default outer angle radius.");
+
+    tooltips.set(`tip_convertToFog`, "Convert all Smoke&Spectre areas to OBR Fog Shapes.");
+    tooltips.set(`tip_convertToSmoke`, "Convert all OBR Fog Shapes to Smoke&Spectre areas.");
+
     tooltips.forEach((value, key) => { SetupTooltips(key, value); });
 }
