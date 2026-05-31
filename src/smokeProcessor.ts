@@ -56,6 +56,11 @@ class SmokeProcessor {
         this.VisibilityChecker = new VisibilityChecker();
     }
 
+    private async NotifyError(message: string, error: unknown) {
+        console.error(message, error);
+        await OBR.notification.show(message, "ERROR");
+    }
+
     private GetPersistenceLimit()
     {
         const metadataValue = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistenceLimit`];
@@ -70,6 +75,7 @@ class SmokeProcessor {
     }
 
     public async Initialize() {
+        try {
         this.persistenceLimit = this.GetPersistenceLimit();
         if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/persistence`] === true) {
             // Using Localstorage to keep persistent data atm
@@ -104,6 +110,9 @@ class SmokeProcessor {
                 const enhancedFogMap = foundFogMaps[0] as Image;
                 await ApplyEnhancedFog(enhancedFogMap, fogMapStyle);
             }
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem initializing smoke processing.", error);
         }
     }
 
@@ -140,47 +149,64 @@ class SmokeProcessor {
     }
 
     private async UpdateWindowVisibility() {
-        // Scene local isnt up to date on item refresh, resulting in delayed positions
-        // Pull fresh
-        const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
-        const windows = await OBR.scene.local.getItems<Wall>(x => x.metadata[`${Constants.EXTENSIONID}/isWindow`] === true) as Wall[];
-        await this.VisibilityChecker.UpdateWindowVisibility(players, windows);
+        try {
+            // Scene local isnt up to date on item refresh, resulting in delayed positions
+            // Pull fresh
+            const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
+            const windows = await OBR.scene.local.getItems<Wall>(x => x.metadata[`${Constants.EXTENSIONID}/isWindow`] === true) as Wall[];
+            await this.VisibilityChecker.UpdateWindowVisibility(players, windows);
+        } catch (error) {
+            await this.NotifyError("There was a problem updating window visibility.", error);
+        }
     }
 
     private async UpdateAutoHideTokens() {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true && BSCACHE.playerRole === "GM") {
-            const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
-            const enemies = await OBR.scene.items.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === true);
-            await this.VisibilityChecker.HideEnemies(players, enemies);
+        try {
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true && BSCACHE.playerRole === "GM") {
+                const players = (await OBR.scene.local.getItems<Light>(x => x.metadata[`${Constants.EXTENSIONID}/isVisionLight`] === true)).filter(x => x.lightType === "PRIMARY");
+                const enemies = await OBR.scene.items.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isAutoHidden`] === true);
+                await this.VisibilityChecker.HideEnemies(players, enemies);
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem updating auto-hide tokens.", error);
         }
     }
 
     private async UpdateTrailingFogMaps() {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled) {
-            // If our trailing fog setting is on, we'll process
-            await this.CreateTrailingFogOverlay();
+        try {
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled) {
+                // If our trailing fog setting is on, we'll process
+                await this.CreateTrailingFogOverlay();
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem updating trailing fog maps.", error);
         }
     }
 
     private async UpdateTrailingFogTokens() {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled) {
-            if (this.revealersToCreate.length > 0) {
-                await OBR.scene.local.addItems(this.revealersToCreate);
-                this.revealersToCreate = [];
+        try {
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true && BSCACHE.fogFilled) {
+                if (this.revealersToCreate.length > 0) {
+                    await OBR.scene.local.addItems(this.revealersToCreate);
+                    this.revealersToCreate = [];
+                }
             }
-        }
-        else if (this.trailingFogTokens.size > 0 || this.trailingFoggedMaps.size > 0) {
-            // Otherwise, we need to remove all and not process
-            const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
-            const trailingFogMaps = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogger`] !== undefined) as Effect[];
-            if (trailingFogMaps.length > 0) await OBR.scene.local.deleteItems(trailingFogMaps.map(x => x.id));
-            if (trailingFogRevealers.length > 0) await OBR.scene.local.deleteItems(trailingFogRevealers.map(x => x.id));
-            this.trailingFogTokens = new Set();
-            this.trailingFoggedMaps = new Set();
+            else if (this.trailingFogTokens.size > 0 || this.trailingFoggedMaps.size > 0) {
+                // Otherwise, we need to remove all and not process
+                const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
+                const trailingFogMaps = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogger`] !== undefined) as Effect[];
+                if (trailingFogMaps.length > 0) await OBR.scene.local.deleteItems(trailingFogMaps.map(x => x.id));
+                if (trailingFogRevealers.length > 0) await OBR.scene.local.deleteItems(trailingFogRevealers.map(x => x.id));
+                this.trailingFogTokens = new Set();
+                this.trailingFoggedMaps = new Set();
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem updating trailing fog tokens.", error);
         }
     }
 
     public async UpdateTrailingFogColor(newColor: string) {
+        try {
         const trailingFogRevealers = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`] !== undefined) as Effect[];
         await OBR.scene.local.updateItems<Effect>(trailingFogRevealers.map(x => x.id), (revealers) => {
             for (let revealer of revealers) {
@@ -200,82 +226,97 @@ class SmokeProcessor {
                 ];
             }
         });
+        } catch (error) {
+            await this.NotifyError("There was a problem updating trailing fog color.", error);
+        }
     }
 
     private CreateTrailingFogRevealer(light: Light) {
-        // TODO(task-21): Wall-aware trailing fog requires a custom SkSL polygon-occlusion shader.
-        // The nearest N wall segments from VisibilityChecker.cachedWallSegments should be passed as
-        // uniforms and TRAILINGFOGREVEALSHADER updated to compute per-pixel occlusion, replacing the
-        // current full-circle mask. Until then the revealer ignores walls.
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true) {
-            if (!this.trailingFogTokens.has(light.id)) {
-                const revealerSize = Math.max(light.attenuationRadius * 2, 200);
-                const revealerEffect = buildEffect()
-                    .position(light.position)
-                    .attachedTo(light.id)
-                    .rotation(light.rotation)
-                    .scale(light.scale)
-                    .width(revealerSize)
-                    .height(revealerSize)
-                    .effectType("ATTACHMENT")
-                    .layer("POST_PROCESS")
-                    .sksl(Constants.TRAILINGFOGREVEALSHADER)
-                    .uniforms([
-                        { name: "radiusRatio", value: 1.0 },
-                        { name: "rotation", value: light.rotation }
-                    ])
-                    .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
-                    .disableHit(true)
-                    .disableAutoZIndex(true)
-                    .zIndex(200) // Revealer Above Overlay
-                    .build();
-                this.revealersToCreate.push(revealerEffect);
-                this.trailingFogTokens.add(light.id);
+        try {
+            // TODO(task-21): Wall-aware trailing fog requires a custom SkSL polygon-occlusion shader.
+            // The nearest N wall segments from VisibilityChecker.cachedWallSegments should be passed as
+            // uniforms and TRAILINGFOGREVEALSHADER updated to compute per-pixel occlusion, replacing the
+            // current full-circle mask. Until then the revealer ignores walls.
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/trailingFog`] === true) {
+                if (!this.trailingFogTokens.has(light.id)) {
+                    const revealerSize = Math.max(light.attenuationRadius * 2, 200);
+                    const revealerEffect = buildEffect()
+                        .position(light.position)
+                        .attachedTo(light.id)
+                        .rotation(light.rotation)
+                        .scale(light.scale)
+                        .width(revealerSize)
+                        .height(revealerSize)
+                        .effectType("ATTACHMENT")
+                        .layer("POST_PROCESS")
+                        .sksl(Constants.TRAILINGFOGREVEALSHADER)
+                        .uniforms([
+                            { name: "radiusRatio", value: 1.0 },
+                            { name: "rotation", value: light.rotation }
+                        ])
+                        .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogLight`]: light.id })
+                        .disableHit(true)
+                        .disableAutoZIndex(true)
+                        .zIndex(200) // Revealer Above Overlay
+                        .build();
+                    this.revealersToCreate.push(revealerEffect);
+                    this.trailingFogTokens.add(light.id);
+                }
             }
+        } catch (error) {
+            void this.NotifyError("There was a problem creating a trailing fog revealer.", error);
         }
     }
 
     private async CreateTrailingFogOverlay() {
-        // We are fogging only the map items, which causes the 'edges' of the Revealer to stick out when a token goes outside of the map bounds
-        // This would be changed if we fogged the viewport instead - because we would be beyond the boundaries of the map with fog and it wouldn't matter.
-        // I think leaving it as such is a decent trade-off to not make everything unnecessarily dark.
-        const trailFoggersToCreate: Effect[] = [];
-        const maps = BSCACHE.sceneItems.filter(x => x.layer === "MAP" && x.type === "IMAGE") as Image[];
-        for (const map of maps) {
-            if (!this.trailingFoggedMaps.has(map.id)) {
-                const trailingFogEffect = buildEffect()
-                    .position(map.position)
-                    .attachedTo(map.id)
-                    .scale(map.scale)
-                    .width(map.image.width)
-                    .height(map.image.height)
-                    .effectType("ATTACHMENT")
-                    .layer("POST_PROCESS")
-                    .sksl(Constants.TRAILINGFOGSHADER)
-                    .uniforms([
-                        { name: "darknessLevel", value: 0.65 },
-                        { name: "darknessColor", value: Utilities.HexToRgbShader(BSCACHE.fogColor) },
-                    ])
-                    .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogger`]: map.id })
-                    .disableHit(true)
-                    .disableAutoZIndex(true)
-                    .zIndex(100) // Overlay at Base
-                    .build();
-                trailFoggersToCreate.push(trailingFogEffect);
-                this.trailingFoggedMaps.add(map.id);
+        try {
+            // We are fogging only the map items, which causes the 'edges' of the Revealer to stick out when a token goes outside of the map bounds
+            // This would be changed if we fogged the viewport instead - because we would be beyond the boundaries of the map with fog and it wouldn't matter.
+            // I think leaving it as such is a decent trade-off to not make everything unnecessarily dark.
+            const trailFoggersToCreate: Effect[] = [];
+            const maps = BSCACHE.sceneItems.filter(x => x.layer === "MAP" && x.type === "IMAGE") as Image[];
+            for (const map of maps) {
+                if (!this.trailingFoggedMaps.has(map.id)) {
+                    const trailingFogEffect = buildEffect()
+                        .position(map.position)
+                        .attachedTo(map.id)
+                        .scale(map.scale)
+                        .width(map.image.width)
+                        .height(map.image.height)
+                        .effectType("ATTACHMENT")
+                        .layer("POST_PROCESS")
+                        .sksl(Constants.TRAILINGFOGSHADER)
+                        .uniforms([
+                            { name: "darknessLevel", value: 0.65 },
+                            { name: "darknessColor", value: Utilities.HexToRgbShader(BSCACHE.fogColor) },
+                        ])
+                        .metadata({ [`${Constants.EXTENSIONID}/isTrailingFogger`]: map.id })
+                        .disableHit(true)
+                        .disableAutoZIndex(true)
+                        .zIndex(100) // Overlay at Base
+                        .build();
+                    trailFoggersToCreate.push(trailingFogEffect);
+                    this.trailingFoggedMaps.add(map.id);
+                }
             }
-        }
 
-        if (trailFoggersToCreate.length > 0) {
-            await OBR.scene.local.addItems(trailFoggersToCreate);
+            if (trailFoggersToCreate.length > 0) {
+                await OBR.scene.local.addItems(trailFoggersToCreate);
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem creating a trailing fog overlay.", error);
         }
     }
 
     public async ClearDoors() {
+        try {
         if (BSCACHE.playerRole !== "PLAYER") return;
 
         const localDoors = BSCACHE.sceneLocal.filter(x => x.metadata[`${Constants.EXTENSIONID}/localDoor`] === true);
         await OBR.scene.local.deleteItems(localDoors.map(x => x.id));
+        } catch (error) {
+            await this.NotifyError("There was a problem clearing local doors.", error);
+        }
     }
 
     private async UpdateDoors() {
@@ -284,42 +325,50 @@ class SmokeProcessor {
     }
 
     private async IsPlayerNearDoor() {
-        if (BSCACHE.playerRole === "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
+        try {
+            if (BSCACHE.playerRole === "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/playerDoors`] !== true) return;
 
-        // Check position of a players owned tokens
-        let playerTokens = this.getTokensICanSeeThrough()
-        playerTokens = playerTokens.filter(x => x.layer === "CHARACTER" || x.layer === "MOUNT");
-        const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
-        const visibleDoors: Curve[] = [];
-        for (const token of playerTokens) {
-            const tokenPosition = token.position;
-            const visionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
+            // Check position of a players owned tokens
+            let playerTokens = this.getTokensICanSeeThrough()
+            playerTokens = playerTokens.filter(x => x.layer === "CHARACTER" || x.layer === "MOUNT");
+            const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
+            const visibleDoors: Curve[] = [];
+            for (const token of playerTokens) {
+                const tokenPosition = token.position;
+                const visionRange = this.GetLightRange(token.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
 
-            for (const door of sceneDoors) {
-                const adjustedPoints = door.points.map(point => ({
-                    x: point.x + door.position.x,
-                    y: point.y + door.position.y
-                }));
-                const doorPosition = Math2.centroid(adjustedPoints);
-                const dx = doorPosition.x - tokenPosition.x;
-                const dy = doorPosition.y - tokenPosition.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                for (const door of sceneDoors) {
+                    const adjustedPoints = door.points.map(point => ({
+                        x: point.x + door.position.x,
+                        y: point.y + door.position.y
+                    }));
+                    const doorPosition = Math2.centroid(adjustedPoints);
+                    const dx = doorPosition.x - tokenPosition.x;
+                    const dy = doorPosition.y - tokenPosition.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
 
-                if (distance <= visionRange) {
-                    if (!this.VisibilityChecker.IsLineOfSightBlocked(token.position, doorPosition, door)) {
-                        visibleDoors.push(door);
+                    if (distance <= visionRange) {
+                        if (!this.VisibilityChecker.IsLineOfSightBlocked(token.position, doorPosition, door)) {
+                            visibleDoors.push(door);
+                        }
                     }
                 }
             }
-        }
 
-        this.UpdateVisibleDoors(visibleDoors);
+            this.UpdateVisibleDoors(visibleDoors);
+        } catch (error) {
+            await this.NotifyError("There was a problem checking player door proximity.", error);
+        }
     }
 
     private async ShowGMDoors() {
-        if (BSCACHE.playerRole === "PLAYER") return;
-        const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
-        this.UpdateVisibleDoors(sceneDoors);
+        try {
+            if (BSCACHE.playerRole === "PLAYER") return;
+            const sceneDoors = await OBR.scene.items.getItems(x => x.type === "CURVE" && x.metadata[`${Constants.EXTENSIONID}/isDoor`] === true) as Curve[];
+            this.UpdateVisibleDoors(sceneDoors);
+        } catch (error) {
+            await this.NotifyError("There was a problem showing GM doors.", error);
+        }
     }
 
     private async UpdateVisibleDoors(sceneDoors: Curve[]) {
@@ -434,25 +483,38 @@ class SmokeProcessor {
     }
 
     public async ClearPersistence() {
+        try {
         const persistentLights = await OBR.scene.local.getItems(x => x.metadata[`${Constants.EXTENSIONID}/getPersistentLight`] === true);
         await OBR.scene.local.deleteItems(persistentLights.map(x => x.id));
         this.persistentLights = [];
         localStorage.setItem(Utilities.GetPersistentLocalKey(), JSON.stringify(this.persistentLights));
+        } catch (error) {
+            await this.NotifyError("There was a problem clearing persistence.", error);
+        }
     }
 
     public async TogglePersistentLightVisibility(off: boolean) {
+        try {
         await OBR.scene.local.updateItems(x => isLocalPersistentLight(x) !== undefined, (pLights) => {
             for (let light of pLights) {
                 light.visible = !off;
             }
         });
+        } catch (error) {
+            await this.NotifyError("There was a problem toggling persistent light visibility.", error);
+        }
     }
     public async ClearOwnershipHighlights() {
+        try {
         const sceneRings = BSCACHE.sceneLocal.filter(x => isIndicatorRing(x));
         await OBR.scene.local.deleteItems(sceneRings.map(x => x.id));
+        } catch (error) {
+            await this.NotifyError("There was a problem clearing ownership highlights.", error);
+        }
     }
 
     public async InitiateOwnerHighlight() {
+        try {
         // If lights are already built before the owner highlight has been toggled on,
         // they will need to be created separately
         if (BSCACHE.playerRole !== "GM" || BSCACHE.fogFilled === false) return;
@@ -461,122 +523,142 @@ class SmokeProcessor {
         for (const sceneToken of sceneVisionTokens) {
             const linkedParent = BSCACHE.sceneItems.find(x => x.id === sceneToken.metadata[`${Constants.EXTENSIONID}/linkedTo`]);
             this.CreateOwnerHighlight(sceneToken, linkedParent, true);
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem initiating ownership highlights.", error);
         }
     }
 
     private CreateOwnerHighlight(token: Item, linkedParent?: Item, override = false) {
-        const tokenSettings = linkedParent ?? token;
-        if ((BSCACHE.playerRole !== "GM"
-            || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true)
-            && !override) return;
+        try {
+            const tokenSettings = linkedParent ?? token;
+            if ((BSCACHE.playerRole !== "GM"
+                || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true)
+                && !override) return;
 
-        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
+            const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+            const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
 
-        const existingRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true && x.attachedTo === token.id);
-        if (existingRing) {
-            this.UpdateOwnerHightlight(token);
-        }
-        else {
-            const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
-            if (!owner) return;
-            
-            const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
-            const playerRing = buildShape()
-                .strokeColor(owner.color)
-                .fillOpacity(0)
-                .position({ x: token.position.x, y: token.position.y })
-                .width(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
-                .height(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
-                .shapeType("CIRCLE")
-                .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
-                .attachedTo(token.id)
-                .locked(true)
-                .layer(Constants.LINELAYER)
-                .disableAttachmentBehavior(["SCALE"])
-                .zIndex(1)
-                .build();
-            this.ringsToCreate.push(playerRing);
+            const existingRing = BSCACHE.sceneLocal.find(x => x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true && x.attachedTo === token.id);
+            if (existingRing) {
+                this.UpdateOwnerHightlight(token);
+            }
+            else {
+                const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+                if (!owner) return;
+
+                const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
+                const playerRing = buildShape()
+                    .strokeColor(owner.color)
+                    .fillOpacity(0)
+                    .position({ x: token.position.x, y: token.position.y })
+                    .width(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
+                    .height(useDarkVision ? darkVisionRange * 2 : ringSize * 2)
+                    .shapeType("CIRCLE")
+                    .metadata({ [`${Constants.EXTENSIONID}/isIndicatorRing`]: true })
+                    .attachedTo(token.id)
+                    .locked(true)
+                    .layer(Constants.LINELAYER)
+                    .disableAttachmentBehavior(["SCALE"])
+                    .zIndex(1)
+                    .build();
+                this.ringsToCreate.push(playerRing);
+            }
+        } catch (error) {
+            void this.NotifyError("There was a problem creating owner highlights.", error);
         }
     }
 
     private UpdateDarkVision(token: Item, linkedParent?: Item) {
-        const tokenSettings = linkedParent ?? token;
-        const darkVisionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]) * 2;
-        const visionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
-        const clearView = (visionDistance / darkVisionDistance) / 2;
+        try {
+            const tokenSettings = linkedParent ?? token;
+            const darkVisionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]) * 2;
+            const visionDistance = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string) * 2;
+            const clearView = (visionDistance / darkVisionDistance) / 2;
 
-        const newPosition: Vector2 = {
-            x: token.position.x - (darkVisionDistance / 2),
-            y: token.position.y - (darkVisionDistance / 2)
-        };
-        const newUniforms = [
-            { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
-            { name: "radius", value: .5 }, // Radius of the circle in normalized units
-            { name: "clear", value: clearView },
-            { name: "smoothwidth", value: 0.0075 }
-        ];
-
-        const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
-        if (thisDarkVision) {
-            const update = {
-                id: thisDarkVision.id,
-                size: darkVisionDistance,
-                position: newPosition,
-                uniforms: newUniforms
+            const newPosition: Vector2 = {
+                x: token.position.x - (darkVisionDistance / 2),
+                y: token.position.y - (darkVisionDistance / 2)
             };
-            this.darkVisionToUpdate.push(update);
+            const newUniforms = [
+                { name: "center", value: { x: 0.5, y: 0.5 } }, // Center of the circle in normalized coordinates
+                { name: "radius", value: .5 }, // Radius of the circle in normalized units
+                { name: "clear", value: clearView },
+                { name: "smoothwidth", value: 0.0075 }
+            ];
+
+            const thisDarkVision = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isDarkVision`] === true);
+            if (thisDarkVision) {
+                const update = {
+                    id: thisDarkVision.id,
+                    size: darkVisionDistance,
+                    position: newPosition,
+                    uniforms: newUniforms
+                };
+                this.darkVisionToUpdate.push(update);
+            }
+        } catch (error) {
+            void this.NotifyError("There was a problem updating dark vision.", error);
         }
     }
 
     private UpdateOwnerHightlight(token: Item, linkedParent?: Item) {
-        const tokenSettings = linkedParent ?? token;
-        if (BSCACHE.playerRole !== "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
+        try {
+            const tokenSettings = linkedParent ?? token;
+            if (BSCACHE.playerRole !== "GM" || BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
 
-        const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
-            > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
-        const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]);
+            const useDarkVision = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string)
+                > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
+            const darkVisionRange = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]);
 
-        const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
-        const thisRing = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true);
+            const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
+            const thisRing = BSCACHE.sceneLocal.find(x => x.attachedTo === token.id && x.metadata[`${Constants.EXTENSIONID}/isIndicatorRing`] === true);
 
-        if (thisRing) {
-            const update = {
-                id: thisRing.id,
-                height: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
-                width: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
-            };
-            this.ringsToUpdate.push(update);
+            if (thisRing) {
+                const update = {
+                    id: thisRing.id,
+                    height: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
+                    width: (useDarkVision ? darkVisionRange * 2 : ringSize * 2),
+                };
+                this.ringsToUpdate.push(update);
+            }
+        } catch (error) {
+            void this.NotifyError("There was a problem updating owner highlights.", error);
         }
     }
 
     private async UpdateOwnershipHighlights() {
-        if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
+        try {
+            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toggleOwnerLines`] !== true) return;
 
-        // Add, Update and Delete
-        if (this.ringsToCreate.length > 0)
-            await OBR.scene.local.addItems(this.ringsToCreate);
-        if (this.ringsToDelete.length > 0)
-            await OBR.scene.local.deleteItems(this.ringsToDelete);
-        if (this.ringsToUpdate.length > 0) {
-            const sceneRings = BSCACHE.sceneLocal.filter(x => isIndicatorRing(x)) as Shape[];
-            await OBR.scene.local.updateItems<Shape>(sceneRings.filter(x => !this.ringsToDelete.includes(x.id)), (rings) => {
-                for (let ring of rings) {
-                    const mine = this.ringsToUpdate.find(x => x.id === ring.id)
-                    if (mine) {
-                        ring.height = mine.height;
-                        ring.width = mine.width;
+            // Add, Update and Delete
+            if (this.ringsToCreate.length > 0)
+                await OBR.scene.local.addItems(this.ringsToCreate);
+            if (this.ringsToDelete.length > 0)
+                await OBR.scene.local.deleteItems(this.ringsToDelete);
+            if (this.ringsToUpdate.length > 0) {
+                const sceneRings = BSCACHE.sceneLocal.filter(x => isIndicatorRing(x)) as Shape[];
+                await OBR.scene.local.updateItems<Shape>(sceneRings.filter(x => !this.ringsToDelete.includes(x.id)), (rings) => {
+                    for (let ring of rings) {
+                        const mine = this.ringsToUpdate.find(x => x.id === ring.id)
+                        if (mine) {
+                            ring.height = mine.height;
+                            ring.width = mine.width;
+                        }
                     }
-                }
-            });
+                });
+            }
+            this.ringsToCreate = [];
+            this.ringsToUpdate = [];
+            this.ringsToDelete = [];
+        } catch (error) {
+            await this.NotifyError("There was a problem updating ownership highlights.", error);
         }
-        this.ringsToCreate = [];
-        this.ringsToUpdate = [];
-        this.ringsToDelete = [];
     }
 
     private async UpdateLights() {
+        try {
         // Find all tokens with vision enabled
         let sceneVisionTokens: Item[] = [];
         if (BSCACHE.playerRole === "GM") {
@@ -836,9 +918,13 @@ class SmokeProcessor {
         this.darkVisionToCreate = [];
         this.darkVisionToUpdate = [];
         this.darkVisionToDelete = [];
+        } catch (error) {
+            await this.NotifyError("There was a problem updating lights.", error);
+        }
     }
 
     private async UpdateWalls() {
+        try {
         const wallPass = (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true && BSCACHE.playerRole === "GM");
 
         // Find all of the REAL fog lines to be recreated as local walls
@@ -971,41 +1057,49 @@ class SmokeProcessor {
             await this.VisibilityChecker.UpdateWallSegments();
             updateCache = false;
         }
+        } catch (error) {
+            await this.NotifyError("There was a problem updating walls.", error);
+        }
     }
 
     private CreateWallToQueue(line: Curve, depth: number) {
-        if (!line.points) return; //Let's just avoid any issues of this not being a line
+        try {
+            if (!line.points) return; //Let's just avoid any issues of this not being a line
 
-        // We are making a mirror of the wall, that we can identify which one it's replicating
-        let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
-        const window = line.metadata[`${Constants.EXTENSIONID}/isWindow`] === true;
-        const doubleSide = line.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true;
+            // We are making a mirror of the wall, that we can identify which one it's replicating
+            let blockWall = line.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
+            const window = line.metadata[`${Constants.EXTENSIONID}/isWindow`] === true;
+            const doubleSide = line.metadata[`${Constants.EXTENSIONID}/doubleSided`] === true;
 
-        if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true) {
-            blockWall = false;
+            if (BSCACHE.playerRole === "GM" && BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/passWallsGM`] === true) {
+                blockWall = false;
+            }
+            const item = buildWall()
+                .points(line.points)
+                .attachedTo(line.id)
+                .rotation(line.rotation)
+                .position(line.position)
+                .locked(true)
+                .scale(line.scale)
+                .blocking(blockWall)
+                .doubleSided(doubleSide)
+                .visible(!window)
+                .disableAttachmentBehavior(["VISIBLE"])
+                .zIndex(this.VisibilityChecker.GetDepth(depth, true))
+                .metadata({
+                    [`${Constants.EXTENSIONID}/isVisionWall`]: true,
+                    [`${Constants.EXTENSIONID}/isWindow`]: window
+                })
+                .build();
+
+            this.wallsToCreate.push(item);
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing wall creation.", error);
         }
-        const item = buildWall()
-            .points(line.points)
-            .attachedTo(line.id)
-            .rotation(line.rotation)
-            .position(line.position)
-            .locked(true)
-            .scale(line.scale)
-            .blocking(blockWall)
-            .doubleSided(doubleSide)
-            .visible(!window)
-            .disableAttachmentBehavior(["VISIBLE"])
-            .zIndex(this.VisibilityChecker.GetDepth(depth, true))
-            .metadata({
-                [`${Constants.EXTENSIONID}/isVisionWall`]: true,
-                [`${Constants.EXTENSIONID}/isWindow`]: window
-            })
-            .build();
-
-        this.wallsToCreate.push(item);
     }
 
     private AddPersistentLightToQueue(token: Item, depth: number, linkedParent?: Item) {
+        try {
         const tokenSettings = linkedParent ?? token;
         // The trade off issue is, PRIMARY Persistent lights will re-trigger Secondary.
         // AUXILIARY Persisent lights will not re-trigger.
@@ -1047,9 +1141,13 @@ class SmokeProcessor {
             const removedPLight = this.persistentLights.shift()!;
             this.lightsToDelete.push(removedPLight.id);
         }
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing persistent light creation.", error);
+        }
     }
 
     private CreateLightToQueue(token: Item, depth: number, linkedParent?: Item) {
+        try {
         const tokenSettings = linkedParent ?? token;
         // We are 'light' to follow the token around, that we can identify which one it's replicating
         const lightType = tokenSettings.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
@@ -1091,9 +1189,13 @@ class SmokeProcessor {
             this.CreateDarkVisionToQueue(token, linkedParent);
             this.CreateOwnerHighlight(token, linkedParent);
         }
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing light creation.", error);
+        }
     }
 
     private CreateDarkVisionToQueue(token: Item, parentToken?: Item) {
+        try {
         const tokenSettings = parentToken ?? token;
         const isBlind = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true;
         const darkMeta = parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`] as string);
@@ -1132,9 +1234,13 @@ class SmokeProcessor {
             .build();
 
         this.darkVisionToCreate.push(darkVision);
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing dark vision creation.", error);
+        }
     }
 
     private CreateDecalToQueue(token: Image) {
+        try {
         // Fog layer/visible allows for a perfect fog cutout to select the token beneath
         const item = buildImage(
             {
@@ -1160,9 +1266,13 @@ class SmokeProcessor {
             .build();
 
         this.decalsToCreate.push(item);
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing decal creation.", error);
+        }
     }
 
     private UpdateWallToQueue(sceneLine: Curve, localWall: Wall, depth: number) {
+        try {
         if (!sceneLine.points) return; //Let's just avoid any issues of this not being a line
 
         let blockWall = sceneLine.metadata[`${Constants.EXTENSIONID}/blocking`] === true;
@@ -1183,9 +1293,13 @@ class SmokeProcessor {
             zIndex: this.VisibilityChecker.GetDepth(depth, true)
         };
         this.wallsToUpdate.push(update);
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing wall updates.", error);
+        }
     }
 
     private UpdateLightToQueue(sceneToken: Item, localLight: Light, depth: number, linkedParent?: Item) {
+        try {
         const tokenSettings = linkedParent ?? sceneToken;
 
         const lightType = tokenSettings.metadata[`${Constants.EXTENSIONID}/isTorch`] === true ? "SECONDARY" : "PRIMARY";
@@ -1214,55 +1328,79 @@ class SmokeProcessor {
         if (lightType === "PRIMARY") {
             this.UpdateOwnerHightlight(sceneToken, linkedParent);
         }
+        } catch (error) {
+            void this.NotifyError("There was a problem queuing light updates.", error);
+        }
     }
 
     private GetLightRange(distance: any, asFloat = false) {
-        const numDistance = asFloat ? parseFloat(distance) : parseInt(distance);
-        const tileDistance = numDistance / BSCACHE.gridScale;
-        return tileDistance * BSCACHE.gridDpi;
+        try {
+            const numDistance = asFloat ? parseFloat(distance) : parseInt(distance);
+            const tileDistance = numDistance / BSCACHE.gridScale;
+            return tileDistance * BSCACHE.gridDpi;
+        } catch (error) {
+            void this.NotifyError("There was a problem calculating light range.", error);
+            return 0;
+        }
     }
 
     // We will only create a new persistent light if it's roughly a square away
     private IsPositionClear(position: Vector2): boolean {
-        const griddedDistance = (BSCACHE.gridDpi - 10) * this.persistenceCullingDistance;
-        for (const light of this.persistentLights) {
-            const distance = Utilities.distanceBetween(position, light.position);
-            if (distance <= griddedDistance) {
-                return false;
+        try {
+            const griddedDistance = (BSCACHE.gridDpi - 10) * this.persistenceCullingDistance;
+            for (const light of this.persistentLights) {
+                const distance = Utilities.distanceBetween(position, light.position);
+                if (distance <= griddedDistance) {
+                    return false;
+                }
             }
+            return true;
+        } catch (error) {
+            void this.NotifyError("There was a problem checking clear position.", error);
+            return false;
         }
-        return true;
     }
 
     private IsPositionAndRotationClear(rotation: number, position: Vector2): boolean {
-        const griddedDistance = (BSCACHE.gridDpi - 10) * this.persistenceCullingDistance;
-        for (const light of this.persistentLights) {
-            const distance = Utilities.distanceBetween(position, light.position);
-            if (distance <= griddedDistance) {
-                if (rotation === light.rotation)
-                    return false;
+        try {
+            const griddedDistance = (BSCACHE.gridDpi - 10) * this.persistenceCullingDistance;
+            for (const light of this.persistentLights) {
+                const distance = Utilities.distanceBetween(position, light.position);
+                if (distance <= griddedDistance) {
+                    if (rotation === light.rotation)
+                        return false;
+                }
             }
+            return true;
+        } catch (error) {
+            void this.NotifyError("There was a problem checking clear position and rotation.", error);
+            return false;
         }
-        return true;
     }
 
     private getTokensICanSeeThrough(): Item[] {
-        const tokensWithVision = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
-        const myTokensWithVision: Item[] = [];
-        const gmTokenWithVision: Item[] = [];
-        for (const token of tokensWithVision) {
-            if (token.createdUserId === BSCACHE.playerId)
-                myTokensWithVision.push(token);
-            else {
-                const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
-                if (owner?.role === "GM")
-                    gmTokenWithVision.push(token);
+        try {
+            const tokensWithVision = BSCACHE.sceneItems.filter(x => (isTokenWithVision(x)));
+            const myTokensWithVision: Item[] = [];
+            const gmTokenWithVision: Item[] = [];
+            for (const token of tokensWithVision) {
+                if (token.createdUserId === BSCACHE.playerId)
+                    myTokensWithVision.push(token);
+                else {
+                    const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+                    if (owner?.role === "GM")
+                        gmTokenWithVision.push(token);
+                }
             }
+            return [...myTokensWithVision, ...gmTokenWithVision];
+        } catch (error) {
+            void this.NotifyError("There was a problem getting visible tokens.", error);
+            return [];
         }
-        return [...myTokensWithVision, ...gmTokenWithVision];
     }
 
     public async ToggleDoor(toggleDoorId: string) {
+        try {
         const localDoor = BSCACHE.sceneLocal.filter((item) => item.id === toggleDoorId && item.metadata[`${Constants.EXTENSIONID}/localDoor`] === true);
         if (localDoor.length === 1) {
             const foundDoors = BSCACHE.sceneItems.filter((item) => item.id === localDoor[0].attachedTo);
@@ -1288,6 +1426,9 @@ class SmokeProcessor {
 
                 await OBR.player.deselect([toggleDoorId]);
             }
+            }
+        } catch (error) {
+            await this.NotifyError("There was a problem toggling the door.", error);
         }
     }
 
