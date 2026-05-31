@@ -480,6 +480,8 @@ class SmokeProcessor {
         }
         else {
             const owner = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/USER-${token.createdUserId}`] as Player;
+            if (!owner) return;
+            
             const ringSize = this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] ?? GetVisionRangeDefault());
             const playerRing = buildShape()
                 .strokeColor(owner.color)
