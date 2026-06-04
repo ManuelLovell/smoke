@@ -6,6 +6,7 @@ import { elevationMode } from "./elevationMode";
 import { Constants } from "./../utilities/bsConstants";
 import { BSCACHE } from "./../utilities/bsSceneCache";
 import { cutterMode } from "./visionDoorMode";
+import { addSmokeMode } from "./addSmokeMode";
 
 export async function SetupTools(): Promise<void>
 {
@@ -92,6 +93,25 @@ export async function SetupTools(): Promise<void>
         onToolDragMove: brushMode.onDragMove,
         onToolDragEnd: brushMode.onDragEnd,
         onToolDragCancel: brushMode.onDragCancel,
+    });
+
+    // Create "add smoke" rectangle mode
+    await OBR.tool.createMode({
+        id: `${Constants.EXTENSIONID}/add-smoke-rectangle-mode`,
+        icons: [
+            {
+                icon: "/fog-background.svg",
+                label: "Add Smoke",
+                filter: {
+                    activeTools: [`${Constants.EXTENSIONID}/vision-tool`],
+                },
+            },
+        ],
+        onToolDragStart: addSmokeMode.onDragStart,
+        onToolDragMove: addSmokeMode.onDragMove,
+        onToolDragEnd: addSmokeMode.onDragEnd,
+        onToolDragCancel: addSmokeMode.onDragCancel,
+        onKeyDown: addSmokeMode.onKeyDown,
     });
 
     // Create Line Trimmer
