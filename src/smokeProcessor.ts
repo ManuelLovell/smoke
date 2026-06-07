@@ -1336,7 +1336,8 @@ class SmokeProcessor {
     private GetLightRange(distance: any, asFloat = false) {
         try {
             const numDistance = asFloat ? parseFloat(distance) : parseInt(distance);
-            const tileDistance = numDistance / BSCACHE.gridScale;
+            const gridScale = BSCACHE.gridScale === 0 ? 1 : BSCACHE.gridScale;
+            const tileDistance = numDistance / gridScale;
             return tileDistance * BSCACHE.gridDpi;
         } catch (error) {
             void this.NotifyError("There was a problem calculating light range.", error);

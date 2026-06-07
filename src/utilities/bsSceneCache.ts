@@ -117,6 +117,14 @@ class BSCache
         this.caches = caches;
     }
 
+    private NormalizeGridScale(value: unknown, fallback = 5): number
+    {
+        const num = typeof value === "number" ? value : Number(value);
+        if (!Number.isFinite(num)) return fallback;
+        if (num === 0) return 1;
+        return num;
+    }
+
     public async RefreshCache()
     {
         if (this.caches.includes(BSCache.PLAYER))
@@ -177,7 +185,7 @@ class BSCache
                 this.gridDpi = await OBR.scene.grid.getDpi();
                 this.gridType = await OBR.scene.grid.getType();
                 const gridScale = await OBR.scene.grid.getScale();
-                this.gridScale = gridScale.parsed?.multiplier ?? 5;
+                this.gridScale = this.NormalizeGridScale(gridScale.parsed?.multiplier, 5);
                 this.gridUnit = gridScale.parsed.unit;
             }
         }
@@ -259,7 +267,7 @@ class BSCache
                 this.gridDpi = await OBR.scene.grid.getDpi();
                 this.gridType = await OBR.scene.grid.getType();
                 const gridScale = await OBR.scene.grid.getScale();
-                this.gridScale = gridScale.parsed?.multiplier ?? 5;
+                this.gridScale = this.NormalizeGridScale(gridScale.parsed?.multiplier, 5);
                 this.gridUnit = gridScale.parsed.unit;
             }
         }
@@ -491,7 +499,7 @@ class BSCache
                     await this.OnSceneGridChange(grid);
                     this.gridDpi = grid.dpi;
                     this.gridType = await OBR.scene.grid.getType();
-                    this.gridScale = parseInt(grid.scale);
+                    this.gridScale = this.NormalizeGridScale(parseInt(grid.scale), 5);
                 });
             }
         }
