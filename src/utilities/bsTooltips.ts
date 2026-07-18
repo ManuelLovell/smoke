@@ -59,7 +59,7 @@ export function CreateTooltips()
     tooltips.set(`tip_innerAngleDefault`, "Set the default inner angle radius.");
     tooltips.set(`tip_outerAngleDefault`, "Set the default outer angle radius.");
 
-    tooltips.set(`tip_convertToFog`, "Convert all Smoke&Spectre areas to OBR Fog Shapes.");
+    tooltips.set(`tip_convertToFog`, "Convert all Smoke&Spectre areas to OBR Fog Shapes. *Only works with Obstruction Polygons.");
     tooltips.set(`tip_convertToSmoke`, "Convert all OBR Fog Shapes to Smoke&Spectre areas.");
 
     tooltips.forEach((value, key) => { SetupTooltips(key, value); });
