@@ -15,6 +15,7 @@ export default {
         unitcontextembed: path.resolve(__dirname, 'pages/unitcontextembed.html'),
         wallcontextembed: path.resolve(__dirname, 'pages/wallcontextembed.html'),
         mapcontextembed: path.resolve(__dirname, 'pages/mapcontextembed.html'),
+        converting: path.resolve(__dirname, "pages/converting.html"),
         notice: path.resolve(__dirname, "src/notice/notice.html"),
         progressbar: path.resolve(__dirname, "pages/progressbar.html")
       }
