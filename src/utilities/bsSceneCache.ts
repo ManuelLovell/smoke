@@ -201,7 +201,12 @@ class BSCache
         this.sceneReady = await OBR.scene.isReady();
         this.theme = await OBR.theme.getTheme();
 
-        Utilities.SetThemeMode(this.theme, document);
+        try {
+            Utilities.SetThemeMode(this.theme, document);
+        } catch (error) {
+            // Whatever. Theme didn't set.
+        }
+
 
         await OBR.broadcast.onMessage(Constants.PROCESSEDID, async (data) =>
         {
