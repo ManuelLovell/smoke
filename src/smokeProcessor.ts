@@ -1133,7 +1133,7 @@ class SmokeProcessor {
             position: persistenceItem.position,
             rotation: persistenceItem.rotation,
             zIndex: depth, // This is for when it's re-calculated on load
-            metadata: token.metadata
+            metadata: persistenceItem.metadata
         });
 
         // If we hit our limit, remove from the bottom of the stack
