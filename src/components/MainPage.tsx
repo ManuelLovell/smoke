@@ -79,6 +79,11 @@ const GridContainer = styled.div`
   min-height: 0;
   display: flex;
   justify-content: center;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    padding: 0 8px;
+    justify-content: stretch;
+  }
 `;
 
 const GridTable = styled.div<{ $columns: number }>`
@@ -88,6 +93,12 @@ const GridTable = styled.div<{ $columns: number }>`
   min-width: max-content;
   height: 100%;
   margin: 0 auto;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    width: 100%;
+    min-width: 0;
+    row-gap: 10px;
+  }
 `;
 
 const HeaderCell = styled.div<{ $accent?: string }>`
@@ -98,6 +109,39 @@ const HeaderCell = styled.div<{ $accent?: string }>`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    display: none;
+  }
+`;
+
+const MobileColumnHeaders = styled.div`
+  display: none;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: 28px 8px repeat(3, 44px) 8px 28px;
+    justify-content: center;
+    grid-template-areas:
+      'link . range collision inner . blind'
+      '. . outer falloff darkness . .';
+    row-gap: 8px;
+    column-gap: 0;
+    padding: 2px 8px 6px;
+  }
+`;
+
+const MobileHeaderItem = styled.div<{ $area: string; $accent?: string }>`
+  display: none;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    display: flex;
+    grid-area: ${props => props.$area};
+    align-items: center;
+    justify-content: center;
+    color: ${props => props.$accent || '#8B9190'};
+  }
 `;
 
 const HeaderIcon = styled.img`
@@ -137,17 +181,59 @@ const TokenHeaderCell = styled.div`
   justify-content: center;
   gap: 2px;
   padding-top: 4px;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    grid-column: auto;
+    grid-area: name;
+    padding-top: 0;
+  }
 `;
 
-const ParameterCell = styled.div`
+const ParameterCell = styled.div<{ $mobileArea?: string }>`
   ${tw`flex flex-col items-center gap-2`}
   padding: 0 4px;
   align-self: center;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    grid-area: ${props => props.$mobileArea || 'auto'};
+    width: 44px;
+    padding: 0;
+  }
 `;
 
 const LinkIndicatorCell = styled.div`
   ${tw`flex items-center justify-center`}
   padding: 0 2px;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    grid-area: link;
+    justify-self: center;
+  }
+`;
+
+const BlindCell = styled(ParameterCell)`
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    grid-area: blind;
+  }
+`;
+
+const TokenGridRow = styled.div`
+  grid-column: 1 / -1;
+  display: contents;
+
+  @media (max-width: 768px) and (hover: none) and (pointer: coarse) {
+    display: grid;
+    grid-template-columns: 28px 8px repeat(3, 44px) 8px 28px;
+    justify-content: center;
+    grid-template-areas:
+      'name name name name name name name'
+      'link . range collision inner . blind'
+      'link . outer falloff darkness . blind';
+    row-gap: 6px;
+    column-gap: 6px;
+    padding: 6px 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  }
 `;
 
 const OwnerModalOverlay = styled.div<{ $isOpen: boolean }>`
@@ -691,6 +777,52 @@ export const MainPage = () => {
                 </SettingsTooltip>
               </HeaderCell>
 
+              <MobileColumnHeaders>
+                <MobileHeaderItem $area="link" $accent={theme.BORDER}>
+                  <SettingsTooltip
+                    theme={theme}
+                    text={t('main.tooltips.linkInstructions')}
+                  >
+                    <Link size={20} color={theme.PRIMARY} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="range" $accent={STAT_COLORS[0]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionRange}>
+                    <HeaderIcon src="/visionRange.svg" alt={t('presets.range')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="collision" $accent={STAT_COLORS[1]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionCollision}>
+                    <HeaderIcon src="/visionBumper.svg" alt={t('presets.collision')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="inner" $accent={STAT_COLORS[2]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionInnerAngle}>
+                    <HeaderIcon src="/visionInner.svg" alt={t('presets.innerAngle')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="outer" $accent={STAT_COLORS[3]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionOuterAngle}>
+                    <HeaderIcon src="/visionOuter.svg" alt={t('presets.outerAngle')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="falloff" $accent={STAT_COLORS[4]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionFalloff}>
+                    <HeaderIcon src="/visionFalloff.svg" alt={t('presets.falloff')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="darkness" $accent={STAT_COLORS[5]}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionDarkness}>
+                    <HeaderIcon src="/darkvision.svg" alt={t('presets.darkvision')} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+                <MobileHeaderItem $area="blind" $accent={theme.BORDER}>
+                  <SettingsTooltip theme={theme} text={tooltips.visionBlind}>
+                    <EyeOffIcon style={{ color: '#fff' }} />
+                  </SettingsTooltip>
+                </MobileHeaderItem>
+              </MobileColumnHeaders>
+
               {/* Token rows */}
               {orderedTokens.map((token) => {
                 const linkedParentId = linkedParentIdByTokenId.get(token.id);
@@ -701,7 +833,7 @@ export const MainPage = () => {
                 const isDropTarget = dropTargetTokenId === token.id;
                 const isDragging = draggedTokenId === token.id;
                 return (
-                  <div key={token.id} style={{ gridColumn: '1 / -1', display: 'contents' }}>
+                  <TokenGridRow key={token.id}>
                     <TokenHeaderCell>
                       <TokenNameCell
                         draggable
@@ -734,7 +866,7 @@ export const MainPage = () => {
                       ) : null}
                     </LinkIndicatorCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="range">
                       <PresetInput
                         value={vision.range}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_RANGE_KEY, v)}
@@ -746,7 +878,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="collision">
                       <PresetInput
                         value={vision.collision}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_SOURCE_KEY, v)}
@@ -758,7 +890,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="inner">
                       <PresetInput
                         value={vision.innerAngle}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_IN_ANGLE_KEY, v)}
@@ -770,7 +902,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="outer">
                       <PresetInput
                         value={vision.outerAngle}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_OUT_ANGLE_KEY, v)}
@@ -782,7 +914,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="falloff">
                       <PresetInput
                         value={Math.round(vision.falloff * 10) / 10}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_FALLOFF_KEY, v)}
@@ -795,7 +927,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <ParameterCell $mobileArea="darkness">
                       <PresetInput
                         value={vision.darkness}
                         onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_DARKNESS_KEY, v)}
@@ -807,7 +939,7 @@ export const MainPage = () => {
                       />
                     </ParameterCell>
 
-                    <ParameterCell>
+                    <BlindCell>
                       <StyledCheckbox
                         theme={theme}
                         type="checkbox"
@@ -815,8 +947,8 @@ export const MainPage = () => {
                         onChange={(e) => updateVisionBlind(tokenSettings.id, e.target.checked)}
                         aria-label={t('main.aria.blind')}
                       />
-                    </ParameterCell>
-                  </div>
+                    </BlindCell>
+                  </TokenGridRow>
                 );
               })}
             </GridTable>
