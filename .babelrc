@@ -1,0 +1,14 @@
+{
+  "presets": [
+    "@babel/preset-react"
+  ],
+  "plugins": [
+    "babel-plugin-macros",
+    [
+      "@babel/plugin-transform-react-jsx",
+      {
+        "runtime": "automatic"
+      }
+    ]
+  ]
+}

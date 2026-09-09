@@ -1,0 +1,38 @@
+html,
+body,
+#root {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  min-inline-size: 0 !important;
+  overflow: hidden !important;
+}
+
+html {
+  font-size: 16px;
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+}
+
+body {
+  min-width: 0 !important;
+  min-inline-size: 0 !important;
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  line-height: 1;
+  text-size-adjust: none;
+  -webkit-text-size-adjust: none;
+}
+
+button {
+  appearance: none;
+  -webkit-appearance: none;
+}

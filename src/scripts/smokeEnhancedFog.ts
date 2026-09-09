@@ -1,0 +1,153 @@
+import OBR, { buildEffect, Image } from "@owlbear-rodeo/sdk";
+import { Constants } from "../helpers/BSConstants";
+
+export async function ApplyEnhancedFog(fogMap: Image, effect: string)
+{
+    // Search for old fog effects
+    const oldEffect = await OBR.scene.local.getItems(x => x.metadata[`${Constants.EXTENSIONID}/isFogEffect`] === fogMap.id);
+    if (oldEffect.length > 0)
+    {
+        await OBR.scene.local.deleteItems(oldEffect.map(x => x.id));
+    }
+    if (effect === Constants.SPOOKYSTYLE)
+        await ApplySpookyFog(fogMap);
+    else if (effect === Constants.FOGGYSTYLE)
+        await ApplyFoggyFog(fogMap);
+    else if (effect === Constants.COSMICSTYLE)
+        await ApplyCosmicFog(fogMap);
+    else if (effect === Constants.WEIRDSTYLE)
+        await ApplyWeirdFog(fogMap);
+    else if (effect === Constants.FLESHSTYLE)
+        await ApplyFleshFog(fogMap);
+    else if (effect === Constants.DRIPSTYLE)
+        await ApplyDripFog(fogMap);
+    else if (effect === Constants.WATERSTYLE)
+        await ApplyWaterFog(fogMap);
+}
+
+async function ApplyCosmicFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.COSMICSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplySpookyFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .blendMode("MULTIPLY")
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.SPOOKYSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyFoggyFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.FOGGYSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyWeirdFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.WEIRDSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyFleshFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.FLESHSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyDripFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.ANNIHILATIONSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}
+
+async function ApplyWaterFog(enhancedFogMap: Image)
+{
+    const fogEffects = buildEffect()
+        .scale(enhancedFogMap.scale)
+        .rotation(enhancedFogMap.rotation)
+        .attachedTo(enhancedFogMap.id)
+        .effectType("ATTACHMENT")
+        .layer("FOG")
+        .metadata({
+            [`${Constants.EXTENSIONID}/isFogEffect`]: enhancedFogMap.id
+        })
+        .sksl(Constants.WATERSHADER)
+        .disableHit(true)
+        .zIndex(-0.5)
+        .build();
+    await OBR.scene.local.addItems([fogEffects]);
+}

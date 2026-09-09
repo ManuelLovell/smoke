@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#root {
+    font-size: 16px;
+    color: white;
+    margin: 0 auto;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    /* Used in background wrapper */
+    --BS-DarkBG: rgba(0, 0, 0, 0.45);
+    --BS-LightBG: rgb(189, 189, 189, 0.45);
+    --vh: 100vh;
+    text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    a:nth-of-type(2) .logo {
+        animation: logo-spin infinite 20s linear;
+    }
+}
+
+@supports (height: 100vh) {
+    :root {
+        --vh: 100vh;
+    }
+}

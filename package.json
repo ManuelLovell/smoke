@@ -1,24 +1,47 @@
 {
-  "name": "experimental",
+  "name": "smoke-two",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
     "preview": "vite preview"
   },
-  "devDependencies": {
-    "@types/showdown": "^2.0.6",
-    "typescript": "^5.5.3",
-    "vite": "^7.1.11"
-  },
   "dependencies": {
-    "@melloware/coloris": "^0.24.0",
-    "@owlbear-rodeo/sdk": "^3.1.0",
-    "showdown": "^2.1.0",
+    "@emotion/styled": "^11.14.1",
+    "@owlbear-rodeo/sdk": "github:owlbear-rodeo/sdk",
+    "@supabase/supabase-js": "^2.91.1",
+    "autoprefixer": "^10.5.4",
+    "framer-motion": "^13.1.1",
+    "lucide-react": "^1.37.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "simplify-js": "^1.2.4",
-    "tippy.js": "^6.3.7",
-    "tom-select": "^2.3.1"
+    "styled-components": "^6.5.3",
+    "twin.macro": "^3.4.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@babel/preset-react": "^7.28.5",
+    "@eslint/js": "^9.39.1",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.23",
+    "babel-plugin-macros": "^3.1.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^3.4.19",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.46.4",
+    "vite": "npm:rolldown-vite@7.2.5"
   }
 }
