@@ -54,7 +54,9 @@ RewriteRule . /index.php [L]
 
 # BEGIN Owlbear
 <IfModule mod_headers.c>
-Header set Access-Control-Allow-Origin "https://www.owlbear.rodeo"
+SetEnvIfNoCase Origin "^https://([a-z0-9-]+\.)*owlbear\.rodeo$" OBR_ORIGIN=$0
+Header always set Access-Control-Allow-Origin "%{OBR_ORIGIN}e" env=OBR_ORIGIN
+Header always set Vary "Origin"
 AddType application/wasm wasm
 <FilesMatch "\.(|htm|html)$">
     <IfModule mod_expires.c>

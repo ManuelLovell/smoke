@@ -1,4 +1,4 @@
-import{t as e}from"./vendor-BzuDUZ9Q.js";import{n as t}from"./style-vendor-D1g7eVte.js";import{s as n}from"./main-CqF9V8S0.js";const r=t.div`
+import{t as e}from"./vendor-BzuDUZ9Q.js";import{n as t}from"./style-vendor-D1g7eVte.js";import{s as n}from"./main-Ba80gaq6.js";const r=t.div`
   padding: 10px;
   color: ${e=>e.theme.PRIMARY};
   min-height: 100vh;
