@@ -1,0 +1,1 @@
+const e=e=>({visionRange:e(`main.tooltips.visionRange`),visionCollision:e(`main.tooltips.visionCollision`),visionInnerAngle:e(`main.tooltips.visionInnerAngle`),visionOuterAngle:e(`main.tooltips.visionOuterAngle`),visionFalloff:e(`main.tooltips.visionFalloff`),visionDarkness:e(`main.tooltips.visionDarkness`),visionBlind:e(`main.tooltips.visionBlind`)});export{e as t};
