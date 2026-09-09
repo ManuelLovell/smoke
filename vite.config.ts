@@ -21,6 +21,21 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(appVersion),
   },
   plugins: [
+    {
+      name: 'copy-assets-htaccess',
+      closeBundle() {
+        const source = path.resolve(__dirname, 'public/assets/.htaccess');
+        const targetDir = path.resolve(__dirname, 'dist/assets');
+        const target = path.resolve(targetDir, '.htaccess');
+
+        if (!fs.existsSync(source)) {
+          return;
+        }
+
+        fs.mkdirSync(targetDir, { recursive: true });
+        fs.copyFileSync(source, target);
+      },
+    },
     react({
       babel: {
         plugins: [

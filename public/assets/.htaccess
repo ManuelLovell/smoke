@@ -1,0 +1,18 @@
+# Asset-level rules for Owlbear extension chunk loading on shared hosts.
+# This file is copied to dist/assets/.htaccess by Vite from public/assets/.htaccess.
+
+<IfModule mod_headers.c>
+    # Allow both apex and www Owlbear origins, and future subdomains.
+    SetEnvIfNoCase Origin "^https://([a-z0-9-]+\.)*owlbear\.rodeo$" OBR_ORIGIN=$0
+    Header always set Access-Control-Allow-Origin "%{OBR_ORIGIN}e" env=OBR_ORIGIN
+    Header always set Vary "Origin"
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType application/wasm .wasm
+</IfModule>
+
+# Do not rewrite asset URLs to WordPress index.php.
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule>
