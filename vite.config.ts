@@ -33,6 +33,43 @@ export default defineConfig({
   build: {
     target: 'esnext',
     rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes('node_modules')) {
+            return;
+          }
+
+          if (id.includes('react-dom') || id.includes('react/cjs') || id.includes('/react/')) {
+            return 'react-vendor';
+          }
+
+          if (id.includes('framer-motion')) {
+            return 'motion-vendor';
+          }
+
+          if (id.includes('styled-components') || id.includes('twin.macro')) {
+            return 'style-vendor';
+          }
+
+          if (id.includes('lucide-react')) {
+            return 'icons-vendor';
+          }
+
+          if (id.includes('@owlbear-rodeo/sdk')) {
+            return 'obr-vendor';
+          }
+
+          if (id.includes('@supabase/supabase-js')) {
+            return 'supabase-vendor';
+          }
+
+          if (id.includes('zustand')) {
+            return 'state-vendor';
+          }
+
+          return 'vendor';
+        },
+      },
       input: {
         main: path.resolve(__dirname, "pages/index.html"),
         linetool: path.resolve(__dirname, 'pages/line.html'),
