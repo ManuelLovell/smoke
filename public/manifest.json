@@ -1,7 +1,7 @@
 {
     "name": "Smoke & Spectre!",
     "description": "Dynamic fog of war with Per-Player fog and 'Ghost' tokens.",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "author": "Battle-System",
     "icon": "/logo.png",
     "manifest_version": 1,
