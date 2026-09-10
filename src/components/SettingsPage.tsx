@@ -46,17 +46,7 @@ export const SettingsPage = () => {
   const [enableConsoleLogging, setEnableConsoleLogging] = useState(false);
   const [wallsGridSnap, setWallsGridSnap] = useState('10');
   const [wallsPersistenceLimit, setWallsPersistenceLimit] = useState('100');
-  const [toolWidth, setToolWidth] = useState('8');
-  const [toolColor, setToolColor] = useState('#000000');
-  const [toolStyle, setToolStyle] = useState<'solid' | 'dotted'>('solid');
-  const [defaultVisionRange, setDefaultVisionRange] = useState('30');
-  const [defaultVisionSource, setDefaultVisionSource] = useState('0');
-  const [defaultVisionDarkness, setDefaultVisionDarkness] = useState('0');
-  const [defaultVisionInnerAngle, setDefaultVisionInnerAngle] = useState('360');
-  const [defaultVisionOuterAngle, setDefaultVisionOuterAngle] = useState('360');
-  const [defaultVisionFalloff, setDefaultVisionFalloff] = useState('0');
   const [defaultElevationLevel, setDefaultElevationLevel] = useState('-10');
-  const [controlMode, setControlMode] = useState<'flywheel' | 'roller'>('flywheel');
   const [selectedPreviewPlayerId, setSelectedPreviewPlayerId] = useState<string>('');
   const tooltips = getSettingsTooltips(t);
 
@@ -128,63 +118,6 @@ export const SettingsPage = () => {
     if (persistenceLimit !== undefined) {
       setWallsPersistenceLimit(String(persistenceLimit));
     }
-
-    const savedToolWidth = sceneMetadata[SettingsConstants.TOOL_WIDTH];
-    if (savedToolWidth !== undefined) {
-      setToolWidth(String(savedToolWidth));
-    }
-
-    const savedToolColor = sceneMetadata[SettingsConstants.TOOL_COLOR];
-    if (typeof savedToolColor === 'string' && savedToolColor.length > 0) {
-      setToolColor(savedToolColor);
-    }
-
-    const savedToolStyle = sceneMetadata[SettingsConstants.TOOL_STYLE] as unknown;
-    if (Array.isArray(savedToolStyle)) {
-      setToolStyle(savedToolStyle.length > 0 ? 'dotted' : 'solid');
-    }
-
-    const savedVisionRange = sceneMetadata[SettingsConstants.DEFAULT_VISION_RANGE];
-    if (savedVisionRange !== undefined) {
-      setDefaultVisionRange(String(savedVisionRange));
-    }
-
-    const savedVisionSource = sceneMetadata[SettingsConstants.DEFAULT_VISION_SOURCE];
-    if (savedVisionSource !== undefined) {
-      setDefaultVisionSource(String(savedVisionSource));
-    }
-
-    const savedVisionDarkness = sceneMetadata[SettingsConstants.DEFAULT_VISION_DARKNESS];
-    if (savedVisionDarkness !== undefined) {
-      setDefaultVisionDarkness(String(savedVisionDarkness));
-    }
-
-    const savedVisionInnerAngle = sceneMetadata[SettingsConstants.DEFAULT_VISION_IN_ANGLE];
-    if (savedVisionInnerAngle !== undefined) {
-      setDefaultVisionInnerAngle(String(savedVisionInnerAngle));
-    }
-
-    const savedVisionOuterAngle = sceneMetadata[SettingsConstants.DEFAULT_VISION_OUT_ANGLE];
-    if (savedVisionOuterAngle !== undefined) {
-      setDefaultVisionOuterAngle(String(savedVisionOuterAngle));
-    }
-
-    const savedVisionFalloff = sceneMetadata[SettingsConstants.DEFAULT_VISION_FALLOFF];
-    if (savedVisionFalloff !== undefined) {
-      setDefaultVisionFalloff(String(savedVisionFalloff));
-    }
-
-    const savedDefaultElevation = sceneMetadata[SettingsConstants.DEFAULT_ELEVATION_LEVEL];
-    if (savedDefaultElevation !== undefined) {
-      setDefaultElevationLevel(String(savedDefaultElevation));
-    }
-
-    const savedControlMode = sceneMetadata[SettingsConstants.CONTROL_MODE];
-    if (savedControlMode === 'roller') {
-      setControlMode('roller');
-    } else {
-      setControlMode('flywheel');
-    }
   }, [cacheReady, sceneMetadata]);
 
   const saveData = async (key: string, value: unknown) => {
@@ -193,15 +126,6 @@ export const SettingsPage = () => {
 
   const clampIntegerValue = (raw: string, min: number, max: number, fallback: number): string => {
     const parsed = Number.parseInt(raw, 10);
-    if (Number.isNaN(parsed)) {
-      return String(fallback);
-    }
-
-    return String(Math.max(min, Math.min(max, parsed)));
-  };
-
-  const clampFloatValue = (raw: string, min: number, max: number, fallback: number): string => {
-    const parsed = Number.parseFloat(raw);
     if (Number.isNaN(parsed)) {
       return String(fallback);
     }
