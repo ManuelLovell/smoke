@@ -81,3 +81,26 @@ AddType application/wasm wasm
 <IfModule mod_mime.c>
     AddType application/wasm .wasm
 </IfModule>
+
+# Fallback cache policy for build assets. This avoids clients keeping stale
+# error responses (like transient 403s) for JS/CSS/WASM files.
+<IfModule mod_expires.c>
+    ExpiresByType application/javascript "access plus 0 seconds"
+    ExpiresByType text/javascript "access plus 0 seconds"
+    ExpiresByType text/css "access plus 0 seconds"
+    ExpiresByType application/wasm "access plus 0 seconds"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|mjs|map|wasm)$">
+        FileETag None
+        Header unset ETag
+        Header unset Last-Modified
+        Header unset Pragma
+        Header unset Cache-Control
+        Header unset Expires
+        Header always set Pragma "no-cache"
+        Header always set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+        Header always set Expires "Thu, 1 Jan 1970 00:00:00 GMT"
+    </FilesMatch>
+</IfModule>

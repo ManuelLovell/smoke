@@ -20,6 +20,9 @@ interface BSCache
     sceneMetadata: Record<string, unknown>;
     setSceneMetadata: (data: Record<string, unknown>) => void;
 
+    fogFilled: boolean;
+    setFogFilled: (filled: boolean) => void;
+
     roomMetadata: Record<string, unknown>;
     setRoomMetadata: (data: Record<string, unknown>) => void;
 

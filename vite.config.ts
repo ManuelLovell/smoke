@@ -86,18 +86,19 @@ export default defineConfig({
         },
       },
       input: {
-        main: path.resolve(__dirname, "pages/index.html"),
-        linetool: path.resolve(__dirname, 'pages/line.html'),
-        brushtool: path.resolve(__dirname, 'pages/brush.html'),
-        elevationtool: path.resolve(__dirname, 'pages/elevation.html'),
-        elevationwarning: path.resolve(__dirname, 'pages/ewarning.html'),
-        polygontool: path.resolve(__dirname, 'pages/polygon.html'),
-        unitcontextembed: path.resolve(__dirname, 'pages/unitcontextembed.html'),
-        wallcontextembed: path.resolve(__dirname, 'pages/wallcontextembed.html'),
-        mapcontextembed: path.resolve(__dirname, 'pages/mapcontextembed.html'),
-        converting: path.resolve(__dirname, "pages/converting.html"),
-        notice: path.resolve(__dirname, "pages/notice.html"),
-        progressbar: path.resolve(__dirname, "pages/progressbar.html")
+        index: path.resolve(__dirname, "index.html"),
+        'pages/index': path.resolve(__dirname, "pages/index.html"),
+        'pages/line': path.resolve(__dirname, 'pages/line.html'),
+        'pages/brush': path.resolve(__dirname, 'pages/brush.html'),
+        'pages/elevation': path.resolve(__dirname, 'pages/elevation.html'),
+        'pages/ewarning': path.resolve(__dirname, 'pages/ewarning.html'),
+        'pages/polygon': path.resolve(__dirname, 'pages/polygon.html'),
+        'pages/unitcontextembed': path.resolve(__dirname, 'pages/unitcontextembed.html'),
+        'pages/wallcontextembed': path.resolve(__dirname, 'pages/wallcontextembed.html'),
+        'pages/mapcontextembed': path.resolve(__dirname, 'pages/mapcontextembed.html'),
+        'pages/converting': path.resolve(__dirname, "pages/converting.html"),
+        'pages/notice': path.resolve(__dirname, "pages/notice.html"),
+        'pages/progressbar': path.resolve(__dirname, "pages/progressbar.html")
       }
     }
   }

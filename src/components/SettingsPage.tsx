@@ -8,7 +8,7 @@ import { SettingsTooltip } from './SettingsTooltip';
 import { getSettingsTooltips } from './SettingsTooltipContent';
 import { SettingsConstants } from '../helpers/MetadataKeys';
 import { Constants } from '../helpers/BSConstants';
-import { useSceneStore } from '../helpers/BSCache';
+import { useSceneStore } from '../helpers/BSCache'; 
 import { useSmokeTheme } from '../helpers/ThemeContext';
 import { useTranslation } from '../i18n/Translation';
 import { SMOKEMACHINE } from '../scripts/smokeProcessor';
@@ -26,6 +26,7 @@ export const SettingsPage = () => {
   const { theme } = useSmokeTheme();
   const { t } = useTranslation();
   const sceneMetadata = useSceneStore((state) => state.sceneMetadata);
+  const fogFilled = useSceneStore((state) => state.fogFilled);
   const cacheReady = useSceneStore((state) => state.cacheReady);
   const partyData = useSceneStore((state) => state.partyData);
   const playerData = useSceneStore((state) => state.playerData);
@@ -37,6 +38,7 @@ export const SettingsPage = () => {
   const [fogTrailing, setFogTrailing] = useState(false);
   const [fogPlayerSeeDoors, setFogPlayerSeeDoors] = useState(false);
   const [fogDisableVision, setFogDisableVision] = useState(false);
+  const [fogFilledState, setFogFilledState] = useState(fogFilled);
   const [wallsBlockingGm, setWallsBlockingGm] = useState(false);
   const [menuUnitContext, setMenuUnitContext] = useState(false);
   const [menuWallContext, setMenuWallContext] = useState(false);
@@ -236,6 +238,20 @@ export const SettingsPage = () => {
         <PageTitle theme={theme}>{t('settings.pageTitle')}</PageTitle>
 
         <Card theme={theme}>
+
+          <ControlRow theme={theme}>
+            <ControlLabel theme={theme}>
+              <SettingsTooltip theme={theme} text={tooltips.fogFilled}>{t('settings.fogFilled')}</SettingsTooltip>
+            </ControlLabel>
+            <ToggleControl
+              label={t('settings.fogFilled')}
+              isOn={fogFilledState}
+              onChange={async (value) => {
+                setFogFilledState(value);
+                await OBR.scene.fog.setFilled(value);
+              }}
+            />
+          </ControlRow>
 
           <ControlRow theme={theme}>
             <ControlLabel theme={theme}>

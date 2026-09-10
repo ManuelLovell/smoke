@@ -18,6 +18,7 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
     const setSceneMetadata = useSceneStore((s) => s.setSceneMetadata);
     const setSceneId = useSceneStore((s) => s.setSceneId);
     const setRoomMetadata = useSceneStore((s) => s.setRoomMetadata);
+    const setFogFilled = useSceneStore((s) => s.setFogFilled);
     const setGridDpi = useSceneStore((s) => s.setGridDpi);
     const setPlayerData = useSceneStore((s) => s.setPlayerData);
     const setPartyData = useSceneStore((s) => s.setPartyData);
@@ -88,6 +89,7 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
                 sceneMetadata,
                 roomMetadata,
                 gridDpi,
+                fogFilled,
                 players,
                 playerSelection,
                 playerColor,
@@ -102,6 +104,7 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
                 OBR.scene.getMetadata(),
                 OBR.room.getMetadata(),
                 OBR.scene.grid.getDpi(),
+                OBR.scene.fog.getFilled(),
                 OBR.party.getPlayers(),
                 OBR.player.getSelection(),
                 OBR.player.getColor(),
@@ -127,6 +130,7 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
                 setSceneId(newSceneId);
             }
 
+            setFogFilled(fogFilled);
             setRoomMetadata(roomMetadata);
             setGridDpi(gridDpi);
             setPlayerData({

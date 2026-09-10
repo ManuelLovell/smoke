@@ -34,6 +34,9 @@ export const useSceneStore = create<BSCache>((set) => ({
     roomMetadata: {},
     setRoomMetadata: (data) => set({ roomMetadata: { ...data } }),
 
+    fogFilled: false,
+    setFogFilled: (filled) => set({ fogFilled: filled }),
+
     sceneId: '',
     setSceneId: (sceneId) => set({ sceneId }),
 
