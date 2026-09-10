@@ -12,6 +12,23 @@
     AddType application/wasm .wasm
 </IfModule>
 
+# Prevent stale browser caches of chunk responses (including transient 403s).
+<IfModule mod_expires.c>
+    ExpiresActive Off
+</IfModule>
+
+<IfModule mod_headers.c>
+    FileETag None
+    Header unset ETag
+    Header unset Last-Modified
+    Header unset Pragma
+    Header unset Cache-Control
+    Header unset Expires
+    Header always set Pragma "no-cache"
+    Header always set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+    Header always set Expires "Thu, 1 Jan 1970 00:00:00 GMT"
+</IfModule>
+
 # Do not rewrite asset URLs to WordPress index.php.
 <IfModule mod_rewrite.c>
     RewriteEngine Off
