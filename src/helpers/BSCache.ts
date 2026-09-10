@@ -43,6 +43,12 @@ export const useSceneStore = create<BSCache>((set) => ({
     gridDpi: 150,
     setGridDpi: (dpi) => set({ gridDpi: dpi }),
 
+    gridSnap: true,
+    setGridSnap: (snap) => set({ gridSnap: snap }),
+
+    gridSnapDistance: 10,
+    setGridSnapDistance: (distance) => set({ gridSnapDistance: distance }),
+
     playerData: undefined,
     setPlayerData: (playerData) => set({ playerData }),
 
@@ -121,7 +127,6 @@ void OBR.onReady(async () => {
 
 interface LegacyBSCache {
     toolStarted: boolean;
-    snap: boolean;
     disableWindows: string[];
     enableWindows: string[];
     sceneItems: Item[];
@@ -132,7 +137,8 @@ interface LegacyBSCache {
     gridDpi: number;
     gridType: string;
     gridScale: number;
-    gridSnap: number;
+    gridSnap: boolean;
+    gridSnapDistance: number;
     playerId: string;
     playerRole: string;
     fogFilled: boolean;
@@ -142,7 +148,6 @@ interface LegacyBSCache {
 
 export const BSCACHE: LegacyBSCache = {
     toolStarted: false,
-    snap: false,
     disableWindows: [],
     enableWindows: [],
 
@@ -178,9 +183,13 @@ export const BSCACHE: LegacyBSCache = {
         return gridScale;
     },
 
-    get gridSnap(): number {
-        const storedValue = readNumericMetadata(`${Constants.EXTENSIONID}/gridSnapWalls`);
-        return storedValue && storedValue > 0 ? storedValue : useSceneStore.getState().gridDpi;
+    get gridSnap(): boolean {
+        return useSceneStore.getState().gridSnap;
+    },
+
+    get gridSnapDistance(): number {
+        const storedValue = readNumericMetadata(`${Constants.EXTENSIONID}/gridSnapDistance`);
+        return storedValue && storedValue > 0 ? storedValue : 10;
     },
 
     get playerId(): string {

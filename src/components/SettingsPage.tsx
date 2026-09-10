@@ -30,6 +30,8 @@ export const SettingsPage = () => {
   const fogFilled = useSceneStore((state) => state.fogFilled);
   const cacheReady = useSceneStore((state) => state.cacheReady);
   const partyData = useSceneStore((state) => state.partyData);
+  const gridSnap = useSceneStore((state) => state.gridSnap);
+  const setGridSnap = useSceneStore((state) => state.setGridSnap);
   const previewSelectRef = useRef<HTMLSelectElement>(null);
 
   const [partyOwnerLines, setPartyOwnerLines] = useState(false);
@@ -44,7 +46,7 @@ export const SettingsPage = () => {
   const [menuWallContext, setMenuWallContext] = useState(false);
   const [otherWarnings, setOtherWarnings] = useState(false);
   const [enableConsoleLogging, setEnableConsoleLogging] = useState(false);
-  const [wallsGridSnap, setWallsGridSnap] = useState('10');
+  const [gridSnapDistance, setGridSnapDistance] = useState('10');
   const [wallsPersistenceLimit, setWallsPersistenceLimit] = useState('100');
   const [defaultElevationLevel, setDefaultElevationLevel] = useState('-10');
   const [selectedPreviewPlayerId, setSelectedPreviewPlayerId] = useState<string>('');
@@ -89,6 +91,11 @@ export const SettingsPage = () => {
       setFogDisableVision(sceneMetadata[SettingsConstants.FOG_DISABLE_VISION] as boolean);
     }
 
+    const sceneGridSnap = sceneMetadata[SettingsConstants.GRID_SNAP];
+    if (typeof sceneGridSnap === 'boolean') {
+      setGridSnap(sceneGridSnap);
+    }
+
     if (sceneMetadata[SettingsConstants.WALLS_BLOCKING_GM] !== undefined) {
       setWallsBlockingGm(sceneMetadata[SettingsConstants.WALLS_BLOCKING_GM] as boolean);
     }
@@ -109,9 +116,9 @@ export const SettingsPage = () => {
       setEnableConsoleLogging(sceneMetadata[SettingsConstants.ENABLE_CONSOLE_LOGGING] as boolean);
     }
 
-    const gridSnap = sceneMetadata[SettingsConstants.WALLS_GRID_SNAP];
-    if (gridSnap !== undefined) {
-      setWallsGridSnap(String(gridSnap));
+    const gridSnapDistance = sceneMetadata[SettingsConstants.GRID_SNAP_DISTANCE];
+    if (gridSnapDistance !== undefined) {
+      setGridSnapDistance(String(gridSnapDistance));
     }
 
     const persistenceLimit = sceneMetadata[SettingsConstants.WALLS_PERSISTENCE_LIMIT];
@@ -173,6 +180,17 @@ export const SettingsPage = () => {
               onChange={async (value) => {
                 setFogFilledState(value);
                 await OBR.scene.fog.setFilled(value);
+              }}
+            />
+            <ControlLabel theme={theme}>
+              <SettingsTooltip theme={theme} text={tooltips.gridSnap}>{t('settings.gridSnap')}</SettingsTooltip>
+            </ControlLabel>
+            <ToggleControl
+              label={t('settings.gridSnap')}
+              isOn={gridSnap}
+              onChange={async (value) => {
+                setGridSnap(value);
+                await saveData(SettingsConstants.GRID_SNAP, value);
               }}
             />
           </ControlRow>
@@ -257,12 +275,13 @@ export const SettingsPage = () => {
               type="number"
               min={1}
               max={100}
-              value={wallsGridSnap}
-              onChange={(event) => setWallsGridSnap(event.target.value)}
+              value={gridSnapDistance}
+              onChange={(event) => setGridSnapDistance(event.target.value)}
               onBlur={async () => {
-                const normalized = clampIntegerValue(wallsGridSnap, 1, 100, 10);
-                setWallsGridSnap(normalized);
-                await saveData(SettingsConstants.WALLS_GRID_SNAP, normalized);
+                const normalized = clampIntegerValue(gridSnapDistance, 1, 100, 10);
+                const numericValue = Number.parseInt(normalized, 10);
+                setGridSnapDistance(normalized);
+                await saveData(SettingsConstants.GRID_SNAP_DISTANCE, numericValue);
               }}
             />
           </ControlRow>

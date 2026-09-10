@@ -55,6 +55,8 @@ export const frTranslations: Record<string, string> = {
   'settings.fogPlayerSeeDoors': 'Les joueurs voient les portes',
   'settings.fogDisableVision': 'Desactiver la vision',
   'settings.fogFilled': 'Brouillard rempli',
+  'settings.gridSnap': 'Accrochage à la grille',
+  'settings.tooltips.gridSnap': 'Active ou désactive l’accrochage des points d’obstruction à la grille.',
   'settings.wallsBlockingGm': 'Le MJ ignore les murs bloquants',
   'settings.menuUnitContext': 'Activer le menu contextuel des unites',
   'settings.menuWallContext': 'Activer le menu contextuel des murs',

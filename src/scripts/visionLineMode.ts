@@ -74,7 +74,7 @@ async function onToolClick(_: ToolContext, event: ToolEvent): Promise<void>
     if (!interaction)
     {
         const snapped = GetSnappedCoordinates(event);
-        const newPos = BSCACHE.snap ? snapped : event.pointerPosition;
+        const newPos = BSCACHE.gridSnap ? snapped : event.pointerPosition;
 
         const line = buildCurve()
             .tension(0)
@@ -145,7 +145,7 @@ function onToolMove(_: ToolContext, event: ToolEvent)
 
     update((line: Curve) =>
     {
-        line.points[line.points.length - 1] = BSCACHE.snap ? snapped : event.pointerPosition;
+        line.points[line.points.length - 1] = BSCACHE.gridSnap ? snapped : event.pointerPosition;
     });
 }
 

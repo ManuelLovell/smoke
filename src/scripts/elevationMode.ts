@@ -70,7 +70,7 @@ async function onToolClick(_J: ToolContext, event: ToolEvent, depth: number) {
 
     if (!interaction) {
         const snapped = GetSnappedCoordinates(event);
-        const newPos = BSCACHE.snap ? snapped : event.pointerPosition;
+        const newPos = BSCACHE.gridSnap ? snapped : event.pointerPosition;
 
         const mappyGon = buildCurve()
             .tension(0)
@@ -130,7 +130,7 @@ function onToolMove(_: ToolContext, event: ToolEvent) {
     const snapped = GetSnappedCoordinates(event);
     update((mappyGon: Curve) => {
         //mappyGon.points[mappyGon.points.length - 1] = event.pointerPosition;
-        mappyGon.points[mappyGon.points.length - 1] = BSCACHE.snap ? snapped : event.pointerPosition;
+        mappyGon.points[mappyGon.points.length - 1] = BSCACHE.gridSnap ? snapped : event.pointerPosition;
     });
 }
 

@@ -32,6 +32,12 @@ interface BSCache
     gridDpi: number;
     setGridDpi: (data: number) => void;
 
+    gridSnap: boolean;
+    setGridSnap: (value: boolean) => void;
+
+    gridSnapDistance: number;
+    setGridSnapDistance: (distance: number) => void;
+
     playerData?: Player;
     setPlayerData: (playerData: Player) => void;
 

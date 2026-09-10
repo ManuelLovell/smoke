@@ -201,7 +201,7 @@ export function GetSnappedCoordinates(event: ToolEvent): Vector2
 {
     if (event.ctrlKey) return event.pointerPosition;
 
-    const snapVar = Math.round(BSCACHE.gridDpi / BSCACHE.gridSnap);
+    const snapVar = BSCACHE.gridSnapDistance;
     const nearGridX = Math.round(event.pointerPosition.x / BSCACHE.gridDpi) * BSCACHE.gridDpi;
     const nearGridY = Math.round(event.pointerPosition.y / BSCACHE.gridDpi) * BSCACHE.gridDpi;
     const absoluteX = Math.abs(nearGridX - event.pointerPosition.x);

@@ -55,6 +55,8 @@ export const esTranslations: Record<string, string> = {
   'settings.fogPlayerSeeDoors': 'Los jugadores ven puertas',
   'settings.fogDisableVision': 'Deshabilitar vision',
   'settings.fogFilled': 'Niebla rellenada',
+  'settings.gridSnap': 'Ajuste a la cuadrícula',
+  'settings.tooltips.gridSnap': 'Activa o desactiva el ajuste de puntos de obstrucción a la cuadrícula.',
   'settings.wallsBlockingGm': 'GM ignora muros bloqueantes',
   'settings.menuUnitContext': 'Habilitar menu contextual de unidad',
   'settings.menuWallContext': 'Habilitar menu contextual de muro',

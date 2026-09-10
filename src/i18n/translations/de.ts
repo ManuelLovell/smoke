@@ -55,6 +55,8 @@ export const deTranslations: Record<string, string> = {
   'settings.fogPlayerSeeDoors': 'Spieler sehen Turen',
   'settings.fogDisableVision': 'Sicht deaktivieren',
   'settings.fogFilled': 'Nebel gefuellt',
+  'settings.gridSnap': 'Raster-Snap',
+  'settings.tooltips.gridSnap': 'Aktiviert oder deaktiviert das Einrasten von Hindernispunkten am Raster.',
   'settings.wallsBlockingGm': 'SL ignoriert blockierende Wande',
   'settings.menuUnitContext': 'Einheiten-Kontextmenu aktivieren',
   'settings.menuWallContext': 'Wand-Kontextmenu aktivieren',

@@ -24,6 +24,7 @@ export const getSettingsTooltips = (t: Translate) => ({
   fogPlayerSeeDoors: t('settings.tooltips.fogPlayerSeeDoors'),
   fogDisableVision: t('settings.tooltips.fogDisableVision'),
   fogFilled: t('settings.tooltips.fogFilled'),
+  gridSnap: t('settings.tooltips.gridSnap'),
   wallsBlockingGm: t('settings.tooltips.wallsBlockingGm'),
   menuUnitContext: t('settings.tooltips.menuUnitContext'),
   menuWallContext: t('settings.tooltips.menuWallContext'),

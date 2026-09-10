@@ -118,8 +118,9 @@ export class SettingsConstants {
   static FOG_PLAYER_SEE_DOORS = `${EXTENSION_ID}/playerDoors`;
   static FOG_DISABLE_VISION = `${EXTENSION_ID}/disableVision`;
 
+  static GRID_SNAP = `${EXTENSION_ID}/gridSnap`;
+  static GRID_SNAP_DISTANCE = `${EXTENSION_ID}/gridSnapDistance`;
   static WALLS_BLOCKING_GM = `${EXTENSION_ID}/passWallsGM`;
-  static WALLS_GRID_SNAP = `${EXTENSION_ID}/gridSnapWalls`;
   static WALLS_PERSISTENCE_LIMIT = `${EXTENSION_ID}/persistenceLimit`;
 
   static MENU_UNIT_CONTEXT = `${EXTENSION_ID}/unitContextMenu`;

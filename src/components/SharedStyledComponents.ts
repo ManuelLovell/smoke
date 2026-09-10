@@ -200,7 +200,7 @@ export const SectionTitle = styled.h2<{ theme: SmokeTheme }>`
 `;
 
 export const ControlRow = styled.div<{ theme: SmokeTheme }>`
-  ${tw`flex items-center justify-between py-1`}
+  ${tw`flex items-center justify-between py-1 gap-2`}
   color: ${props => props.theme.PRIMARY};
 `;
 

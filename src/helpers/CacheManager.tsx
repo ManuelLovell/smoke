@@ -10,6 +10,7 @@ import { cancelDrawing as CancelLineDrawing, finishDrawing as FinishLineDrawing,
 import { cancelDrawing as CancelPolyDrawing, finishDrawing as FinishPolyDrawing, undoLastPoint as UndoPolygonPoint } from '../scripts/visionPolygonMode';
 import { ApplyEnhancedFog } from '../scripts/smokeEnhancedFog';
 import { HardwareWarning } from './BSUtilities';
+import { SettingsConstants } from './MetadataKeys';
 
 export function CacheSync({ children }: { children: React.ReactNode }) {
     const setItems = useSceneStore((s) => s.setItems);
@@ -20,6 +21,8 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
     const setRoomMetadata = useSceneStore((s) => s.setRoomMetadata);
     const setFogFilled = useSceneStore((s) => s.setFogFilled);
     const setGridDpi = useSceneStore((s) => s.setGridDpi);
+    const setGridSnap = useSceneStore((s) => s.setGridSnap);
+    const setGridSnapDistance = useSceneStore((s) => s.setGridSnapDistance);
     const setPlayerData = useSceneStore((s) => s.setPlayerData);
     const setPartyData = useSceneStore((s) => s.setPartyData);
     const setExpectedFogMapId = useSceneStore((s) => s.setExpectedFogMapId);
@@ -133,6 +136,10 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
             setFogFilled(fogFilled);
             setRoomMetadata(roomMetadata);
             setGridDpi(gridDpi);
+            const initialGridSnap = sceneMetadata[SettingsConstants.GRID_SNAP];
+            setGridSnap(typeof initialGridSnap === 'boolean' ? initialGridSnap : true);
+            const initialGridSnapDistance = Number(sceneMetadata[SettingsConstants.GRID_SNAP_DISTANCE]);
+            setGridSnapDistance(Number.isFinite(initialGridSnapDistance) ? initialGridSnapDistance : 10);
             setPlayerData({
                 id: playerId,
                 name: playerName,
@@ -170,6 +177,16 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
             unsubSceneMetadata = OBR.scene.onMetadataChange(async (metadata) => {
                 // Handle SMOKEMACHINE-specific operations
                 await handleMetadataChange(metadata, previousMetadata);
+
+                const incomingGridSnap = metadata[SettingsConstants.GRID_SNAP];
+                if (typeof incomingGridSnap === 'boolean') {
+                    setGridSnap(incomingGridSnap);
+                }
+
+                const incomingGridSnapDistance = Number(metadata[SettingsConstants.GRID_SNAP_DISTANCE]);
+                if (Number.isFinite(incomingGridSnapDistance)) {
+                    setGridSnapDistance(incomingGridSnapDistance);
+                }
 
                 // Update cache
                 setSceneMetadata(metadata);
