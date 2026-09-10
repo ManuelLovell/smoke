@@ -2,19 +2,37 @@ import { useEffect } from 'react';
 import OBR, { buildCurve, Curve, Line, Path, Image, Shape, Vector2 } from '@owlbear-rodeo/sdk';
 import { Constants } from '../helpers/BSConstants';
 import { TensionHelper } from '../scripts/tensionhelper';
-import { BSCACHE } from '../helpers/BSCache';
+import { BSCACHE, useSceneStore } from '../helpers/BSCache';
 import { adjustPoints, ConvertPathCommands, IsMetadataNumber } from '../helpers/BSUtilities';
 import { GetDarkvisionDefault, GetDoorLineColor, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolColor, GetToolWidth, GetVisionRangeDefault, GetWindowLineColor } from '../scripts/visionToolUtilities';
 import { SPECTREMACHINE } from '../scripts/SpectreTwo';
 
 export function SetupContextMenu({ children }: { children: React.ReactNode }) {
-    
+
+    const waitForHydratedSceneCache = async () => {
+        const currentState = useSceneStore.getState();
+        if (currentState.sceneReady && currentState.cacheReady) {
+            return;
+        }
+
+        await new Promise<void>((resolve) => {
+            const unsubscribe = useSceneStore.subscribe((state) => {
+                if (state.sceneReady && state.cacheReady) {
+                    unsubscribe();
+                    resolve();
+                }
+            });
+        });
+    };
+
     useEffect(() => {
         // This is ran once, but this is a performative place to ensure this is not tried before the scene is ready
         OBR.onReady(async () => {
-            
+
             const userRole = await OBR.player.getRole();
             if (userRole !== "GM") return;
+
+            await waitForHydratedSceneCache();
 
             await OBR.contextMenu.create({
                 id: `${Constants.EXTENSIONID}/convert-curve`,
@@ -880,7 +898,10 @@ export function SetupContextMenu({ children }: { children: React.ReactNode }) {
                         await OBR.scene.items.updateItems(context.items.map(x => x.id), items => {
                             for (const item of items) {
                                 item.metadata[`${Constants.SPECTREID}/isSpectre`] = true;
-                                item.metadata[`${Constants.SPECTREID}/spectreViewers`] = [BSCACHE.playerId];
+                                const activePlayerId = useSceneStore.getState().playerData?.id;
+                                if (activePlayerId) {
+                                    item.metadata[`${Constants.SPECTREID}/spectreViewers`] = [activePlayerId];
+                                }
                                 item.visible = false;
                             }
                         });
@@ -888,19 +909,12 @@ export function SetupContextMenu({ children }: { children: React.ReactNode }) {
                 }
             });
 
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true) {
-                await SetupUnitContextMenu(true);
-            }
+            await SetupUnitContextMenu(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/unitContextMenu`] === true);
 
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true) {
-                await SetupWallContextMenu(true);
-            }
+            await SetupWallContextMenu(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/wallContextMenu`] === true);
 
-            if (BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true) {
-                await SetupAutoHideMenu(true);
-            }
-
-       });
+            await SetupAutoHideMenu(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/autoHide`] === true);
+        });
     }, []);
 
     return <>{children}</>;
@@ -963,7 +977,6 @@ export async function SetupAutoHideMenu(enable: boolean) {
 
 export async function SetupWallContextMenu(enable: boolean) {
     if (enable) {
-
 
         await OBR.contextMenu.create({
             id: `${Constants.EXTENSIONID}/switch-advanced-wall`,

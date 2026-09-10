@@ -5,16 +5,35 @@ import { polygonMode } from "../scripts/visionPolygonMode";
 import { brushMode } from "../scripts/visionBrushMode";
 import { elevationMode } from "../scripts/elevationMode";
 import { Constants } from "../helpers/BSConstants";
-import { BSCACHE } from "../helpers/BSCache";
+import { BSCACHE, useSceneStore } from "../helpers/BSCache";
 import { cutterMode } from "../scripts/visionDoorMode";
 import { addSmokeMode } from "../scripts/addSmokeMode";
 
 export function SetupTools({ children }: { children: React.ReactNode }) {
+
+    const waitForHydratedSceneCache = async () => {
+        const currentState = useSceneStore.getState();
+        if (currentState.sceneReady && currentState.cacheReady) {
+            return;
+        }
+
+        await new Promise<void>((resolve) => {
+            const unsubscribe = useSceneStore.subscribe((state) => {
+                if (state.sceneReady && state.cacheReady) {
+                    unsubscribe();
+                    resolve();
+                }
+            });
+        });
+    };
+
     useEffect(() => {
         OBR.onReady(async () => {
 
             const userRole = await OBR.player.getRole();
             if (userRole !== "GM") return;
+            
+            await waitForHydratedSceneCache();
 
             const smokeIconUrl = "https://raw.githubusercontent.com/ArmindoFlores/obr-fogofwar/main/public/icon.svg";
             let lastTool = '';

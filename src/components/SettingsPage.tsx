@@ -26,10 +26,10 @@ export const SettingsPage = () => {
   const { theme } = useSmokeTheme();
   const { t } = useTranslation();
   const sceneMetadata = useSceneStore((state) => state.sceneMetadata);
+  const playerData = useSceneStore((state) => state.playerData);
   const fogFilled = useSceneStore((state) => state.fogFilled);
   const cacheReady = useSceneStore((state) => state.cacheReady);
   const partyData = useSceneStore((state) => state.partyData);
-  const playerData = useSceneStore((state) => state.playerData);
   const previewSelectRef = useRef<HTMLSelectElement>(null);
 
   const [partyOwnerLines, setPartyOwnerLines] = useState(false);
