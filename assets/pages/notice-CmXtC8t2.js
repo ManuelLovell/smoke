@@ -1,4 +1,4 @@
-import"../modulepreload-polyfill-D0-zRrqB.js";import"../icons-vendor-BpXzVROX.js";import{d as e}from"../obr-vendor-CnAfirNi.js";import{t}from"../BSConstants-CIgOEcMM.js";import{t as n}from"../Translation-CqsdLp_x.js";var r=document.querySelector(`#bs-notice`),i=document.querySelector(`#bs-notice-notes`);r.innerHTML=`
+import"../modulepreload-polyfill-D0-zRrqB.js";import"../icons-vendor-BpXzVROX.js";import{d as e}from"../obr-vendor-CnAfirNi.js";import{t}from"../BSConstants-CIgOEcMM.js";import{t as n}from"../Translation-BuZ1s8tI.js";var r=document.querySelector(`#bs-notice`),i=document.querySelector(`#bs-notice-notes`);r.innerHTML=`
   <div id="newsContainer">
         <h1>${n.t(`notice.title`)}</h1>
         ${n.t(`notice.bodyLine1`)}

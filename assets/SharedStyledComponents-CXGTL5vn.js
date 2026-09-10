@@ -158,7 +158,7 @@ import{t as e}from"./vendor-CIquYMec.js";import{i as t}from"./ThemeContext-BrJdz
   color: ${e=>e.theme.PRIMARY};
   border-bottom: 2px solid ${e=>e.theme.BORDER};
 `,c=n.div`
-  ${{display:`flex`,alignItems:`center`,justifyContent:`space-between`,paddingTop:`0.25rem`,paddingBottom:`0.25rem`}}
+  ${{display:`flex`,alignItems:`center`,justifyContent:`space-between`,gap:`0.5rem`,paddingTop:`0.25rem`,paddingBottom:`0.25rem`}}
   color: ${e=>e.theme.PRIMARY};
 `,l=n.label`
   ${{flex:`1 1 0%`,cursor:`pointer`,textAlign:`left`,fontSize:`1rem`}}
