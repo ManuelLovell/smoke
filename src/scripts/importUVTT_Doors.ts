@@ -1,7 +1,7 @@
 import { Curve, buildCurve, Vector2 } from "@owlbear-rodeo/sdk";
 import { Constants } from "../helpers/BSConstants";
 import { BSCACHE } from "../helpers/BSCache";
-import { GetToolWidth } from "./visionToolUtilities";
+import { GetDoorLineColor, GetToolWidth } from "./visionToolUtilities";
 
 export function ConvertDoorItem(uvttDoors: UVTTPortal[], importDpi: number, dpiRatio: number, offset: number[]): Curve[]
 {
@@ -20,7 +20,7 @@ export function ConvertDoorItem(uvttDoors: UVTTPortal[], importDpi: number, dpiR
         const line = buildCurve()
             .tension(0)
             .points(newItemPaths)
-            .strokeColor(Constants.DOORCOLOR)
+            .strokeColor(GetDoorLineColor())
             .strokeDash(BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolStyle`] as [] ?? Constants.DEFAULTLINESTROKE)
             .strokeWidth(GetToolWidth())
             .fillOpacity(0)

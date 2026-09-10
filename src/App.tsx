@@ -12,7 +12,7 @@ import { useTranslation } from './i18n/Translation';
 import { TrackSMOKEEvent } from './metrics/SmokeMetrics';
 import { initializeSMOKEMetricsQueue } from './metrics/SmokeMetricsQueue';
 
-type PageType = 'Main' | 'Player' | 'Spectre' | 'Presets' | 'Settings' | 'Import';
+type PageType = 'Main' | 'Player' | 'Spectre' | 'Presets' | 'Defaults' |   'Settings' | 'Import';
 
 const LoadingContainer = styled.div`
   display: flex;
@@ -54,6 +54,7 @@ const MainPage = lazy(async () => ({ default: (await import('./components/MainPa
 const PlayerPage = lazy(async () => ({ default: (await import('./components/PlayerPage')).PlayerPage }));
 const SpectrePage = lazy(async () => ({ default: (await import('./components/SpectrePage')).SpectrePage }));
 const PresetsPage = lazy(async () => ({ default: (await import('./components/PresetsPage')).PresetsPage }));
+const DefaultsPage = lazy(async () => ({ default: (await import('./components/DefaultsPage')).DefaultsPage }));
 const SettingsPage = lazy(async () => ({ default: (await import('./components/SettingsPage')).SettingsPage }));
 const ImportPage = lazy(async () => ({ default: (await import('./components/ImportPage')).ImportPage }));
 
@@ -80,6 +81,8 @@ function App() {
         return <PresetsPage key="presets" />;
       case 'Settings':
         return <SettingsPage key="settings" />;
+      case 'Defaults':
+        return <DefaultsPage key="defaults" />;
       case 'Import':
         return <ImportPage key="import" />;
     }

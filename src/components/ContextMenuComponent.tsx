@@ -4,14 +4,18 @@ import { Constants } from '../helpers/BSConstants';
 import { TensionHelper } from '../scripts/tensionhelper';
 import { BSCACHE } from '../helpers/BSCache';
 import { adjustPoints, ConvertPathCommands, IsMetadataNumber } from '../helpers/BSUtilities';
-import { GetDarkvisionDefault, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolWidth, GetVisionRangeDefault } from '../scripts/visionToolUtilities';
+import { GetDarkvisionDefault, GetDoorLineColor, GetFalloffRangeDefault, GetInnerAngleDefault, GetOuterAngleDefault, GetSourceRangeDefault, GetToolColor, GetToolWidth, GetVisionRangeDefault, GetWindowLineColor } from '../scripts/visionToolUtilities';
 import { SPECTREMACHINE } from '../scripts/SpectreTwo';
 
 export function SetupContextMenu({ children }: { children: React.ReactNode }) {
-
+    
     useEffect(() => {
         // This is ran once, but this is a performative place to ensure this is not tried before the scene is ready
         OBR.onReady(async () => {
+            
+            const userRole = await OBR.player.getRole();
+            if (userRole !== "GM") return;
+
             await OBR.contextMenu.create({
                 id: `${Constants.EXTENSIONID}/convert-curve`,
                 icons: [
@@ -568,12 +572,12 @@ export function SetupContextMenu({ children }: { children: React.ReactNode }) {
                         for (const item of items) {
                             if (!enableDoor) {
                                 delete item.metadata[`${Constants.EXTENSIONID}/isWindow`];
-                                //item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
+                                item.style.strokeColor = GetToolColor();
                                 item.style.strokeDash = Constants.DEFAULTLINESTROKE;
                             }
                             else {
                                 item.metadata[`${Constants.EXTENSIONID}/isWindow`] = true;
-                                //item.style.strokeColor = Constants.WINDOWCOLOR;
+                                item.style.strokeColor = GetWindowLineColor();
                                 item.style.strokeDash = [20, 20];
                             }
                         }
@@ -632,12 +636,11 @@ export function SetupContextMenu({ children }: { children: React.ReactNode }) {
                                 delete item.metadata[`${Constants.EXTENSIONID}/doorOpen`];
                                 delete item.metadata[`${Constants.EXTENSIONID}/disabled`];
                                 delete item.metadata[`${Constants.EXTENSIONID}/isDoor`];
-                                item.style.strokeColor = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/toolColor`] as string ?? Constants.DEFAULTLINECOLOR;
+                                item.style.strokeColor = GetToolColor();
                             }
                             else {
-                                //#bb99ff
                                 item.metadata[`${Constants.EXTENSIONID}/isDoor`] = true;
-                                item.style.strokeColor = Constants.DOORCOLOR;
+                                item.style.strokeColor = GetDoorLineColor();
                             }
                         }
                     });

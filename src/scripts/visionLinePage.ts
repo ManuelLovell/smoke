@@ -1,6 +1,7 @@
 import OBR from "@owlbear-rodeo/sdk";
 import "../styles/style.css";
 import { Constants } from "../helpers/BSConstants";
+import { Translation } from "../i18n/Translation";
 
 OBR.onReady(async () =>
 {
@@ -12,7 +13,7 @@ OBR.onReady(async () =>
     const buttonFinish = document.createElement('input');
     buttonFinish.id = "endLine";
     buttonFinish.classList.add("end-line");
-    buttonFinish.value = "Finish Line";
+    buttonFinish.value = Translation.t('drawing.finishLine');
     buttonFinish.type = "button";
     buttonFinish.onclick = async () =>
     {
@@ -22,7 +23,7 @@ OBR.onReady(async () =>
     const buttonCancel = document.createElement('input');
     buttonCancel.id = "endLine";
     buttonCancel.classList.add("end-line");
-    buttonCancel.value = "Cancel Line";
+    buttonCancel.value = Translation.t('drawing.cancelLine');
     buttonCancel.type = "button";
     buttonCancel.onclick = async () =>
     {
@@ -32,7 +33,7 @@ OBR.onReady(async () =>
     const buttonUndo = document.createElement('input');
     buttonUndo.id = "undoLine";
     buttonUndo.classList.add("end-line");
-    buttonUndo.value = "Undo Point";
+    buttonUndo.value = Translation.t('drawing.undoPoint');
     buttonUndo.type = "button";
     buttonUndo.onclick = async () =>
     {

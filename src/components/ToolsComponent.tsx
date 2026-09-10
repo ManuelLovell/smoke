@@ -12,6 +12,10 @@ import { addSmokeMode } from "../scripts/addSmokeMode";
 export function SetupTools({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         OBR.onReady(async () => {
+
+            const userRole = await OBR.player.getRole();
+            if (userRole !== "GM") return;
+
             const smokeIconUrl = "https://raw.githubusercontent.com/ArmindoFlores/obr-fogofwar/main/public/icon.svg";
             let lastTool = '';
             await OBR.tool.onToolChange(async (toolId) => {
@@ -110,8 +114,6 @@ export function SetupTools({ children }: { children: React.ReactNode }) {
                 {
                     metadata: [{ key: [`${Constants.EXTENSIONID}/elevationEditor`], value: true }]
                 },
-                onToolDown: brushMode.onActivate,
-                onToolUp: brushMode.onDeactivate,
                 onToolDragStart: brushMode.onDragStart,
                 onToolDragMove: brushMode.onDragMove,
                 onToolDragEnd: brushMode.onDragEnd,

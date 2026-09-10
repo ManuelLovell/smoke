@@ -6,7 +6,7 @@ import { useTranslation } from '../../i18n/Translation';
 
 interface NumberRollerProps {
   value: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, source?: 'manual' | 'drag' | 'preset') => void;
   min?: number;
   max?: number;
   step?: number;
@@ -104,7 +104,6 @@ export const NumberRoller: React.FC<NumberRollerProps> = ({
   const [draft, setDraft] = useState(String(value));
   const [displayValue, setDisplayValue] = useState(value);
   const dragRef = useRef<{ startY: number; startVal: number; currentVal: number; moved: boolean } | null>(null);
-  const maxLen = String(max).length;
 
   useEffect(() => {
     setDisplayValue(value);
@@ -120,8 +119,9 @@ export const NumberRoller: React.FC<NumberRollerProps> = ({
   };
 
   const commitDraft = (raw: string) => {
-    const n = clamp(parseFloat(raw) || 0);
-    onChange(n);
+    const parsed = Number.parseFloat(raw);
+    const nextValue = Number.isNaN(parsed) ? 0 : parsed;
+    onChange(nextValue, 'manual');
     setEditing(false);
   };
 
@@ -153,7 +153,7 @@ export const NumberRoller: React.FC<NumberRollerProps> = ({
     const finalValue = dragRef.current.currentVal;
     dragRef.current = null;
     if (wasDrag) {
-      if (finalValue !== value) onChange(finalValue);
+      if (finalValue !== value) onChange(finalValue, 'drag');
       setDraft(String(finalValue));
       setDisplayValue(finalValue);
     } else {
@@ -164,10 +164,10 @@ export const NumberRoller: React.FC<NumberRollerProps> = ({
 
   const handleStep = (delta: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(clamp(value + delta * step));
+    onChange(clamp(value + delta * step), 'preset');
   };
 
-  const fillPct = ((displayValue - min) / (max - min)) * 100;
+  const fillPct = Math.max(0, Math.min(100, ((displayValue - min) / (max - min)) * 100));
 
   return (
     <RollerContainer
@@ -188,7 +188,7 @@ export const NumberRoller: React.FC<NumberRollerProps> = ({
             if (decimalCount > 1) {
               val = val.replace(/\.(?=.*\.)/g, '');
             }
-            setDraft(val.replace(/[^\d.]/g, '').slice(0, maxLen + 1));
+            setDraft(val.replace(/[^\d.]/g, ''));
           }}
           onBlur={() => commitDraft(draft)}
           onKeyDown={(e) => {

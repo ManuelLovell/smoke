@@ -7,6 +7,8 @@ export const getSettingsTooltips = (t: Translate) => ({
   wallsPersistenceLimit: t('settings.tooltips.wallsPersistenceLimit'),
   toolWidth: t('settings.tooltips.toolWidth'),
   toolColor: t('settings.tooltips.toolColor'),
+  doorLineColor: t('settings.tooltips.doorLineColor'),
+  windowLineColor: t('settings.tooltips.windowLineColor'),
   toolStyle: t('settings.tooltips.toolStyle'),
   defaultVisionRange: t('settings.tooltips.defaultVisionRange'),
   defaultVisionSource: t('settings.tooltips.defaultVisionSource'),

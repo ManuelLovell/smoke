@@ -164,6 +164,15 @@ export const Navigation = ({ isOpen, currentPage, onToggle, onNavigate }: Naviga
               {isCurrentUserGm && (
                 <NavButton
                   theme={theme}
+                  $isActive={currentPage === 'Defaults'}
+                  onClick={() => onNavigate('Defaults')}
+                >
+                  {t('nav.defaults')}
+                </NavButton>
+              )}
+              {isCurrentUserGm && (
+                <NavButton
+                  theme={theme}
                   $isActive={currentPage === 'Settings'}
                   onClick={() => onNavigate('Settings')}
                 >

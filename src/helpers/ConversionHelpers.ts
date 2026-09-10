@@ -3,7 +3,7 @@ import { Constants } from "./BSConstants";
 import { isVisionLine } from "./ItemFilters";
 import { BSCACHE } from "./BSCache";
 import * as Utilities from "./BSUtilities";
-import { GetToolWidth } from "../scripts/visionToolUtilities";
+import { GetDoorLineColor, GetToolWidth } from "../scripts/visionToolUtilities";
 import { TensionHelper } from "../scripts/tensionhelper";
 import { Translation } from "../i18n/Translation";
 
@@ -1012,7 +1012,7 @@ export function convertFogWallWithDoors(item: Item): Curve[] | null {
       createdLines.push(
         buildSegmentCurve(segment.start, segment.end, {
           name: "Vision Line (Door)",
-          strokeColor: Constants.DOORCOLOR,
+          strokeColor: GetDoorLineColor(),
           metadata: segment.door?.open === true
             ? {
                 [`${Constants.EXTENSIONID}/isDoor`]: true,

@@ -107,6 +107,8 @@ export class SettingsConstants {
   static PARTY_OWNER_LINES = `${EXTENSION_ID}/toggleOwnerLines`;
 
   static TOOL_COLOR = `${EXTENSION_ID}/toolColor`;
+  static DOOR_LINE_COLOR = `${EXTENSION_ID}/doorLineColor`;
+  static WINDOW_LINE_COLOR = `${EXTENSION_ID}/windowLineColor`;
   static TOOL_STYLE = `${EXTENSION_ID}/toolStyle`;
   static TOOL_WIDTH = `${EXTENSION_ID}/toolWidth`;
 

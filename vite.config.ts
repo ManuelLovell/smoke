@@ -89,7 +89,6 @@ export default defineConfig({
         index: path.resolve(__dirname, "index.html"),
         'pages/index': path.resolve(__dirname, "pages/index.html"),
         'pages/line': path.resolve(__dirname, 'pages/line.html'),
-        'pages/brush': path.resolve(__dirname, 'pages/brush.html'),
         'pages/elevation': path.resolve(__dirname, 'pages/elevation.html'),
         'pages/ewarning': path.resolve(__dirname, 'pages/ewarning.html'),
         'pages/polygon': path.resolve(__dirname, 'pages/polygon.html'),

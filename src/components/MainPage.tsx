@@ -278,7 +278,8 @@ const OwnerPlayerItem = styled.button<{ theme: any }>`
   background-color: ${props => props.theme.OFFSET};
   color: ${props => props.theme.PRIMARY};
   border: 2px solid ${props => props.theme.BORDER};
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: bold;
 
   &:hover {
     background-color: ${props => props.theme.OFFSET}dd;
@@ -307,6 +308,46 @@ interface VisionData {
   hidden: boolean;
 }
 
+type BulkVisionField = 'range' | 'collision' | 'innerAngle' | 'outerAngle' | 'falloff' | 'darkness';
+
+interface BulkEditConfig {
+  key: string;
+  min: number;
+  max: number;
+  presets: number[];
+  step?: number;
+  accent: string;
+  label: string;
+}
+
+const HeaderIconButton = styled.button<{ $accent?: string }>`
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  padding: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    border-color: ${props => props.$accent || 'rgba(255, 255, 255, 0.35)'};
+    background: rgba(255, 255, 255, 0.08);
+  }
+`;
+
+const BulkEditModalContent = styled.div<{ theme: any }>`
+  ${tw`rounded-lg shadow-lg p-4`}
+  background-color: rgb(82, 77, 114);
+  border: 2px solid ${props => props.theme.BORDER};
+  width: 220px;
+`;
+
+const BulkEditModalTitle = styled.h3<{ theme: any }>`
+  ${tw`text-sm font-bold text-center mb-3`}
+  color: ${props => props.theme.PRIMARY};
+`;
+
 export const MainPage = () => {
   const { theme } = useSmokeTheme();
   const { t } = useTranslation();
@@ -319,6 +360,8 @@ export const MainPage = () => {
   const [selectedTokenForOwner, setSelectedTokenForOwner] = useState<string | null>(null);
   const [draggedTokenId, setDraggedTokenId] = useState<string | null>(null);
   const [dropTargetTokenId, setDropTargetTokenId] = useState<string | null>(null);
+  const [bulkEditField, setBulkEditField] = useState<BulkVisionField | null>(null);
+  const [bulkEditValue, setBulkEditValue] = useState(0);
   const [hideHiddenTokens, setHideHiddenTokens] = useState(true);
   const tooltips = useMemo(() => getMainPageTooltips(t), [t]);
 
@@ -327,6 +370,58 @@ export const MainPage = () => {
     const saved = sceneMetadata[SettingsConstants.CONTROL_MODE];
     return (saved === 'roller' ? 'roller' : 'flywheel') as 'flywheel' | 'roller';
   }, [sceneMetadata]);
+
+  const bulkEditConfigs = useMemo<Record<BulkVisionField, BulkEditConfig>>(() => ({
+    range: {
+      key: VISION_RANGE_KEY,
+      min: 0,
+      max: 120,
+      presets: [0, 15, 30, 45, 60, 75, 90],
+      accent: STAT_COLORS[0],
+      label: t('presets.range'),
+    },
+    collision: {
+      key: VISION_SOURCE_KEY,
+      min: 0,
+      max: 20,
+      presets: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20],
+      accent: STAT_COLORS[1],
+      label: t('presets.collision'),
+    },
+    innerAngle: {
+      key: VISION_IN_ANGLE_KEY,
+      min: 0,
+      max: 360,
+      presets: [0, 36, 72, 108, 144, 180, 216, 252, 288, 324, 360],
+      accent: STAT_COLORS[2],
+      label: t('presets.innerAngle'),
+    },
+    outerAngle: {
+      key: VISION_OUT_ANGLE_KEY,
+      min: 0,
+      max: 360,
+      presets: [0, 36, 72, 108, 144, 180, 216, 252, 288, 324, 360],
+      accent: STAT_COLORS[3],
+      label: t('presets.outerAngle'),
+    },
+    falloff: {
+      key: VISION_FALLOFF_KEY,
+      min: 0,
+      max: 1,
+      step: 0.1,
+      presets: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0],
+      accent: STAT_COLORS[4],
+      label: t('presets.falloff'),
+    },
+    darkness: {
+      key: VISION_DARKNESS_KEY,
+      min: 0,
+      max: 100,
+      presets: [0, 15, 30, 45, 60, 75, 90],
+      accent: STAT_COLORS[5],
+      label: t('presets.darkvision'),
+    },
+  }), [t]);
 
   const ownerNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -445,13 +540,26 @@ export const MainPage = () => {
     const blind = token.metadata[VISION_BLIND_KEY];
     const hidden = token.metadata[HIDDEN_TOKEN_KEY];
 
+    const getNumericValue = (value: unknown, fallback: number): number => {
+      if (typeof value === 'number' && !Number.isNaN(value)) {
+        return value;
+      }
+
+      if (typeof value === 'string') {
+        const parsed = Number.parseFloat(value);
+        return Number.isNaN(parsed) ? fallback : parsed;
+      }
+
+      return fallback;
+    };
+
     return {
-      range: (typeof range === 'number' && !Number.isNaN(range)) ? range : 30,
-      collision: (typeof collision === 'number' && !Number.isNaN(collision)) ? collision : 0,
-      innerAngle: (typeof innerAngle === 'number' && !Number.isNaN(innerAngle)) ? innerAngle : 360,
-      outerAngle: (typeof outerAngle === 'number' && !Number.isNaN(outerAngle)) ? outerAngle : 360,
-      falloff: (typeof falloff === 'number' && !Number.isNaN(falloff)) ? falloff : 1.0,
-      darkness: (typeof darkness === 'number' && !Number.isNaN(darkness)) ? darkness : 0,
+      range: getNumericValue(range, 30),
+      collision: getNumericValue(collision, 0),
+      innerAngle: getNumericValue(innerAngle, 360),
+      outerAngle: getNumericValue(outerAngle, 360),
+      falloff: getNumericValue(falloff, 1.0),
+      darkness: getNumericValue(darkness, 0),
       blind: blind === true,
       hidden: hidden === true,
     };
@@ -638,11 +746,11 @@ export const MainPage = () => {
   const updateVisionParameter = async (
     tokenId: string,
     key: string,
-    value: number
+    value: number,
+    source: 'manual' | 'drag' | 'preset' = 'drag'
   ) => {
     try {
-      // Normalize and validate the value before saving
-      const normalizedValue = normalizeVisionParameter(key, value);
+      const normalizedValue = source === 'manual' ? value : normalizeVisionParameter(key, value);
 
       await OBR.scene.items.updateItems([tokenId], (items) => {
         items[0].metadata[key] = normalizedValue;
@@ -651,6 +759,44 @@ export const MainPage = () => {
       console.error('Error updating vision parameter:', error);
       await OBR.notification.show(t('main.notifications.visionUpdateFailed'), 'ERROR');
     }
+  };
+
+  const updateVisionParameterForAll = async (
+    key: string,
+    value: number,
+    source: 'manual' | 'drag' | 'preset' = 'drag'
+  ) => {
+    const tokenIds = tokens.map((token) => token.id);
+    if (tokenIds.length === 0) {
+      return;
+    }
+
+    try {
+      const normalizedValue = source === 'manual' ? value : normalizeVisionParameter(key, value);
+
+      await OBR.scene.items.updateItems(tokenIds, (sceneItems) => {
+        for (const item of sceneItems) {
+          item.metadata[key] = normalizedValue;
+        }
+      });
+    } catch (error) {
+      console.error('Error updating vision parameter for all tokens:', error);
+      await OBR.notification.show(t('main.notifications.visionUpdateFailed'), 'ERROR');
+    }
+  };
+
+  const openBulkEdit = (field: BulkVisionField) => {
+    const firstToken = orderedTokens[0];
+    if (firstToken) {
+      const linkedParentId = linkedParentIdByTokenId.get(firstToken.id);
+      const tokenSettings = linkedParentId ? tokenById.get(linkedParentId) ?? firstToken : firstToken;
+      const vision = getVisionData(tokenSettings);
+      setBulkEditValue(vision[field]);
+    } else {
+      setBulkEditValue(bulkEditConfigs[field].min);
+    }
+
+    setBulkEditField(field);
   };
 
   const updateVisionBlind = async (tokenId: string, isBlind: boolean) => {
@@ -743,32 +889,44 @@ export const MainPage = () => {
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[0]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionRange}>
-                  <HeaderIcon src="/visionRange.svg" alt={t('presets.range')} />
+                  <HeaderIconButton $accent={STAT_COLORS[0]} onClick={() => openBulkEdit('range')} aria-label={t('presets.range')}>
+                    <HeaderIcon src="/visionRange.svg" alt={t('presets.range')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[1]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionCollision}>
-                  <HeaderIcon src="/visionBumper.svg" alt={t('presets.collision')} />
+                  <HeaderIconButton $accent={STAT_COLORS[1]} onClick={() => openBulkEdit('collision')} aria-label={t('presets.collision')}>
+                    <HeaderIcon src="/visionBumper.svg" alt={t('presets.collision')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[2]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionInnerAngle}>
-                  <HeaderIcon src="/visionInner.svg" alt={t('presets.innerAngle')} />
+                  <HeaderIconButton $accent={STAT_COLORS[2]} onClick={() => openBulkEdit('innerAngle')} aria-label={t('presets.innerAngle')}>
+                    <HeaderIcon src="/visionInner.svg" alt={t('presets.innerAngle')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[3]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionOuterAngle}>
-                  <HeaderIcon src="/visionOuter.svg" alt={t('presets.outerAngle')} />
+                  <HeaderIconButton $accent={STAT_COLORS[3]} onClick={() => openBulkEdit('outerAngle')} aria-label={t('presets.outerAngle')}>
+                    <HeaderIcon src="/visionOuter.svg" alt={t('presets.outerAngle')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[4]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionFalloff}>
-                  <HeaderIcon src="/visionFalloff.svg" alt={t('presets.falloff')} />
+                  <HeaderIconButton $accent={STAT_COLORS[4]} onClick={() => openBulkEdit('falloff')} aria-label={t('presets.falloff')}>
+                    <HeaderIcon src="/visionFalloff.svg" alt={t('presets.falloff')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={STAT_COLORS[5]}>
                 <SettingsTooltip theme={theme} text={tooltips.visionDarkness}>
-                  <HeaderIcon src="/darkvision.svg" alt={t('presets.darkvision')} />
+                  <HeaderIconButton $accent={STAT_COLORS[5]} onClick={() => openBulkEdit('darkness')} aria-label={t('presets.darkvision')}>
+                    <HeaderIcon src="/darkvision.svg" alt={t('presets.darkvision')} />
+                  </HeaderIconButton>
                 </SettingsTooltip>
               </HeaderCell>
               <HeaderCell $accent={theme.BORDER}>
@@ -788,32 +946,44 @@ export const MainPage = () => {
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="range" $accent={STAT_COLORS[0]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionRange}>
-                    <HeaderIcon src="/visionRange.svg" alt={t('presets.range')} />
+                    <HeaderIconButton $accent={STAT_COLORS[0]} onClick={() => openBulkEdit('range')} aria-label={t('presets.range')}>
+                      <HeaderIcon src="/visionRange.svg" alt={t('presets.range')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="collision" $accent={STAT_COLORS[1]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionCollision}>
-                    <HeaderIcon src="/visionBumper.svg" alt={t('presets.collision')} />
+                    <HeaderIconButton $accent={STAT_COLORS[1]} onClick={() => openBulkEdit('collision')} aria-label={t('presets.collision')}>
+                      <HeaderIcon src="/visionBumper.svg" alt={t('presets.collision')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="inner" $accent={STAT_COLORS[2]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionInnerAngle}>
-                    <HeaderIcon src="/visionInner.svg" alt={t('presets.innerAngle')} />
+                    <HeaderIconButton $accent={STAT_COLORS[2]} onClick={() => openBulkEdit('innerAngle')} aria-label={t('presets.innerAngle')}>
+                      <HeaderIcon src="/visionInner.svg" alt={t('presets.innerAngle')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="outer" $accent={STAT_COLORS[3]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionOuterAngle}>
-                    <HeaderIcon src="/visionOuter.svg" alt={t('presets.outerAngle')} />
+                    <HeaderIconButton $accent={STAT_COLORS[3]} onClick={() => openBulkEdit('outerAngle')} aria-label={t('presets.outerAngle')}>
+                      <HeaderIcon src="/visionOuter.svg" alt={t('presets.outerAngle')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="falloff" $accent={STAT_COLORS[4]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionFalloff}>
-                    <HeaderIcon src="/visionFalloff.svg" alt={t('presets.falloff')} />
+                    <HeaderIconButton $accent={STAT_COLORS[4]} onClick={() => openBulkEdit('falloff')} aria-label={t('presets.falloff')}>
+                      <HeaderIcon src="/visionFalloff.svg" alt={t('presets.falloff')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="darkness" $accent={STAT_COLORS[5]}>
                   <SettingsTooltip theme={theme} text={tooltips.visionDarkness}>
-                    <HeaderIcon src="/darkvision.svg" alt={t('presets.darkvision')} />
+                    <HeaderIconButton $accent={STAT_COLORS[5]} onClick={() => openBulkEdit('darkness')} aria-label={t('presets.darkvision')}>
+                      <HeaderIcon src="/darkvision.svg" alt={t('presets.darkvision')} />
+                    </HeaderIconButton>
                   </SettingsTooltip>
                 </MobileHeaderItem>
                 <MobileHeaderItem $area="blind" $accent={theme.BORDER}>
@@ -869,7 +1039,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="range">
                       <PresetInput
                         value={vision.range}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_RANGE_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_RANGE_KEY, v, source)}
                         min={0}
                         max={120}
                         accent={DEFAULT_THEME.OFFSET}
@@ -881,7 +1051,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="collision">
                       <PresetInput
                         value={vision.collision}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_SOURCE_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_SOURCE_KEY, v, source)}
                         min={0}
                         max={20}
                         accent={DEFAULT_THEME.OFFSET}
@@ -893,7 +1063,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="inner">
                       <PresetInput
                         value={vision.innerAngle}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_IN_ANGLE_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_IN_ANGLE_KEY, v, source)}
                         min={0}
                         max={360}
                         accent={DEFAULT_THEME.OFFSET}
@@ -905,7 +1075,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="outer">
                       <PresetInput
                         value={vision.outerAngle}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_OUT_ANGLE_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_OUT_ANGLE_KEY, v, source)}
                         min={0}
                         max={360}
                         accent={DEFAULT_THEME.OFFSET}
@@ -917,7 +1087,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="falloff">
                       <PresetInput
                         value={Math.round(vision.falloff * 10) / 10}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_FALLOFF_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_FALLOFF_KEY, v, source)}
                         min={0}
                         max={1}
                         accent={DEFAULT_THEME.OFFSET}
@@ -930,7 +1100,7 @@ export const MainPage = () => {
                     <ParameterCell $mobileArea="darkness">
                       <PresetInput
                         value={vision.darkness}
-                        onChange={(v) => updateVisionParameter(tokenSettings.id, VISION_DARKNESS_KEY, v)}
+                        onChange={(v, source) => updateVisionParameter(tokenSettings.id, VISION_DARKNESS_KEY, v, source)}
                         min={0}
                         max={100}
                         accent={DEFAULT_THEME.OFFSET}
@@ -963,7 +1133,7 @@ export const MainPage = () => {
                 <OwnerPlayerItem
                   key={player.id}
                   theme={theme}
-                  style={{ background: player.color || theme.OFFSET, textShadow: '2px 2px 2px rgba(0, 0, 0, 0.9)' }}
+                  style={{ background: player.color + '50' || theme.OFFSET, textShadow: '2px 2px 2px rgba(0, 0, 0, 0.9)' }}
                   onClick={() => handleOwnerSelect(player.id)}
                 >
                   {player.name}
@@ -996,6 +1166,30 @@ export const MainPage = () => {
               </OwnerModalActionRow>
             </OwnerModalSection>
           </OwnerModalContent>
+        </OwnerModalOverlay>
+
+        <OwnerModalOverlay $isOpen={bulkEditField !== null} onClick={() => setBulkEditField(null)}>
+          <BulkEditModalContent theme={theme} onClick={(e) => e.stopPropagation()}>
+            {bulkEditField ? (
+              <>
+                <BulkEditModalTitle theme={theme}>{bulkEditConfigs[bulkEditField].label}</BulkEditModalTitle>
+                <PresetInput
+                  value={bulkEditValue}
+                  onChange={(value, source) => {
+                    setBulkEditValue(value);
+                    void updateVisionParameterForAll(bulkEditConfigs[bulkEditField].key, value, source);
+                  }}
+                  min={bulkEditConfigs[bulkEditField].min}
+                  max={bulkEditConfigs[bulkEditField].max}
+                  accent={bulkEditConfigs[bulkEditField].accent}
+                  mode={mode}
+                  step={bulkEditConfigs[bulkEditField].step}
+                  presets={bulkEditConfigs[bulkEditField].presets}
+                />
+                <BulkEditModalTitle style={{ paddingTop: '10px' }} theme={theme}>Bulk Edit</BulkEditModalTitle> 
+              </>
+            ) : null}
+          </BulkEditModalContent>
         </OwnerModalOverlay>
       </MainPageContainer>
     </motion.div>

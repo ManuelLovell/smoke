@@ -4,7 +4,7 @@ import { DEFAULT_THEME } from '../../helpers/ThemeConstants';
 
 interface FlyWheelProps {
   value: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, source?: 'manual' | 'drag' | 'preset') => void;
   min?: number;
   max?: number;
   accent?: string;
@@ -112,13 +112,13 @@ export const FlyWheel: React.FC<FlyWheelProps> = ({
   const [center, setCenter] = useState<{ x: number; y: number } | null>(null);
   const btnRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ moved: boolean } | null>(null);
-  const maxLen = String(max).length;
 
   const clamp = (v: number) => Math.min(max, Math.max(min, v));
 
   const commitDraft = (raw: string) => {
-    const n = clamp(parseInt(raw, 10) || 0);
-    onChange(n);
+    const parsed = Number.parseFloat(raw);
+    const nextValue = Number.isNaN(parsed) ? 0 : parsed;
+    onChange(nextValue, 'manual');
     setEditing(false);
   };
 
@@ -158,7 +158,7 @@ export const FlyWheel: React.FC<FlyWheelProps> = ({
     setActiveSlice(null);
     setCenter(null);
     if (wasDrag && idx != null && presets[idx] !== undefined) {
-      onChange(clamp(presets[idx]));
+      onChange(clamp(presets[idx]), 'preset');
     } else {
       setDraft(String(value));
       setEditing(true);
@@ -181,13 +181,20 @@ export const FlyWheel: React.FC<FlyWheelProps> = ({
           <StyledInput
             autoFocus
             value={draft}
-            onChange={(e) => setDraft(e.target.value.replace(/\D/g, '').slice(0, maxLen))}
+            onChange={(e) => {
+              let val = e.target.value;
+              const decimalCount = (val.match(/\./g) || []).length;
+              if (decimalCount > 1) {
+                val = val.replace(/\.(?=.*\.)/g, '');
+              }
+              setDraft(val.replace(/[^\d.]/g, ''));
+            }}
             onBlur={() => commitDraft(draft)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') commitDraft(draft);
               if (e.key === 'Escape') setEditing(false);
             }}
-            inputMode="numeric"
+            inputMode="decimal"
           />
         ) : (
           <span>{value}</span>

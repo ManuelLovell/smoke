@@ -7,7 +7,7 @@ import { NumberRoller } from './NumberRoller';
 
 interface PresetInputProps {
   value: number;
-  onChange: (value: number) => void;
+  onChange: (value: number, source?: 'manual' | 'drag' | 'preset') => void;
   min: number;
   max: number;
   accent?: string;

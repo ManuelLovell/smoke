@@ -846,6 +846,7 @@ class SmokeProcessor {
                         light.falloff = mine.falloff;
                         light.innerAngle = mine.innerAngle;
                         light.outerAngle = mine.outerAngle;
+                        light.visible = !mine.blind;
                         light.rotation = mine.tokenFacing + this.findLightDirection(mine.visionFacing);
                         light.metadata[`${Constants.EXTENSIONID}/visionFacing`] = mine.visionFacing;
                         light.metadata[`${Constants.EXTENSIONID}/visionBlind`] = mine.blind;
@@ -1164,6 +1165,7 @@ class SmokeProcessor {
             .position(token.position)
             .rotation(token.rotation + visionFacing) //respect the token orientation also
             .lightType(lightType)
+            .visible(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] !== true)                                                       
             .attenuationRadius(useDarkVision ? darkVisionRange : visionRange)
             .sourceRadius(this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionSourceRange`] ?? GetSourceRangeDefault(), true))
             .falloff(parseFloat(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionFallOff`] as string ?? GetFalloffRangeDefault()))
@@ -1309,7 +1311,7 @@ class SmokeProcessor {
             > parseInt(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`] as string);
         const darkVisionRange = tokenSettings.metadata[`${Constants.EXTENSIONID}/visionBlind`] === true ?
             0 : this.GetLightRange(tokenSettings.metadata[`${Constants.EXTENSIONID}/visionDark`]);
-
+            
         const update = {
             id: localLight.id,
             visionRange: tokenSettings.metadata[`${Constants.EXTENSIONID}/visionRange`],

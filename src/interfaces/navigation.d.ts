@@ -1,5 +1,5 @@
 
-type PageType = 'Main' | 'Spectre' | 'Player' | 'Presets' | 'Settings' | 'Import';
+type PageType = 'Main' | 'Spectre' | 'Player' | 'Presets' | 'Defaults' | 'Settings' | 'Import';
 
 interface NavigationProps {
     isOpen: boolean;

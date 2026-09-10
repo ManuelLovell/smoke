@@ -1,6 +1,6 @@
 import OBR, { Curve, KeyEvent, Pointer, ToolContext, ToolEvent, Vector2, buildCurve, buildPointer } from "@owlbear-rodeo/sdk";
 import { Constants } from "../helpers/BSConstants";
-import { GetToolWidth, SplitLines } from "./visionToolUtilities";
+import { GetDoorLineColor, GetToolWidth, GetWindowLineColor, SplitLines } from "./visionToolUtilities";
 import { InvertColor } from "../helpers/BSUtilities";
 
 let newSegment: Vector2[] = [];
@@ -32,11 +32,11 @@ export async function finishDrawing(oldLine: Curve): Promise<void> {
 
     if (cutterType === doorCutterMode) {
         baseLineMeta[`${Constants.EXTENSIONID}/isDoor`] = true;
-        baseLineColor = Constants.DOORCOLOR;
+        baseLineColor = GetDoorLineColor();
         baselineName = "Vision Line (Door)";
     } else if (cutterType === windowCutterMode) {
         baseLineMeta[`${Constants.EXTENSIONID}/isWindow`] = true;
-        baseLineColor = Constants.WINDOWCOLOR;
+        baseLineColor = GetWindowLineColor();
         baselineName = "Vision Line (Window)";
     }
 

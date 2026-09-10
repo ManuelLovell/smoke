@@ -2,6 +2,32 @@ import { ToolEvent, Vector2 } from "@owlbear-rodeo/sdk";
 import { BSCACHE } from "../helpers/BSCache";
 import * as Utilities from "../helpers/BSUtilities";
 import { Constants } from "../helpers/BSConstants";
+import { SettingsConstants } from "../helpers/MetadataKeys";
+
+const HEX_COLOR_PATTERN = /^#[a-f0-9]{6}$/i;
+
+function getSavedHexColor(value: unknown, fallback: string): string {
+    if (typeof value === "string" && HEX_COLOR_PATTERN.test(value)) {
+        return value;
+    }
+
+    return fallback;
+}
+
+export function GetToolColor(): string
+{
+    return getSavedHexColor(BSCACHE.sceneMetadata[SettingsConstants.TOOL_COLOR], Constants.DEFAULTLINECOLOR);
+}
+
+export function GetDoorLineColor(): string
+{
+    return getSavedHexColor(BSCACHE.sceneMetadata[SettingsConstants.DOOR_LINE_COLOR], Constants.DOORCOLOR);
+}
+
+export function GetWindowLineColor(): string
+{
+    return getSavedHexColor(BSCACHE.sceneMetadata[SettingsConstants.WINDOW_LINE_COLOR], Constants.WINDOWCOLOR);
+}
 
 export function GetToolWidth()
 {

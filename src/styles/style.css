@@ -147,6 +147,7 @@ a {
     padding: 8px !important;
     font-weight: 700;
     font-size: medium;
+    color: white;
     background-color: rgba(80, 79, 92, 0.71) !important;
     border: 2px solid rgb(157, 153, 255) !important;
     text-shadow: 1px 1px 2px #000;
