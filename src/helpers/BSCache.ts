@@ -71,6 +71,7 @@ let fogFilled = false;
 let fogColor = '#000000';
 let gridType = 'SQUARE';
 let gridScale = 1;
+let busy = false;
 
 const readNumericMetadata = (key: string): number | null => {
     const value = useSceneStore.getState().sceneMetadata[key];
@@ -143,13 +144,22 @@ interface LegacyBSCache {
     playerRole: string;
     fogFilled: boolean;
     fogColor: string;
-    ToggleBusy: (busy: boolean) => Promise<void>;
+    busy: boolean;
+    ToggleBusy: (busy: boolean) => void;
 }
 
 export const BSCACHE: LegacyBSCache = {
     toolStarted: false,
     disableWindows: [],
     enableWindows: [],
+
+    get busy(): boolean {
+        return busy;
+    },
+
+    set busy(value: boolean) {
+        busy = value;
+    },
 
     get sceneItems(): Item[] {
         return useSceneStore.getState().items;
@@ -208,7 +218,7 @@ export const BSCACHE: LegacyBSCache = {
         return fogColor;
     },
 
-    async ToggleBusy(_busy: boolean): Promise<void> {
-        return;
+    ToggleBusy(busy: boolean): void {
+        this.busy = busy;
     },
 };

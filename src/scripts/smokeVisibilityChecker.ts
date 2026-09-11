@@ -117,8 +117,8 @@ export class VisibilityChecker {
     private isTokenNearTrailingRevealer(enemy: Item): boolean {
         const revealers = BSCACHE.sceneLocal.filter(item => item.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`]) as Effect[];
         for (const revealer of revealers) {
-            const radius = revealer.width /2;
-            const inProximity = this.distanceSquared(enemy.position,revealer.position) <= radius;
+            const radius = revealer.width / 2;
+            const inProximity = this.distanceSquared(enemy.position, revealer.position) <= radius;
             if (inProximity) return true;
         }
         // Implement the logic to check if the enemy token is near a trailing revealer
@@ -313,9 +313,9 @@ export class VisibilityChecker {
         players: Light[],
         enemies: Item[]
     ): Promise<void> {
-        const hiddenEnemies: string[] = [];
-        const visibleEnemies: string[] = [];
-        
+        const hiddenEnemies = new Set<string>();
+        const visibleEnemies = new Set<string>();
+
         for (const enemy of enemies) {
             // Check against each player
             for (const player of players) {
@@ -326,27 +326,46 @@ export class VisibilityChecker {
                     // Only check line of sight if within radius
                     if (!this.isLineOfSightBlocked(player, enemy)) {
                         // Enemy is visible to at least one player, skip to next enemy
-                        visibleEnemies.push(enemy.id);
+                        visibleEnemies.add(enemy.id);
                         continue;
                     }
                 }
-                hiddenEnemies.push(enemy.id);
+                hiddenEnemies.add(enemy.id);
             }
             const isNearTrailingRevealer = this.isTokenNearTrailingRevealer(enemy);
-            if (!hiddenEnemies.includes(enemy.id) && isNearTrailingRevealer) {
-                hiddenEnemies.push(enemy.id);
+            if (!hiddenEnemies.has(enemy.id) && isNearTrailingRevealer) {
+                hiddenEnemies.add(enemy.id);
             }
         }
 
-        await OBR.scene.items.updateItems(enemies.map(enemy => enemy.id), (enemies) => {
-            for (let enemy of enemies) {
-                if (hiddenEnemies.includes(enemy.id) && !visibleEnemies.includes(enemy.id)) {
-                    if (enemy.visible) enemy.visible = false;
-                }
-                else {
-                    if (!enemy.visible) enemy.visible = true;
-                }
+        const enemyIdsToUpdate: string[] = [];
+        for (const enemy of enemies) {
+            const shouldBeHidden = hiddenEnemies.has(enemy.id) && !visibleEnemies.has(enemy.id);
+            const shouldBeVisible = !shouldBeHidden;
+
+            if (enemy.visible !== shouldBeVisible) {
+                enemyIdsToUpdate.push(enemy.id);
             }
-        });
+        }
+
+        if (enemyIdsToUpdate.length === 0) {
+            return;
+        }
+        
+        BSCACHE.ToggleBusy(true);
+        try {
+            await OBR.scene.items.updateItems(enemyIdsToUpdate, (enemyItems) => {
+                for (const enemy of enemyItems) {
+                    const shouldBeHidden = hiddenEnemies.has(enemy.id) && !visibleEnemies.has(enemy.id);
+                    const shouldBeVisible = !shouldBeHidden;
+
+                    if (enemy.visible !== shouldBeVisible) {
+                        enemy.visible = shouldBeVisible;
+                    }
+                }
+            });
+        } finally {
+            BSCACHE.ToggleBusy(false);
+        }
     }
 }

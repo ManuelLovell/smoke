@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import OBR, { type Player, Image } from '@owlbear-rodeo/sdk';
-import { useSceneStore } from '../helpers/BSCache';
+import { BSCACHE, useSceneStore } from '../helpers/BSCache';
 import { OwlbearIds, Constants } from './BSConstants';
 import LOGGER from './Logger';
 import { SMOKEMACHINE } from '../scripts/smokeProcessor';
@@ -250,6 +250,10 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
 
             // Smoke processor subscriptions - trigger rendering when items change
             unsubSmokeItems = OBR.scene.items.onChange(async (items) => {
+                if (disposed || BSCACHE.busy) {
+                    return;
+                }
+
                 // Handle enhanced fog if an expected fog map is being looked for
                 const expectedMapId = useSceneStore.getState().expectedFogMapId;
                 if (expectedMapId !== '') {
@@ -270,6 +274,10 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
             });
 
             unsubSmokeLocalItems = OBR.scene.local.onChange(async (localItems) => {
+                if (disposed || BSCACHE.busy) {
+                    return;
+                }
+
                 const oldLocalItems = useSceneStore.getState().oldLocalItems as Image[];
                 await SPECTREMACHINE.HandleLocalMovement(oldLocalItems);
                 setOldLocalItems(localItems);
