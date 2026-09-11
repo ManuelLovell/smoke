@@ -34,6 +34,9 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
     const setCacheReady = useSceneStore((s) => s.setCacheReady);
 
     useEffect(() => {
+        let disposed = false;
+        let isSyncing = false;
+        let hasActiveSync = false;
 
         let unsubSceneReady: () => void;
         let unsubItems: () => void;
@@ -53,6 +56,44 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
         let unsubLineEvent: () => void;
         let unsubPolygonEvent: () => void;
         let unsubFogBackgroundEvent: () => void;
+
+        const clearSubscriptions = () => {
+            unsubItems?.();
+            unsubLocalItems?.();
+            unsubSceneMetadata?.();
+            unsubRoomMetadata?.();
+            unsubGridDpi?.();
+            unsubPlayerData?.();
+            unsubPartyData?.();
+            unsubSmokeItems?.();
+            unsubSmokeLocalItems?.();
+            unsubResetPersistence?.();
+            unsubTrailingFogColor?.();
+            unsubDoorToggle?.();
+            unsubWarningCast?.();
+            unsubElevationEvent?.();
+            unsubLineEvent?.();
+            unsubPolygonEvent?.();
+            unsubFogBackgroundEvent?.();
+
+            unsubItems = undefined as unknown as () => void;
+            unsubLocalItems = undefined as unknown as () => void;
+            unsubSceneMetadata = undefined as unknown as () => void;
+            unsubRoomMetadata = undefined as unknown as () => void;
+            unsubGridDpi = undefined as unknown as () => void;
+            unsubPlayerData = undefined as unknown as () => void;
+            unsubPartyData = undefined as unknown as () => void;
+            unsubSmokeItems = undefined as unknown as () => void;
+            unsubSmokeLocalItems = undefined as unknown as () => void;
+            unsubResetPersistence = undefined as unknown as () => void;
+            unsubTrailingFogColor = undefined as unknown as () => void;
+            unsubDoorToggle = undefined as unknown as () => void;
+            unsubWarningCast = undefined as unknown as () => void;
+            unsubElevationEvent = undefined as unknown as () => void;
+            unsubLineEvent = undefined as unknown as () => void;
+            unsubPolygonEvent = undefined as unknown as () => void;
+            unsubFogBackgroundEvent = undefined as unknown as () => void;
+        };
 
         // Handler for SMOKEMACHINE-specific metadata operations
         const handleMetadataChange = async (newMetadata: Record<string, unknown>, oldMetadata: Record<string, unknown>) => {
@@ -86,6 +127,15 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
         };
 
         const syncSceneState = async () => {
+            if (disposed || isSyncing) {
+                return;
+            }
+
+            isSyncing = true;
+
+            try {
+                clearSubscriptions();
+
             const [
                 items,
                 localItems,
@@ -284,7 +334,6 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
                         break;
                 }
             });
-
             // Broadcast message handler for line drawing events
             unsubLineEvent = OBR.broadcast.onMessage(`${OwlbearIds.EXTENSIONID}/LINEEVENT`, (data) => {
                 const event = data.data as string;
@@ -338,51 +387,56 @@ export function CacheSync({ children }: { children: React.ReactNode }) {
             await SPECTREMACHINE.Initialize();
             await SPECTREMACHINE.Run();
 
+            hasActiveSync = true;
 
             LOGGER.log('CacheManager: Cache is ready');
+            } finally {
+                isSyncing = false;
+            }
         };
 
         // Extra onReady to catch late initializations
         OBR.onReady(async () => {
+            if (disposed) {
+                return;
+            }
+
             const isReady = await OBR.scene.isReady();
             setSceneReady(isReady);
+            let lastReady = isReady;
+
             if (isReady) {
                 LOGGER.log('Scene is ready on initial load, syncing cache...');
                 await syncSceneState();
             }
 
             unsubSceneReady = OBR.scene.onReadyChange(async (ready) => {
+                if (disposed) {
+                    return;
+                }
+
                 setSceneReady(ready);
 
                 if (ready) {
-                    LOGGER.log('Scene became ready, syncing cache...');
-                    await syncSceneState();
+                    if (!lastReady || !hasActiveSync) {
+                        LOGGER.log('Scene became ready, syncing cache...');
+                        await syncSceneState();
+                    }
                 } else {
                     LOGGER.log('Scene is no longer ready, clearing cache...');
+                    clearSubscriptions();
+                    hasActiveSync = false;
                     setCacheReady(false); // Scene closed, invalidate cache
                 }
+
+                lastReady = ready;
             });
         });
 
         return () => {
+            disposed = true;
             unsubSceneReady?.();
-            unsubItems?.();
-            unsubLocalItems?.();
-            unsubSceneMetadata?.();
-            unsubRoomMetadata?.();
-            unsubGridDpi?.();
-            unsubPlayerData?.();
-            unsubPartyData?.();
-            unsubSmokeItems?.();
-            unsubSmokeLocalItems?.();
-            unsubResetPersistence?.();
-            unsubTrailingFogColor?.();
-            unsubDoorToggle?.();
-            unsubWarningCast?.();
-            unsubElevationEvent?.();
-            unsubLineEvent?.();
-            unsubPolygonEvent?.();
-            unsubFogBackgroundEvent?.();
+            clearSubscriptions();
         };
     }, [
         setSceneReady,
