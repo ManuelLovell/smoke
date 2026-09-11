@@ -1,4 +1,4 @@
-import OBR, { Curve, Item, Light, Math2, Vector2, Wall } from "@owlbear-rodeo/sdk";
+import OBR, { Curve, Effect, Item, Light, Math2, Vector2, Wall } from "@owlbear-rodeo/sdk";
 import { Constants } from "../helpers/BSConstants";
 import * as Utilities from "../helpers/BSUtilities";
 import { BSCACHE } from "../helpers/BSCache";
@@ -111,6 +111,18 @@ export class VisibilityChecker {
         if (o4 === 0 && onSegment(line2Start, line1End, line2End)) return true;
 
         // Otherwise, the line segments don't intersect
+        return false;
+    }
+
+    private isTokenNearTrailingRevealer(enemy: Item): boolean {
+        const revealers = BSCACHE.sceneLocal.filter(item => item.metadata[`${Constants.EXTENSIONID}/isTrailingFogLight`]) as Effect[];
+        for (const revealer of revealers) {
+            const radius = revealer.width /2;
+            const inProximity = this.distanceSquared(enemy.position,revealer.position) <= radius;
+            if (inProximity) return true;
+        }
+        // Implement the logic to check if the enemy token is near a trailing revealer
+        // Placeholder implementation, replace with actual logic
         return false;
     }
 
@@ -303,7 +315,7 @@ export class VisibilityChecker {
     ): Promise<void> {
         const hiddenEnemies: string[] = [];
         const visibleEnemies: string[] = [];
-
+        
         for (const enemy of enemies) {
             // Check against each player
             for (const player of players) {
@@ -318,6 +330,10 @@ export class VisibilityChecker {
                         continue;
                     }
                 }
+                hiddenEnemies.push(enemy.id);
+            }
+            const isNearTrailingRevealer = this.isTokenNearTrailingRevealer(enemy);
+            if (!hiddenEnemies.includes(enemy.id) && isNearTrailingRevealer) {
                 hiddenEnemies.push(enemy.id);
             }
         }
