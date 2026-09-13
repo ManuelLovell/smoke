@@ -236,8 +236,11 @@ async function Deactivate() {
         await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
     }
     else {
-        await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationMapping`]: [] });
-        await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
+        const currentTool = await OBR.tool.getActiveTool();
+        if (currentTool === `${Constants.EXTENSIONID}/vision-tool`) {
+            await OBR.scene.setMetadata({ [`${Constants.EXTENSIONID}/elevationMapping`]: [] });
+            await OBR.broadcast.sendMessage(Constants.PROCESSEDID, true, { destination: "ALL" });
+        }
     }
 
     await OBR.tool.setMetadata(`${Constants.EXTENSIONID}/vision-tool`,
