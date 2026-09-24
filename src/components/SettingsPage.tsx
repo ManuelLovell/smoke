@@ -49,7 +49,6 @@ export const SettingsPage = () => {
   const [gridSnapDistance, setGridSnapDistance] = useState('10');
   const [elevationStyle, setElevationStyle] = useState('false');
   const [wallsPersistenceLimit, setWallsPersistenceLimit] = useState('100');
-  const [defaultElevationLevel, setDefaultElevationLevel] = useState('-10');
   const [selectedPreviewPlayerId, setSelectedPreviewPlayerId] = useState<string>('');
   const tooltips = getSettingsTooltips(t);
 
