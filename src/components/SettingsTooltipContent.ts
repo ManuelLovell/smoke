@@ -17,6 +17,7 @@ export const getSettingsTooltips = (t: Translate) => ({
   defaultVisionOuterAngle: t('settings.tooltips.defaultVisionOuterAngle'),
   defaultVisionFalloff: t('settings.tooltips.defaultVisionFalloff'),
   defaultElevationLevel: t('settings.tooltips.defaultElevationLevel'),
+  elevationStyle: t('settings.tooltips.elevationStyle'),
   partyOwnerLines: t('settings.tooltips.partyOwnerLines'),
   fogPersistence: t('settings.tooltips.fogPersistence'),
   fogAutoHide: t('settings.tooltips.fogAutoHide'),

@@ -48,6 +48,8 @@ export const frTranslations: Record<string, string> = {
   'settings.defaultVisionOuterAngle': 'Angle externe par defaut',
   'settings.defaultVisionFalloff': 'Attenuation par defaut',
   'settings.defaultElevationLevel': 'Elevation par defaut',
+  'settings.elevationStyle': 'Style d’élévation',
+  'settings.tooltips.elevationStyle': 'Permet de modifier la manière dont les élévations traitent les murs. Mesa autorise les jetons à voir au-dessus des murs lorsque l’élévation est supérieure à 0. City les fait tous se comporter de la même manière.',
   'settings.partyOwnerLines': 'Afficher les anneaux de proprietaire',
   'settings.fogPersistence': 'Activer la persistance de vision',
   'settings.fogAutoHide': 'Masquer automatiquement les unites',

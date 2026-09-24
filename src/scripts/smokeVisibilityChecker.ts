@@ -186,7 +186,8 @@ export class VisibilityChecker {
         }
 
         const elevationComplex = BSCACHE.sceneMetadata[`${Constants.EXTENSIONID}/elevationComplex`];
-        if (elevationComplex === true) {
+
+        if (elevationComplex === 'true') {
             // Elevation Complex keeps the Walls consistent on levels 0-6.
             switch (value) {
                 case 1:

@@ -47,6 +47,7 @@ export const SettingsPage = () => {
   const [otherWarnings, setOtherWarnings] = useState(false);
   const [enableConsoleLogging, setEnableConsoleLogging] = useState(false);
   const [gridSnapDistance, setGridSnapDistance] = useState('10');
+  const [elevationStyle, setElevationStyle] = useState('false');
   const [wallsPersistenceLimit, setWallsPersistenceLimit] = useState('100');
   const [defaultElevationLevel, setDefaultElevationLevel] = useState('-10');
   const [selectedPreviewPlayerId, setSelectedPreviewPlayerId] = useState<string>('');
@@ -116,14 +117,16 @@ export const SettingsPage = () => {
       setEnableConsoleLogging(sceneMetadata[SettingsConstants.ENABLE_CONSOLE_LOGGING] as boolean);
     }
 
-    const gridSnapDistance = sceneMetadata[SettingsConstants.GRID_SNAP_DISTANCE];
-    if (gridSnapDistance !== undefined) {
-      setGridSnapDistance(String(gridSnapDistance));
+    if (sceneMetadata[SettingsConstants.ELEVATION_STYLE] !== undefined) {
+      setElevationStyle(sceneMetadata[SettingsConstants.ELEVATION_STYLE] as string);
     }
 
-    const persistenceLimit = sceneMetadata[SettingsConstants.WALLS_PERSISTENCE_LIMIT];
-    if (persistenceLimit !== undefined) {
-      setWallsPersistenceLimit(String(persistenceLimit));
+    if (sceneMetadata[SettingsConstants.GRID_SNAP_DISTANCE] !== undefined) {
+      setGridSnapDistance(String(sceneMetadata[SettingsConstants.GRID_SNAP_DISTANCE]));
+    }
+
+    if (sceneMetadata[SettingsConstants.WALLS_PERSISTENCE_LIMIT] !== undefined) {
+      setWallsPersistenceLimit(String(sceneMetadata[SettingsConstants.WALLS_PERSISTENCE_LIMIT]));
     }
   }, [cacheReady, sceneMetadata]);
 
@@ -288,24 +291,19 @@ export const SettingsPage = () => {
 
           <ControlRow theme={theme}>
             <ControlLabel theme={theme}>
-              <SettingsTooltip theme={theme} text={tooltips.defaultElevationLevel}>{t('settings.defaultElevationLevel')}</SettingsTooltip>
+              <SettingsTooltip theme={theme} text={tooltips.elevationStyle}>{t('settings.elevationStyle')}</SettingsTooltip>
             </ControlLabel>
             <SmallSelect
               theme={theme}
-              value={defaultElevationLevel}
+              value={elevationStyle}
               onChange={async (event) => {
                 const nextValue = event.target.value;
-                setDefaultElevationLevel(nextValue);
-                await saveData(SettingsConstants.DEFAULT_ELEVATION_LEVEL, nextValue);
+                setElevationStyle(nextValue);
+                await saveData(SettingsConstants.ELEVATION_STYLE, nextValue);
               }}
             >
-              <option value="-10">0</option>
-              <option value="1">1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
+              <option value="false">Mesa</option>
+              <option value="true">City</option>
             </SmallSelect>
           </ControlRow>
 

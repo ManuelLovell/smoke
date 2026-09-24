@@ -133,6 +133,8 @@ export class SettingsConstants {
   static DEFAULT_VISION_DARKNESS = `${EXTENSION_ID}/visionDarkDefault`;
   static DEFAULT_VISION_SOURCE = `${EXTENSION_ID}/visionSourceDefault`;
   static DEFAULT_ELEVATION_LEVEL = `${EXTENSION_ID}/defaultElevation`;
+  
+  static ELEVATION_STYLE = `${EXTENSION_ID}/elevationComplex`;
 
   static VISION_PRESETS = `${EXTENSION_ID}/visionPresets`;
   static OTHER_WARNINGS = `${EXTENSION_ID}/showWarnings`;

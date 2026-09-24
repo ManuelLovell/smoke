@@ -48,6 +48,8 @@ export const deTranslations: Record<string, string> = {
   'settings.defaultVisionOuterAngle': 'Standard-Aussenwinkel',
   'settings.defaultVisionFalloff': 'Standard-Abfall',
   'settings.defaultElevationLevel': 'Standard-Hohenebene',
+  'settings.elevationStyle': 'Hohenstil',
+  'settings.tooltips.elevationStyle': 'Wechselt, wie Hohen die Wande behandeln. Mesa erlaubt Tokens, uber Wande mit Hohen uber 0 zu sehen. City behandelt sie alle gleich.',
   'settings.partyOwnerLines': 'Eigentumsringe anzeigen',
   'settings.fogPersistence': 'Sicht-Persistenz aktivieren',
   'settings.fogAutoHide': 'Einheiten automatisch ausblenden',

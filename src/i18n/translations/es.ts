@@ -48,6 +48,8 @@ export const esTranslations: Record<string, string> = {
   'settings.defaultVisionOuterAngle': 'Angulo externo predeterminado',
   'settings.defaultVisionFalloff': 'Caida predeterminada',
   'settings.defaultElevationLevel': 'Elevacion predeterminada',
+  'settings.elevationStyle': 'Estilo de elevación',
+  'settings.tooltips.elevationStyle': 'Cambia cómo las Elevaciones tratan los muros. Mesa permitirá que los tokens vean por encima de los muros con elevación superior a 0. City hará que todos se comporten igual.',
   'settings.partyOwnerLines': 'Mostrar anillos de propiedad',
   'settings.fogPersistence': 'Habilitar persistencia de vision',
   'settings.fogAutoHide': 'Auto-ocultar unidades',
