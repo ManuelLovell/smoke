@@ -14,7 +14,7 @@ import { isTokenWithVisionForUI } from '../helpers/ItemFilters';
 import { TokenConstants, SettingsConstants } from '../helpers/MetadataKeys';
 import { DEFAULT_THEME } from '../helpers/ThemeConstants';
 import { ViewportFunctions } from '../scripts/bsViewport';
-import { EyeOffIcon, Link } from 'lucide-react';
+import { EyeOffIcon, Link, SquareMenuIcon } from 'lucide-react';
 import { useTranslation } from '../i18n/Translation';
 
 // Vision parameter metadata keys - using TokenConstants from MetadataKeys
@@ -176,7 +176,7 @@ const TokenOwnerCell = styled.div`
 const TokenHeaderCell = styled.div`
   grid-column: 1 / -1;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 2px;
@@ -1004,7 +1004,9 @@ export const MainPage = () => {
                 const isDragging = draggedTokenId === token.id;
                 return (
                   <TokenGridRow key={token.id}>
-                    <TokenHeaderCell>
+                    <TokenHeaderCell
+                      onClick={(e) => handleTokenRightClick(token, e)}>
+                      <SquareMenuIcon style={{ color: '#fff', cursor: 'pointer' }} />
                       <TokenNameCell
                         draggable
                         $isDragging={isDragging}
@@ -1186,7 +1188,7 @@ export const MainPage = () => {
                   step={bulkEditConfigs[bulkEditField].step}
                   presets={bulkEditConfigs[bulkEditField].presets}
                 />
-                <BulkEditModalTitle style={{ paddingTop: '10px' }} theme={theme}>Bulk Edit</BulkEditModalTitle> 
+                <BulkEditModalTitle style={{ paddingTop: '10px' }} theme={theme}>Bulk Edit</BulkEditModalTitle>
               </>
             ) : null}
           </BulkEditModalContent>
