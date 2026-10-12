@@ -2,16 +2,7 @@ import OBR from "@owlbear-rodeo/sdk";
 import "../styles/style.css";
 import { Constants, LIGHTDIRECTIONS } from "../helpers/BSConstants";
 import { Translation } from "../i18n/Translation";
-
-type VisionPreset = {
-    name: string;
-    visionRange: string;
-    visionSourceRange: string;
-    visionFallOff: string;
-    visionInAngle: string;
-    visionOutAngle: string;
-    visionDark: string;
-};
+import { loadPresets } from "../helpers/PresetManager";
 
 OBR.onReady(async () =>
 {
@@ -56,18 +47,16 @@ OBR.onReady(async () =>
     }
 
     const sceneMetadata = await OBR.scene.getMetadata();
-    const scenePresets = Array.isArray(sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`])
-        ? sceneMetadata[`${Constants.EXTENSIONID}/visionPresets`] as VisionPreset[]
-        : [];
+    const visionPresets = await loadPresets();
 
     const presetPlaceholder = document.createElement("option");
     presetPlaceholder.value = "";
-    presetPlaceholder.textContent = scenePresets.length > 0
+    presetPlaceholder.textContent = visionPresets.length > 0
         ? Translation.t('unitContext.applyPresetPlaceholder')
         : Translation.t('unitContext.noPresetsSaved');
     visionPresetSelect.appendChild(presetPlaceholder);
 
-    for (const preset of scenePresets)
+    for (const preset of visionPresets)
     {
         const option = document.createElement("option");
         option.value = preset.name;
@@ -118,7 +107,7 @@ OBR.onReady(async () =>
         const target = event.currentTarget as HTMLSelectElement;
         if (!target.value) return;
 
-        const matchedPreset = scenePresets.find(preset => preset.name === target.value);
+        const matchedPreset = visionPresets.find(preset => preset.name === target.value);
         if (!matchedPreset) return;
 
         await OBR.scene.items.updateItems(unitItems.map(x => x.id), items =>
